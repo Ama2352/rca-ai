@@ -1,0 +1,39 @@
+{
+  "class_counts": {
+    "ad_cpu_saturation": 3,
+    "cart_cache_connectivity": 2,
+    "container_config_missing_secret": 3,
+    "container_crash_loop": 2,
+    "email_memory_growth": 2,
+    "messaging_consumer_delay": 2,
+    "payment_application_rejection": 3,
+    "payment_dependency_unavailable": 2,
+    "shipping_downstream_latency": 3
+  },
+  "corpus_sha256": "1b2052bb17eeae39a1e1dbc2dd5c7ed8d599dc15efeb59445e6de1d25c1ca167",
+  "frozen_query_source_sha256": {
+    "ad-high-cpu-01.txt": "b87664ca06895a4ae703bff6214af20e29fb72e2412bfb584c8b41c7f50cbedf",
+    "application-failure-01.txt": "b5a4e5556df58dfc3c8255b056e4e9232efb73d7f77b56e57e59b9d2ac09a6b5",
+    "cart-failure-01.txt": "722ccb6fe7d22c77dcbe40b32641b25515c93e692dfeffd4f635dafbe354aad2",
+    "crash-loop-backoff-01.txt": "f29815fe90e48c488bbb9d94dcc7262882366d75135575cb8aa07c396a76f995",
+    "dependency-unavailable-01.txt": "b3a048753815be381edea89df6b0f3bab2803e6451fa1526a7ef747e785d86ba",
+    "downstream-latency-01.txt": "a57110132216b325757e0305cea7e40321b6f4b03fa7cbbd129afa362828cf9f",
+    "memory-leak-01.txt": "3dc9245f9735dd37bdc51af27beb408234c396600bccf99239251f218a6ace52",
+    "messaging-failure-01.txt": "074f595afbc7e5bd36ddc655227c2841d2af7e9c08c1a26b09f9c3c59dbc7c37",
+    "missing-secret-01.txt": "2fc36833fe66ef3b735017ddd4fb1c7dee120adfdb0c230f5adc4f5bd4c4e80f"
+  },
+  "query_sha256": {
+    "ad-high-cpu-01.txt": "b87664ca06895a4ae703bff6214af20e29fb72e2412bfb584c8b41c7f50cbedf",
+    "application-failure-01.txt": "b5a4e5556df58dfc3c8255b056e4e9232efb73d7f77b56e57e59b9d2ac09a6b5",
+    "cart-failure-01.txt": "722ccb6fe7d22c77dcbe40b32641b25515c93e692dfeffd4f635dafbe354aad2",
+    "crash-loop-backoff-01.txt": "f29815fe90e48c488bbb9d94dcc7262882366d75135575cb8aa07c396a76f995",
+    "dependency-unavailable-01.txt": "b3a048753815be381edea89df6b0f3bab2803e6451fa1526a7ef747e785d86ba",
+    "downstream-latency-01.txt": "a57110132216b325757e0305cea7e40321b6f4b03fa7cbbd129afa362828cf9f",
+    "memory-leak-01.txt": "3dc9245f9735dd37bdc51af27beb408234c396600bccf99239251f218a6ace52",
+    "messaging-failure-01.txt": "074f595afbc7e5bd36ddc655227c2841d2af7e9c08c1a26b09f9c3c59dbc7c37",
+    "missing-secret-01.txt": "2fc36833fe66ef3b735017ddd4fb1c7dee120adfdb0c230f5adc4f5bd4c4e80f"
+  },
+  "record_count": 22,
+  "retrieval_builder_sha256": "9afec7c1a8fa93bc99a6a959c3be37a6ea9bee3681401ca706603829dc942261",
+  "seed_source_sha256": "2f52b80b48d66735820af5ac7d6ac0314d89d3eb8cf0a40f3dd79261a0fa8ef6"
+}

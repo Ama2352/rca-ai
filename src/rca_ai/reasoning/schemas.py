@@ -1,0 +1,13 @@
+"""Provider-compatible strict structured-output schemas for reasoning stages."""
+
+import json
+
+
+# The compact JSON literal is parsed once so insertion order and schema values
+# remain exactly those in the frozen provider request.
+GENERATOR_JSON_SCHEMA = json.loads('{"type":"object","additionalProperties":false,"properties":{"hypotheses":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"explanation":{"type":"string"},"explains_fact_refs":{"type":"array","items":{"type":"string"}},"supporting_fact_refs":{"type":"array","items":{"type":"string"}},"history_refs":{"type":"array","items":{"type":"string"}},"knowledge_refs":{"type":"array","items":{"type":"string"}},"assumptions":{"type":"array","items":{"type":"string"}},"unresolved":{"type":"array","items":{"type":"string"}}},"required":["id","explanation","explains_fact_refs","supporting_fact_refs","history_refs","knowledge_refs","assumptions","unresolved"]}}},"required":["hypotheses"]}')
+
+GENERATOR_SCHEMA_NAME = "hypothesis_generation_contract"
+
+VALIDATOR_JSON_SCHEMA = json.loads('{"type":"object","additionalProperties":false,"properties":{"hypothesis_id":{"type":"string"},"decision":{"type":"string","enum":["KEEP","KEEP_QUALIFIED","REJECT"]},"support_level":{"type":"string","enum":["STRONG","PLAUSIBLE","WEAK","CONTRADICTED"]},"incident_basis":{"type":"object","additionalProperties":false,"properties":{"evidence":{"type":"array","items":{"type":"string"}}},"required":["evidence"]},"hard_violations":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"claim":{"type":"string"},"type":{"type":"string"},"fact_refs":{"type":"array","items":{"type":"string"}},"reason":{"type":"string"}},"required":["claim","type","fact_refs","reason"]}},"qualifications":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"claim":{"type":"string"},"issue":{"type":"string"},"fact_refs":{"type":"array","items":{"type":"string"}},"observed_form":{"type":"string"}},"required":["claim","issue","fact_refs","observed_form"]}},"relation_assessment":{"type":"object","additionalProperties":false,"properties":{"relation":{"type":"string"},"support_level":{"type":"string","enum":["STRONG","PLAUSIBLE","WEAK","CONTRADICTED"]},"fact_refs":{"type":"array","items":{"type":"string"}},"reason":{"type":"string"}},"required":["relation","support_level","fact_refs","reason"]},"unresolved":{"type":"array","items":{"type":"string"}}},"required":["hypothesis_id","decision","support_level","incident_basis","hard_violations","qualifications","relation_assessment","unresolved"]}')
+VALIDATOR_SCHEMA_NAME = "hypothesis_validator_contract"

@@ -1,0 +1,50 @@
+{
+  "hypothesis_id": "HYP1",
+  "decision": "KEEP_QUALIFIED",
+  "support_level": "PLAUSIBLE",
+  "incident_basis": {
+    "evidence": [
+      "F22",
+      "F23",
+      "F24",
+      "F25",
+      "F39",
+      "F49",
+      "F37",
+      "F38",
+      "F46"
+    ]
+  },
+  "hard_violations": [],
+  "qualifications": [
+    {
+      "claim": "Payment service is rejecting charge requests due to a credential or validation failure",
+      "issue": "Cause not directly observed; assumption about credential/validation failure exceeds current evidence",
+      "fact_refs": [
+        "F22",
+        "F23",
+        "F39"
+      ],
+      "observed_form": "Current facts show increased error spans and STATUS_CODE_ERROR in payment service, but no logs or metrics indicating credential or validation failures"
+    }
+  ],
+  "relation_assessment": {
+    "relation": "Payment service rejecting charge requests causes downstream errors in checkout and frontend operations",
+    "support_level": "PLAUSIBLE",
+    "fact_refs": [
+      "F22",
+      "F23",
+      "F39",
+      "F49",
+      "F37",
+      "F38",
+      "F46"
+    ],
+    "reason": "Correlation between increased error spans in payment and increased errors/latency changes in downstream services is evident, but direct causal proof of rejection leading to downstream failures is not present"
+  },
+  "unresolved": [
+    "Inspect payment service logs for validation error messages",
+    "Capture the exact error codes and messages returned by payment during charge requests",
+    "Verify whether recent credential or configuration changes were deployed to payment"
+  ]
+}

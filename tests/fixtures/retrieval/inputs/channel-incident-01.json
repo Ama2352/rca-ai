@@ -1,0 +1,200 @@
+{
+  "coverage": {
+    "kubernetes": {
+      "candidate_count": 2,
+      "missing": false,
+      "selected_count": 2,
+      "source_count": 52,
+      "source_present": true,
+      "uncertainty": [
+        "pod_and_deployment_snapshots_have_no_capture_timestamp"
+      ]
+    },
+    "logs": {
+      "candidate_count": 0,
+      "missing": true,
+      "selected_count": 0,
+      "source_count": 0,
+      "source_present": true,
+      "uncertainty": []
+    },
+    "metrics": {
+      "candidate_count": 21,
+      "missing": false,
+      "selected_count": 17,
+      "source_count": 46,
+      "source_present": true,
+      "uncertainty": []
+    },
+    "traces": {
+      "candidate_count": 0,
+      "missing": true,
+      "selected_count": 0,
+      "source_count": 0,
+      "source_present": true,
+      "uncertainty": []
+    }
+  },
+  "kubernetes": [
+    {
+      "available_replicas": 1,
+      "container": "telemetry-docs",
+      "container_state": "waiting",
+      "deployment": "telemetry-docs",
+      "deployment_conditions": [
+        {
+          "lastTransitionTime": "2026-09-25T13:09:12Z",
+          "lastUpdateTime": "2026-09-25T13:09:12Z",
+          "message": "Deployment has minimum availability.",
+          "reason": "MinimumReplicasAvailable",
+          "status": "True",
+          "type": "Available"
+        },
+        {
+          "lastTransitionTime": "2026-09-24T16:25:05Z",
+          "lastUpdateTime": "2026-09-25T13:14:43Z",
+          "message": "ReplicaSet \"telemetry-docs-6cc6ddbf9c\" is progressing.",
+          "reason": "ReplicaSetUpdated",
+          "status": "True",
+          "type": "Progressing"
+        }
+      ],
+      "desired_replicas": 1,
+      "event_count": null,
+      "event_first_at": null,
+      "event_last_at": null,
+      "event_message": null,
+      "event_reason": null,
+      "exit_code": null,
+      "lane": "kubernetes.state",
+      "phase": "Pending",
+      "pod": "telemetry-docs-6cc6ddbf9c-5vrrw",
+      "pod_uid": "367508dd-6a8e-4dc7-95e0-9cbd1d3e44d4",
+      "ready": false,
+      "ready_replicas": 1,
+      "restart_count": 0,
+      "source": [
+        "k8s_pods.json:items[25]",
+        "deployment[0]"
+      ],
+      "termination_reason": null,
+      "uncertainty": [
+        "snapshot_time_not_embedded",
+        "waiting_reason_not_timestamped"
+      ],
+      "updated_replicas": 1,
+      "waiting_reason": "CreateContainerConfigError"
+    },
+    {
+      "available_replicas": 1,
+      "container": "",
+      "container_state": "",
+      "deployment": "telemetry-docs",
+      "deployment_conditions": [
+        {
+          "lastTransitionTime": "2026-09-25T13:09:12Z",
+          "lastUpdateTime": "2026-09-25T13:09:12Z",
+          "message": "Deployment has minimum availability.",
+          "reason": "MinimumReplicasAvailable",
+          "status": "True",
+          "type": "Available"
+        },
+        {
+          "lastTransitionTime": "2026-09-24T16:25:05Z",
+          "lastUpdateTime": "2026-09-25T13:14:43Z",
+          "message": "ReplicaSet \"telemetry-docs-6cc6ddbf9c\" is progressing.",
+          "reason": "ReplicaSetUpdated",
+          "status": "True",
+          "type": "Progressing"
+        }
+      ],
+      "desired_replicas": 1,
+      "event_count": 6,
+      "event_first_at": 1790342084.0,
+      "event_last_at": 1790342138.0,
+      "event_message": "Error: secret \"eda-capture-secret-does-not-exist\" not found",
+      "event_reason": "Failed",
+      "exit_code": null,
+      "lane": "kubernetes.event",
+      "phase": "Pending",
+      "pod": "telemetry-docs-6cc6ddbf9c-5vrrw",
+      "pod_uid": "367508dd-6a8e-4dc7-95e0-9cbd1d3e44d4",
+      "ready": false,
+      "ready_replicas": 1,
+      "restart_count": null,
+      "source": [
+        "k8s_events.json:items[21]",
+        "k8s_pods.json:items[25]"
+      ],
+      "termination_reason": null,
+      "uncertainty": [
+        "event_count_cumulative"
+      ],
+      "updated_replicas": 1,
+      "waiting_reason": null
+    }
+  ],
+  "logs": [],
+  "metrics": [
+    {
+      "baseline_delta": null,
+      "baseline_event_count": null,
+      "baseline_max": null,
+      "baseline_median": null,
+      "baseline_min": null,
+      "baseline_n": 0,
+      "baseline_resets": 0,
+      "baseline_sd": null,
+      "baseline_value": null,
+      "incident_delta": null,
+      "incident_event_count": null,
+      "incident_max": 1.0,
+      "incident_median": null,
+      "incident_min": 1.0,
+      "incident_n": 4,
+      "incident_resets": 0,
+      "incident_value": null,
+      "labels": {
+        "container_image_name": "ghcr.io/open-telemetry/demo",
+        "container_image_tag": "3.1.0-telemetry-docs",
+        "host_name": "otel-collector-agent-65w65",
+        "k8s_cluster_uid": "028d9b63-a348-4cc0-9f00-bd244cd22985",
+        "k8s_deployment_name": "telemetry-docs",
+        "k8s_pod_start_time": "2026-09-25T13:14:43Z",
+        "k8s_pod_uid": "367508dd-6a8e-4dc7-95e0-9cbd1d3e44d4",
+        "k8s_replicaset_name": "telemetry-docs-6cc6ddbf9c",
+        "k8s_replicaset_uid": "e147a984-5053-464c-9bcd-a286be082c69",
+        "os_type": "linux",
+        "service_namespace": "opentelemetry-demo",
+        "service_version": "3.1.0"
+      },
+      "lane": "metric.unknown_presence",
+      "metric": "target_info",
+      "metric_kind": "unknown",
+      "relative_change": null,
+      "resource": "telemetry-docs-6cc6ddbf9c-5vrrw",
+      "service": "telemetry-docs",
+      "signed_change": null,
+      "source": [
+        "metrics.json:data.result[44]"
+      ],
+      "uncertainty": [
+        "unknown_metric_type"
+      ],
+      "unit": "reported_unit"
+    }
+  ],
+  "traces": [],
+  "uncertainty": [
+    "event_count_cumulative",
+    "pod_and_deployment_snapshots_have_no_capture_timestamp",
+    "snapshot_time_not_embedded",
+    "unknown_metric_type",
+    "waiting_reason_not_timestamped"
+  ],
+  "window": {
+    "baseline_start": 1790342022.0,
+    "incident_end": 1790342142.0,
+    "incident_start": 1790342082.0
+  }
+}

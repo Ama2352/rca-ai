@@ -1,0 +1,47 @@
+{
+  "hypothesis_id": "HYP3",
+  "decision": "KEEP_QUALIFIED",
+  "support_level": "PLAUSIBLE",
+  "incident_basis": {
+    "evidence": [
+      "F1",
+      "F2",
+      "F3"
+    ]
+  },
+  "hard_violations": [],
+  "qualifications": [
+    {
+      "claim": "Enabling the 'High CPU‑Load problempattern' added extra instrumentation or processing",
+      "issue": "overstates causality without direct evidence",
+      "fact_refs": [
+        "F3"
+      ],
+      "observed_form": "log entry indicating the pattern was enabled"
+    },
+    {
+      "claim": "contributing to the ad pod’s CPU increase",
+      "issue": "overstates causality; only correlation observed",
+      "fact_refs": [
+        "F1",
+        "F2"
+      ],
+      "observed_form": "significant increase in CPU usage metrics for ad pod"
+    }
+  ],
+  "relation_assessment": {
+    "relation": "pattern enablement caused CPU usage increase in ad pod",
+    "support_level": "PLAUSIBLE",
+    "fact_refs": [
+      "F1",
+      "F2",
+      "F3"
+    ],
+    "reason": "Pattern enablement and CPU spike co‑occur, but no direct measurement of overhead confirms causation"
+  },
+  "unresolved": [
+    "What code changes correspond to the pattern activation",
+    "Measured overhead of the pattern when enabled",
+    "Whether the pattern was disabled after the incident"
+  ]
+}

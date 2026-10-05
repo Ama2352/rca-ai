@@ -1,0 +1,50 @@
+{
+  "hypothesis_id": "HYP1",
+  "decision": "KEEP_QUALIFIED",
+  "support_level": "PLAUSIBLE",
+  "incident_basis": {
+    "evidence": [
+      "F13",
+      "F1",
+      "F2",
+      "F3"
+    ]
+  },
+  "hard_violations": [],
+  "qualifications": [
+    {
+      "claim": "CPU saturation directly translates into longer ad‑service response times",
+      "issue": "overstatement of causal certainty",
+      "fact_refs": [
+        "F9"
+      ],
+      "observed_form": "ad‑service latency decreased (mean latency from 5.175 ms to 4.441 ms) per trace edge"
+    },
+    {
+      "claim": "CPU saturation observed in the ad pod caused the latency increase of the frontend‑web GET operation",
+      "issue": "overstatement of causality without direct evidence",
+      "fact_refs": [
+        "F1",
+        "F2",
+        "F13"
+      ],
+      "observed_form": "correlation between CPU spike and latency increase but no direct measurement linking them"
+    }
+  ],
+  "relation_assessment": {
+    "relation": "CPU saturation in ad pod → latency increase of frontend‑web GET operation",
+    "support_level": "PLAUSIBLE",
+    "fact_refs": [
+      "F1",
+      "F2",
+      "F13",
+      "F9"
+    ],
+    "reason": "CPU usage spike coincides with latency increase, yet trace data shows ad‑service latency decreased, making the causal link uncertain"
+  },
+  "unresolved": [
+    "Precise timing overlap between the CPU spike and the latency increase",
+    "Quantitative contribution of ad‑service latency to the overall frontend‑web latency",
+    "Whether scaling the ad pod would have mitigated the latency rise"
+  ]
+}

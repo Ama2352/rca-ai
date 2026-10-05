@@ -1,0 +1,224 @@
+{
+  "history": {
+    "implementation": "app.retrieval.service.RetrievalService",
+    "query": "METRIC lane=metric.unknown_presence service=telemetry-docs metric=target_info type=unknown unit=reported_unit\nKUBERNETES lane=kubernetes.event workload=telemetry-docs phase=Pending ready=false event=Failed replicas=1/1\nKUBERNETES lane=kubernetes.state workload=telemetry-docs container=telemetry-docs phase=Pending ready=false state=waiting reason=CreateContainerConfigError replicas=1/1\n",
+    "diagnostics": {
+      "active_modalities": [
+        "metric",
+        "kubernetes"
+      ],
+      "channels": {
+        "metric": {
+          "query_view": "telemetry-docs target_info unknown reported_unit\n",
+          "top10": [
+            {
+              "rank": 1,
+              "incident_id": "H018",
+              "bm25_score": 5.734597513596981
+            },
+            {
+              "rank": 2,
+              "incident_id": "H021",
+              "bm25_score": 4.430508610188821
+            },
+            {
+              "rank": 3,
+              "incident_id": "H001",
+              "bm25_score": 1.3884125684691278
+            },
+            {
+              "rank": 4,
+              "incident_id": "H015",
+              "bm25_score": 1.0492008109876982
+            },
+            {
+              "rank": 5,
+              "incident_id": "H002",
+              "bm25_score": 1.0003218343515843
+            },
+            {
+              "rank": 6,
+              "incident_id": "H003",
+              "bm25_score": 1.0003218343515843
+            }
+          ]
+        },
+        "kubernetes": {
+          "query_view": "telemetry-docs phase Pending ready false event Failed replicas 1/1\ntelemetry-docs container telemetry-docs phase Pending ready false state waiting reason CreateContainerConfigError replicas 1/1\n",
+          "top10": [
+            {
+              "rank": 1,
+              "incident_id": "H020",
+              "bm25_score": 8.08830034842305
+            },
+            {
+              "rank": 2,
+              "incident_id": "H021",
+              "bm25_score": 8.08830034842305
+            },
+            {
+              "rank": 3,
+              "incident_id": "H019",
+              "bm25_score": 5.4834933012184095
+            },
+            {
+              "rank": 4,
+              "incident_id": "H022",
+              "bm25_score": 5.217490374643354
+            },
+            {
+              "rank": 5,
+              "incident_id": "H018",
+              "bm25_score": 4.82992837272419
+            }
+          ]
+        }
+      },
+      "rrf_ranking": [
+        {
+          "rank": 1,
+          "incident_id": "H021",
+          "rrf_score": 0.03225806451612903,
+          "contributions": {
+            "kubernetes": 0.016129032258064516,
+            "metric": 0.016129032258064516
+          },
+          "channel_ranks": {
+            "kubernetes": 2,
+            "metric": 2
+          }
+        },
+        {
+          "rank": 2,
+          "incident_id": "H018",
+          "rrf_score": 0.03177805800756621,
+          "contributions": {
+            "kubernetes": 0.015384615384615385,
+            "metric": 0.01639344262295082
+          },
+          "channel_ranks": {
+            "kubernetes": 5,
+            "metric": 1
+          }
+        },
+        {
+          "rank": 3,
+          "incident_id": "H020",
+          "rrf_score": 0.01639344262295082,
+          "contributions": {
+            "kubernetes": 0.01639344262295082
+          },
+          "channel_ranks": {
+            "kubernetes": 1
+          }
+        },
+        {
+          "rank": 4,
+          "incident_id": "H001",
+          "rrf_score": 0.015873015873015872,
+          "contributions": {
+            "metric": 0.015873015873015872
+          },
+          "channel_ranks": {
+            "metric": 3
+          }
+        },
+        {
+          "rank": 5,
+          "incident_id": "H019",
+          "rrf_score": 0.015873015873015872,
+          "contributions": {
+            "kubernetes": 0.015873015873015872
+          },
+          "channel_ranks": {
+            "kubernetes": 3
+          }
+        },
+        {
+          "rank": 6,
+          "incident_id": "H015",
+          "rrf_score": 0.015625,
+          "contributions": {
+            "metric": 0.015625
+          },
+          "channel_ranks": {
+            "metric": 4
+          }
+        },
+        {
+          "rank": 7,
+          "incident_id": "H022",
+          "rrf_score": 0.015625,
+          "contributions": {
+            "kubernetes": 0.015625
+          },
+          "channel_ranks": {
+            "kubernetes": 4
+          }
+        },
+        {
+          "rank": 8,
+          "incident_id": "H002",
+          "rrf_score": 0.015384615384615385,
+          "contributions": {
+            "metric": 0.015384615384615385
+          },
+          "channel_ranks": {
+            "metric": 5
+          }
+        },
+        {
+          "rank": 9,
+          "incident_id": "H003",
+          "rrf_score": 0.015151515151515152,
+          "contributions": {
+            "metric": 0.015151515151515152
+          },
+          "channel_ranks": {
+            "metric": 6
+          }
+        }
+      ],
+      "final_top3": [
+        "H021",
+        "H018",
+        "H020"
+      ]
+    },
+    "query_input": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\k8s_history_domain_comparison_20261001_runs\\80fc6c36-ae12-4dc4-a958-e0dd4d5f64a6\\incident_evidence.json"
+  },
+  "domain_knowledge": {
+    "implementation": "retrieval_experiment.src.bm25_retriever.BM25Index",
+    "query": "METRIC lane=metric.unknown_presence service=telemetry-docs metric=target_info type=unknown unit=reported_unit\nKUBERNETES lane=kubernetes.event workload=telemetry-docs phase=Pending ready=false event=Failed replicas=1/1\nKUBERNETES lane=kubernetes.state workload=telemetry-docs container=telemetry-docs phase=Pending ready=false state=waiting reason=CreateContainerConfigError replicas=1/1\n",
+    "ranked": [
+      [
+        "kubernetes.pod_phase.pending",
+        5.0280249599614
+      ],
+      [
+        "kubernetes.container_state.waiting",
+        2.900283314570315
+      ],
+      [
+        "kubernetes.secret.required_startup",
+        0.5741546632152068
+      ]
+    ]
+  },
+  "history_ids": [
+    "H021",
+    "H018",
+    "H020"
+  ],
+  "knowledge_ids": [
+    "kubernetes.pod_phase.pending",
+    "kubernetes.container_state.waiting",
+    "kubernetes.secret.required_startup"
+  ],
+  "history_store": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\retrieval_experiment\\corpus\\historical_incidents.jsonl",
+  "knowledge_store": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\missing_secret_sourced_repair_20261001\\knowledge.json",
+  "retrieval_call_count": {
+    "history": 1,
+    "domain_knowledge": 1
+  }
+}

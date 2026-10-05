@@ -1,0 +1,13 @@
+METRIC lane=metric.gauge_absolute service=ad metric=k8s_pod_cpu_usage type=gauge direction=increased unit=reported_unit before=0.0053 incident=2.5
+METRIC lane=metric.gauge_relative service=ad metric=k8s_pod_cpu_usage type=gauge direction=increased unit=reported_unit before=0.0053 incident=2.5
+LOG lane=log.info_change service=ad severity=INFO pattern="Non-targeted ad request received, preparing random response." change=appeared
+LOG lane=log.info_change service=ad severity=INFO pattern="Targeted ad request received for [accessories]" change=appeared
+LOG lane=log.info_change service=ad severity=INFO pattern="Targeted ad request received for [assembly]" change=appeared
+LOG lane=log.info_change service=ad severity=INFO pattern="Targeted ad request received for [binoculars]" change=decreased
+TRACE lane=trace.edge kind=edge service=frontend callee=ad error=unchanged latency=decreased
+TRACE lane=trace.edge kind=edge service=frontend-proxy callee=frontend error=unchanged latency=decreased
+TRACE lane=trace.edge kind=edge service=frontend-web callee=frontend-proxy error=unchanged latency=decreased
+TRACE lane=trace.latency_decrease kind=operation service=frontend operation="GET /api/data" error=unchanged latency=decreased
+TRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=GET error=unchanged latency=decreased
+TRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation="router frontend egress" error=unchanged latency=decreased
+TRACE lane=trace.latency_increase kind=operation service=frontend-web operation=GET error=unchanged latency=increased

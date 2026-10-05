@@ -1,0 +1,81 @@
+{
+  "hypotheses": [
+    {
+      "id": "HYP1",
+      "explanation": "The CPU saturation observed in the ad pod caused the latency increase of the frontend‑web GET operation.",
+      "explains_fact_refs": [
+        "F13"
+      ],
+      "supporting_fact_refs": [
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "history_refs": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "knowledge_refs": [],
+      "assumptions": [
+        "frontend‑web GET operation makes a synchronous call to the ad service",
+        "CPU saturation directly translates into longer ad‑service response times",
+        "No other component introduced additional latency during the incident"
+      ],
+      "unresolved": [
+        "Precise timing overlap between the CPU spike and the latency increase",
+        "Quantitative contribution of ad‑service latency to the overall frontend‑web latency",
+        "Whether scaling the ad pod would have mitigated the latency rise"
+      ]
+    },
+    {
+      "id": "HYP2",
+      "explanation": "The rise in targeted requests for assembly, accessories, and non‑targeted ads increased the computational load on the ad service, leading to the observed CPU surge.",
+      "explains_fact_refs": [
+        "F1",
+        "F2"
+      ],
+      "supporting_fact_refs": [
+        "F5",
+        "F6",
+        "F7"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "assumptions": [
+        "Different ad request types consume more CPU than the baseline binoculars request",
+        "Log counts reflect actual traffic volume",
+        "No other workload changed on the ad pod"
+      ],
+      "unresolved": [
+        "Exact CPU cost per request type",
+        "Total request volume for each type during the incident",
+        "Whether other services also saw a shift in request patterns"
+      ]
+    },
+    {
+      "id": "HYP3",
+      "explanation": "Enabling the 'High CPU‑Load problempattern' added extra instrumentation or processing, contributing to the ad pod’s CPU increase.",
+      "explains_fact_refs": [
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "supporting_fact_refs": [
+        "F3"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "assumptions": [
+        "Activating the problempattern introduces additional CPU work",
+        "The pattern was enabled shortly before the incident",
+        "The pattern does not merely log but also performs extra calculations"
+      ],
+      "unresolved": [
+        "What code changes correspond to the pattern activation",
+        "Measured overhead of the pattern when enabled",
+        "Whether the pattern was disabled after the incident"
+      ]
+    }
+  ]
+}

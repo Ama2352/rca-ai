@@ -1,0 +1,487 @@
+{
+  "scenario_id": "ad-high-cpu-01",
+  "groups": [
+    {
+      "group_id": "G1",
+      "entity": "ad",
+      "observations": [
+        {
+          "alias": "E1",
+          "source_id": "897cc5d0646a8329f732",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "metrics",
+          "record": {
+            "fact_id": "897cc5d0646a8329f732",
+            "rank_within_lane": 1,
+            "fact": {
+              "lane": "metric.gauge_absolute",
+              "metric": "k8s_pod_cpu_usage",
+              "metric_kind": "gauge",
+              "service": "ad",
+              "resource": "ad-544b5478f8-xfbnn",
+              "unit": "reported_unit",
+              "labels": {
+                "host_name": "otel-collector-agent-65w65",
+                "k8s_deployment_name": "ad",
+                "k8s_replicaset_name": "ad-544b5478f8",
+                "service_namespace": "opentelemetry-demo",
+                "service_version": "3.1.0"
+              },
+              "baseline_value": 0.00532728975,
+              "incident_value": 2.4920616999200003,
+              "baseline_median": 0.0017224545000000002,
+              "incident_median": 2.996278826,
+              "baseline_min": 0.001662837,
+              "baseline_max": 0.015878849,
+              "incident_min": 0.001728392,
+              "incident_max": 3.243734766,
+              "baseline_n": 16,
+              "incident_n": 25,
+              "relative_change": 466.79165708416747,
+              "signed_change": 2.4867344101700004,
+              "uncertainty": []
+            }
+          }
+        },
+        {
+          "alias": "E2",
+          "source_id": "35f4e25ed206f626be39",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "metrics",
+          "record": {
+            "fact_id": "35f4e25ed206f626be39",
+            "rank_within_lane": 1,
+            "fact": {
+              "lane": "metric.gauge_relative",
+              "metric": "k8s_pod_cpu_usage",
+              "metric_kind": "gauge",
+              "service": "ad",
+              "resource": "ad-544b5478f8-xfbnn",
+              "unit": "reported_unit",
+              "labels": {
+                "host_name": "otel-collector-agent-65w65",
+                "k8s_deployment_name": "ad",
+                "k8s_replicaset_name": "ad-544b5478f8",
+                "service_namespace": "opentelemetry-demo",
+                "service_version": "3.1.0"
+              },
+              "baseline_value": 0.00532728975,
+              "incident_value": 2.4920616999200003,
+              "baseline_median": 0.0017224545000000002,
+              "incident_median": 2.996278826,
+              "baseline_min": 0.001662837,
+              "baseline_max": 0.015878849,
+              "incident_min": 0.001728392,
+              "incident_max": 3.243734766,
+              "baseline_n": 16,
+              "incident_n": 25,
+              "relative_change": 466.79165708416747,
+              "signed_change": 2.4867344101700004,
+              "uncertainty": []
+            }
+          }
+        },
+        {
+          "alias": "E3",
+          "source_id": "30e24b4e003fcb28792d",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "logs",
+          "record": {
+            "fact_id": "30e24b4e003fcb28792d",
+            "rank_within_lane": 1,
+            "fact": {
+              "lane": "log.info_change",
+              "pattern": "High CPU-Load problempattern enabled",
+              "example": "High CPU-Load problempattern enabled",
+              "scope": "oteldemo.problempattern.CPULoad",
+              "service": "ad",
+              "severity": "INFO",
+              "baseline_count": 1,
+              "incident_count": 12,
+              "baseline_rate_per_min": 0.75,
+              "incident_rate_per_min": 6.0,
+              "signed_rate_change": 5.25,
+              "uncertainty": []
+            }
+          }
+        },
+        {
+          "alias": "E4",
+          "source_id": "79ce5c60c2ae3d861b14",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "logs",
+          "record": {
+            "fact_id": "79ce5c60c2ae3d861b14",
+            "rank_within_lane": 2,
+            "fact": {
+              "lane": "log.info_change",
+              "pattern": "Targeted ad request received for [binoculars]",
+              "example": "Targeted ad request received for [binoculars]",
+              "scope": "oteldemo.AdService",
+              "service": "ad",
+              "severity": "INFO",
+              "baseline_count": 7,
+              "incident_count": 4,
+              "baseline_rate_per_min": 5.25,
+              "incident_rate_per_min": 2.0,
+              "signed_rate_change": -3.25,
+              "uncertainty": []
+            }
+          }
+        },
+        {
+          "alias": "E5",
+          "source_id": "98c6456e29323333dee0",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "logs",
+          "record": {
+            "fact_id": "98c6456e29323333dee0",
+            "rank_within_lane": 3,
+            "fact": {
+              "lane": "log.info_change",
+              "pattern": "Targeted ad request received for [assembly]",
+              "example": "Targeted ad request received for [assembly]",
+              "scope": "oteldemo.AdService",
+              "service": "ad",
+              "severity": "INFO",
+              "baseline_count": 0,
+              "incident_count": 3,
+              "baseline_rate_per_min": 0.0,
+              "incident_rate_per_min": 1.5,
+              "signed_rate_change": 1.5,
+              "uncertainty": []
+            }
+          }
+        },
+        {
+          "alias": "E6",
+          "source_id": "b1a4738c313fe6dabbb0",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "logs",
+          "record": {
+            "fact_id": "b1a4738c313fe6dabbb0",
+            "rank_within_lane": 4,
+            "fact": {
+              "lane": "log.info_change",
+              "pattern": "Targeted ad request received for [accessories]",
+              "example": "Targeted ad request received for [accessories]",
+              "scope": "oteldemo.AdService",
+              "service": "ad",
+              "severity": "INFO",
+              "baseline_count": 0,
+              "incident_count": 2,
+              "baseline_rate_per_min": 0.0,
+              "incident_rate_per_min": 1.0,
+              "signed_rate_change": 1.0,
+              "uncertainty": []
+            }
+          }
+        },
+        {
+          "alias": "E7",
+          "source_id": "36429d64790c315329de",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "logs",
+          "record": {
+            "fact_id": "36429d64790c315329de",
+            "rank_within_lane": 5,
+            "fact": {
+              "lane": "log.info_change",
+              "pattern": "Non-targeted ad request received, preparing random response.",
+              "example": "Non-targeted ad request received, preparing random response.",
+              "scope": "oteldemo.AdService",
+              "service": "ad",
+              "severity": "INFO",
+              "baseline_count": 0,
+              "incident_count": 1,
+              "baseline_rate_per_min": 0.0,
+              "incident_rate_per_min": 0.5,
+              "signed_rate_change": 0.5,
+              "uncertainty": []
+            }
+          }
+        }
+      ],
+      "diagnostics": [],
+      "observed_relations": [],
+      "source_refs": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6",
+        "E7"
+      ],
+      "time_context": "Processed facts contain baseline/incident comparisons where present; no absolute sample timestamps are embedded in these selected rows."
+    },
+    {
+      "group_id": "G2",
+      "entity": "frontend",
+      "observations": [
+        {
+          "alias": "E11",
+          "source_id": "dc15361317fe19fb9e60",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "dc15361317fe19fb9e60",
+            "rank_within_lane": 3,
+            "fact": {
+              "lane": "trace.latency_decrease",
+              "kind": "operation",
+              "service": "frontend",
+              "operation_or_callee": "GET /api/data",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 13.496357142857144,
+              "incident_mean_ms": 9.935125000000001,
+              "baseline_median_ms": 7.390499999999999,
+              "incident_median_ms": 6.37,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": 26.65599999999998,
+              "signed_latency_change_ms": -3.5612321428571434,
+              "baseline_n": 14,
+              "incident_n": 24,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        },
+        {
+          "alias": "E13",
+          "source_id": "3bfcc55c54ee04768adc",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "3bfcc55c54ee04768adc",
+            "rank_within_lane": 2,
+            "fact": {
+              "lane": "trace.edge",
+              "kind": "edge",
+              "service": "frontend",
+              "operation_or_callee": "ad",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 5.175285714285715,
+              "incident_mean_ms": 4.440833333333333,
+              "baseline_median_ms": 1.33,
+              "incident_median_ms": 1.169,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": null,
+              "signed_latency_change_ms": -0.7344523809523817,
+              "baseline_n": 7,
+              "incident_n": 12,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        }
+      ],
+      "diagnostics": [],
+      "observed_relations": [],
+      "source_refs": [
+        "E11",
+        "E13"
+      ],
+      "time_context": "Processed facts contain baseline/incident comparisons where present; no absolute sample timestamps are embedded in these selected rows."
+    },
+    {
+      "group_id": "G3",
+      "entity": "frontend-proxy",
+      "observations": [
+        {
+          "alias": "E9",
+          "source_id": "f58420c8a5db84f0ffec",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "f58420c8a5db84f0ffec",
+            "rank_within_lane": 1,
+            "fact": {
+              "lane": "trace.latency_decrease",
+              "kind": "operation",
+              "service": "frontend-proxy",
+              "operation_or_callee": "GET",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 15.781125,
+              "incident_mean_ms": 10.087904761904761,
+              "baseline_median_ms": 11.8325,
+              "incident_median_ms": 7.392,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": 22.642,
+              "signed_latency_change_ms": -5.693220238095238,
+              "baseline_n": 8,
+              "incident_n": 21,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        },
+        {
+          "alias": "E10",
+          "source_id": "08d060fcbfaf30a65ef6",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "08d060fcbfaf30a65ef6",
+            "rank_within_lane": 2,
+            "fact": {
+              "lane": "trace.latency_decrease",
+              "kind": "operation",
+              "service": "frontend-proxy",
+              "operation_or_callee": "router frontend egress",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 15.53975,
+              "incident_mean_ms": 9.868380952380951,
+              "baseline_median_ms": 11.494,
+              "incident_median_ms": 7.187,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": 22.414,
+              "signed_latency_change_ms": -5.671369047619049,
+              "baseline_n": 8,
+              "incident_n": 21,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        },
+        {
+          "alias": "E12",
+          "source_id": "4b098913f0cd4ee9ba2f",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "4b098913f0cd4ee9ba2f",
+            "rank_within_lane": 1,
+            "fact": {
+              "lane": "trace.edge",
+              "kind": "edge",
+              "service": "frontend-proxy",
+              "operation_or_callee": "frontend",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 12.20375,
+              "incident_mean_ms": 6.110904761904762,
+              "baseline_median_ms": 7.0655,
+              "incident_median_ms": 3.91,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": 19.074,
+              "signed_latency_change_ms": -6.092845238095237,
+              "baseline_n": 8,
+              "incident_n": 21,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        }
+      ],
+      "diagnostics": [],
+      "observed_relations": [],
+      "source_refs": [
+        "E9",
+        "E10",
+        "E12"
+      ],
+      "time_context": "Processed facts contain baseline/incident comparisons where present; no absolute sample timestamps are embedded in these selected rows."
+    },
+    {
+      "group_id": "G4",
+      "entity": "frontend-web",
+      "observations": [
+        {
+          "alias": "E8",
+          "source_id": "a1ee0831a0e1de4764b2",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "a1ee0831a0e1de4764b2",
+            "rank_within_lane": 1,
+            "fact": {
+              "lane": "trace.latency_increase",
+              "kind": "operation",
+              "service": "frontend-web",
+              "operation_or_callee": "GET",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 110.0,
+              "incident_mean_ms": 161.66666666666666,
+              "baseline_median_ms": 88.0,
+              "incident_median_ms": 167.0,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": null,
+              "signed_latency_change_ms": 51.66666666666666,
+              "baseline_n": 6,
+              "incident_n": 3,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        },
+        {
+          "alias": "E14",
+          "source_id": "a719f2b4f859322c9c51",
+          "source_type": "CURRENT_EVIDENCE",
+          "modality": "traces",
+          "record": {
+            "fact_id": "a719f2b4f859322c9c51",
+            "rank_within_lane": 3,
+            "fact": {
+              "lane": "trace.edge",
+              "kind": "edge",
+              "service": "frontend-web",
+              "operation_or_callee": "frontend-proxy",
+              "baseline_error_rate": 0.0,
+              "incident_error_rate": 0.0,
+              "baseline_errors": 0,
+              "incident_errors": 0,
+              "baseline_mean_ms": 15.642333333333333,
+              "incident_mean_ms": 15.295333333333334,
+              "baseline_median_ms": 11.8325,
+              "incident_median_ms": 17.951,
+              "baseline_p95_ms": null,
+              "incident_p95_ms": null,
+              "signed_latency_change_ms": -0.34699999999999953,
+              "baseline_n": 6,
+              "incident_n": 3,
+              "uncertainty": [
+                "p95_insufficient_support"
+              ]
+            }
+          }
+        }
+      ],
+      "diagnostics": [],
+      "observed_relations": [],
+      "source_refs": [
+        "E8",
+        "E14"
+      ],
+      "time_context": "Processed facts contain baseline/incident comparisons where present; no absolute sample timestamps are embedded in these selected rows."
+    }
+  ],
+  "deterministic_inference": "None; grouped only by existing fact.service values. No causal edge added. Co-occurring CPU and latency records remain separate observations.",
+  "source_artifacts": [
+    "otel_demo_dataset\\processor_v1_eval\\selected_evidence\\ad-high-cpu-01.json"
+  ]
+}

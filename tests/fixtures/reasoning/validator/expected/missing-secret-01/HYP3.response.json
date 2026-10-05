@@ -1,0 +1,49 @@
+{
+  "hypothesis_id": "HYP3",
+  "decision": "KEEP_QUALIFIED",
+  "support_level": "PLAUSIBLE",
+  "incident_basis": {
+    "evidence": [
+      "F6",
+      "F8",
+      "F9",
+      "F2"
+    ]
+  },
+  "hard_violations": [],
+  "qualifications": [
+    {
+      "claim": "A node‑level issue (e.g., kubelet or volume plugin failure) prevents the secret from being mounted",
+      "issue": "overstates origin; current facts only show secret not found, not node‑level failure",
+      "fact_refs": [
+        "F8",
+        "F9"
+      ],
+      "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found indicates missing or mis‑named secret, not necessarily a node‑level problem"
+    },
+    {
+      "claim": "The secret is correctly defined and accessible in the cluster",
+      "issue": "overstates state; observed fact shows secret missing",
+      "fact_refs": [
+        "F8"
+      ],
+      "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found"
+    }
+  ],
+  "relation_assessment": {
+    "relation": "node‑level failure → secret mount failure → container waiting (CreateContainerConfigError)",
+    "support_level": "PLAUSIBLE",
+    "fact_refs": [
+      "F6",
+      "F8",
+      "F9",
+      "F2"
+    ],
+    "reason": "Current facts demonstrate a waiting container with a secret‑not‑found error, but do not provide direct evidence of a node‑level kubelet or volume plugin problem; the hypothesis is a plausible explanation pending further investigation."
+  },
+  "unresolved": [
+    "Examine kubelet logs on the node for secret‑mount errors.",
+    "Validate the volume plugin configuration for secret volumes.",
+    "Determine if the issue is isolated to a specific node or affects multiple nodes."
+  ]
+}

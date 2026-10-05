@@ -1,0 +1,32 @@
+[
+  {
+    "knowledge_key": "kubernetes.pod_phase.pending",
+    "claim": "A Pending Pod has been accepted by the cluster, although one or more containers may not yet be set up and ready to run.",
+    "source": {
+      "title": "Pod Lifecycle",
+      "publisher": "Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/",
+      "section": "Pod phase"
+    }
+  },
+  {
+    "knowledge_key": "kubernetes.container_state.waiting",
+    "claim": "A Waiting container is not Running or Terminated and is completing operations needed before startup, which can include applying Secret data.",
+    "source": {
+      "title": "Pod Lifecycle",
+      "publisher": "Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/",
+      "section": "Container states — Waiting"
+    }
+  },
+  {
+    "knowledge_key": "kubernetes.secret.required_startup",
+    "claim": "Containers that depend on a required, non-optional Secret do not start until that Secret is available.",
+    "source": {
+      "title": "Secrets",
+      "publisher": "Kubernetes",
+      "url": "https://kubernetes.io/docs/concepts/configuration/secret/",
+      "section": "Optional Secrets"
+    }
+  }
+]

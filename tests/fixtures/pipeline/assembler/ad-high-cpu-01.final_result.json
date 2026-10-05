@@ -1,0 +1,164 @@
+{
+  "incident_id": "ad-high-cpu-01",
+  "candidate_results": [
+    {
+      "incident_id": "ad-high-cpu-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP1",
+        "explanation": "The CPU saturation observed in the ad pod caused the latency increase of the frontend‑web GET operation.",
+        "assumptions": [
+          "frontend‑web GET operation makes a synchronous call to the ad service",
+          "CPU saturation directly translates into longer ad‑service response times",
+          "No other component introduced additional latency during the incident"
+        ],
+        "unresolved": [
+          "Precise timing overlap between the CPU spike and the latency increase",
+          "Quantitative contribution of ad‑service latency to the overall frontend‑web latency",
+          "Whether scaling the ad pod would have mitigated the latency rise"
+        ]
+      },
+      "evidence_refs": [
+        "F13",
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "history_refs": [
+        "H1",
+        "H2",
+        "H3"
+      ],
+      "knowledge_refs": [],
+      "qualifications": [
+        {
+          "claim": "CPU saturation directly translates into longer ad‑service response times",
+          "issue": "overstatement of causal certainty",
+          "fact_refs": [
+            "F9"
+          ],
+          "observed_form": "ad‑service latency decreased (mean latency from 5.175 ms to 4.441 ms) per trace edge"
+        },
+        {
+          "claim": "CPU saturation observed in the ad pod caused the latency increase of the frontend‑web GET operation",
+          "issue": "overstatement of causality without direct evidence",
+          "fact_refs": [
+            "F1",
+            "F2",
+            "F13"
+          ],
+          "observed_form": "correlation between CPU spike and latency increase but no direct measurement linking them"
+        }
+      ],
+      "validation_unresolved": [
+        "Precise timing overlap between the CPU spike and the latency increase",
+        "Quantitative contribution of ad‑service latency to the overall frontend‑web latency",
+        "Whether scaling the ad pod would have mitigated the latency rise"
+      ]
+    },
+    {
+      "incident_id": "ad-high-cpu-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP2",
+        "explanation": "The rise in targeted requests for assembly, accessories, and non‑targeted ads increased the computational load on the ad service, leading to the observed CPU surge.",
+        "assumptions": [
+          "Different ad request types consume more CPU than the baseline binoculars request",
+          "Log counts reflect actual traffic volume",
+          "No other workload changed on the ad pod"
+        ],
+        "unresolved": [
+          "Exact CPU cost per request type",
+          "Total request volume for each type during the incident",
+          "Whether other services also saw a shift in request patterns"
+        ]
+      },
+      "evidence_refs": [
+        "F1",
+        "F2",
+        "F5",
+        "F6",
+        "F7"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "qualifications": [
+        {
+          "claim": "The rise in targeted requests for assembly, accessories, and non‑targeted ads increased the computational load on the ad service, leading to the observed CPU surge.",
+          "issue": "Causal claim not directly supported by current facts; overstates certainty.",
+          "fact_refs": [
+            "F1",
+            "F2",
+            "F5",
+            "F6",
+            "F7"
+          ],
+          "observed_form": "Assembly requests increased from 0 to 3, accessories from 0 to 2, non‑targeted from 0 to 1 (log counts); CPU usage median increased from 0.0017 to 2.996 (CPU metric)."
+        }
+      ],
+      "validation_unresolved": [
+        "Exact CPU cost per request type",
+        "Total request volume for each type during the incident",
+        "Whether other services also saw a shift in request patterns"
+      ]
+    },
+    {
+      "incident_id": "ad-high-cpu-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP3",
+        "explanation": "Enabling the 'High CPU‑Load problempattern' added extra instrumentation or processing, contributing to the ad pod’s CPU increase.",
+        "assumptions": [
+          "Activating the problempattern introduces additional CPU work",
+          "The pattern was enabled shortly before the incident",
+          "The pattern does not merely log but also performs extra calculations"
+        ],
+        "unresolved": [
+          "What code changes correspond to the pattern activation",
+          "Measured overhead of the pattern when enabled",
+          "Whether the pattern was disabled after the incident"
+        ]
+      },
+      "evidence_refs": [
+        "F1",
+        "F2",
+        "F3"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "qualifications": [
+        {
+          "claim": "Enabling the 'High CPU‑Load problempattern' added extra instrumentation or processing",
+          "issue": "overstates causality without direct evidence",
+          "fact_refs": [
+            "F3"
+          ],
+          "observed_form": "log entry indicating the pattern was enabled"
+        },
+        {
+          "claim": "contributing to the ad pod’s CPU increase",
+          "issue": "overstates causality; only correlation observed",
+          "fact_refs": [
+            "F1",
+            "F2"
+          ],
+          "observed_form": "significant increase in CPU usage metrics for ad pod"
+        }
+      ],
+      "validation_unresolved": [
+        "What code changes correspond to the pattern activation",
+        "Measured overhead of the pattern when enabled",
+        "Whether the pattern was disabled after the incident"
+      ]
+    }
+  ]
+}

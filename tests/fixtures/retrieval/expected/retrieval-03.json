@@ -1,0 +1,54 @@
+{
+  "history": {
+    "implementation": "retrieval_experiment.src.bm25_retriever.BM25Index",
+    "query": "METRIC lane=metric.gauge_absolute service=ad metric=k8s_pod_cpu_usage type=gauge direction=increased unit=reported_unit before=0.0053 incident=2.5\nMETRIC lane=metric.gauge_relative service=ad metric=k8s_pod_cpu_usage type=gauge direction=increased unit=reported_unit before=0.0053 incident=2.5\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Non-targeted ad request received, preparing random response.\" change=appeared\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Targeted ad request received for [accessories]\" change=appeared\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Targeted ad request received for [assembly]\" change=appeared\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Targeted ad request received for [binoculars]\" change=decreased\nTRACE lane=trace.edge kind=edge service=frontend callee=ad error=unchanged latency=decreased\nTRACE lane=trace.edge kind=edge service=frontend-proxy callee=frontend error=unchanged latency=decreased\nTRACE lane=trace.edge kind=edge service=frontend-web callee=frontend-proxy error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend operation=\"GET /api/data\" error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=GET error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=\"router frontend egress\" error=unchanged latency=decreased\nTRACE lane=trace.latency_increase kind=operation service=frontend-web operation=GET error=unchanged latency=increased\n",
+    "ranked": [
+      [
+        "H003",
+        132.3406288992275
+      ],
+      [
+        "H001",
+        128.21046179760384
+      ],
+      [
+        "H002",
+        91.79491680554847
+      ]
+    ],
+    "query_input": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\retrieval_experiment\\queries\\ad-high-cpu-01.txt"
+  },
+  "domain_knowledge": {
+    "implementation": "retrieval_experiment.src.bm25_retriever.BM25Index",
+    "query": "METRIC lane=metric.gauge_absolute service=ad metric=k8s_pod_cpu_usage type=gauge direction=increased unit=reported_unit before=0.0053 incident=2.5\nMETRIC lane=metric.gauge_relative service=ad metric=k8s_pod_cpu_usage type=gauge direction=increased unit=reported_unit before=0.0053 incident=2.5\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Non-targeted ad request received, preparing random response.\" change=appeared\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Targeted ad request received for [accessories]\" change=appeared\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Targeted ad request received for [assembly]\" change=appeared\nLOG lane=log.info_change service=ad severity=INFO pattern=\"Targeted ad request received for [binoculars]\" change=decreased\nTRACE lane=trace.edge kind=edge service=frontend callee=ad error=unchanged latency=decreased\nTRACE lane=trace.edge kind=edge service=frontend-proxy callee=frontend error=unchanged latency=decreased\nTRACE lane=trace.edge kind=edge service=frontend-web callee=frontend-proxy error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend operation=\"GET /api/data\" error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=GET error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=\"router frontend egress\" error=unchanged latency=decreased\nTRACE lane=trace.latency_increase kind=operation service=frontend-web operation=GET error=unchanged latency=increased\n",
+    "ranked": [
+      [
+        "kubernetes.container_state.waiting",
+        2.923955645787232
+      ],
+      [
+        "kubernetes.secret.required_startup",
+        1.0543357602397059
+      ],
+      [
+        "kubernetes.pod_phase.pending",
+        0.0
+      ]
+    ]
+  },
+  "history_ids": [
+    "H003",
+    "H001",
+    "H002"
+  ],
+  "knowledge_ids": [
+    "kubernetes.container_state.waiting",
+    "kubernetes.secret.required_startup"
+  ],
+  "history_store": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\retrieval_experiment\\corpus\\historical_incidents.jsonl",
+  "knowledge_store": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\missing_secret_sourced_repair_20261001\\knowledge.json",
+  "retrieval_call_count": {
+    "history": 1,
+    "domain_knowledge": 1
+  }
+}

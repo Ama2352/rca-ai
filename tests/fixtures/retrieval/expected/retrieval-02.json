@@ -1,0 +1,433 @@
+{
+  "history": {
+    "implementation": "app.retrieval.service.RetrievalService",
+    "query": "METRIC lane=metric.counter_rate service=checkout metric=go_memory_allocated_bytes_total type=counter direction=decreased unit=bytes/second before=2.2e+04 incident=2.2e+04\nMETRIC lane=metric.counter_rate service=checkout metric=go_memory_allocations_total type=counter direction=decreased unit=events/second before=1.6e+02 incident=1.3e+02\nMETRIC lane=metric.counter_rate service=checkout metric=k8s_pod_network_io_bytes_total type=counter direction=decreased unit=bytes/second label.direction=receive before=3.6e+02 incident=3.3e+02\nMETRIC lane=metric.counter_rate service=checkout metric=k8s_pod_network_io_bytes_total type=counter direction=decreased unit=bytes/second label.direction=transmit before=1.4e+03 incident=1.1e+03\nMETRIC lane=metric.counter_rate service=payment metric=k8s_pod_network_io_bytes_total type=counter direction=increased unit=bytes/second label.direction=transmit before=3e+02 incident=4.2e+02\nMETRIC lane=metric.gauge_absolute service=checkout metric=container_memory_available_bytes type=gauge direction=increased unit=bytes before=5e+06 incident=5.9e+06\nMETRIC lane=metric.gauge_absolute service=checkout metric=container_memory_page_faults_ratio type=gauge direction=increased unit=ratio before=1.9e+06 incident=1.9e+06\nMETRIC lane=metric.gauge_absolute service=checkout metric=container_memory_working_set_bytes type=gauge direction=decreased unit=bytes before=1.6e+07 incident=1.5e+07\nMETRIC lane=metric.gauge_absolute service=checkout metric=k8s_pod_cpu_usage type=gauge direction=decreased unit=reported_unit before=0.021 incident=0.011\nMETRIC lane=metric.gauge_absolute service=payment metric=nodejs_eventloop_delay_max_seconds type=gauge direction=increased unit=seconds before=0.039 incident=0.087\nMETRIC lane=metric.gauge_relative service=checkout metric=container_cpu_usage type=gauge direction=decreased unit=reported_unit before=0.024 incident=0.016\nMETRIC lane=metric.gauge_relative service=checkout metric=k8s_pod_cpu_usage type=gauge direction=decreased unit=reported_unit before=0.021 incident=0.011\nMETRIC lane=metric.gauge_relative service=payment metric=nodejs_eventloop_delay_max_seconds type=gauge direction=increased unit=seconds before=0.039 incident=0.087\nMETRIC lane=metric.gauge_relative service=payment metric=nodejs_eventloop_delay_min_seconds type=gauge direction=decreased unit=seconds before=0.0083 incident=0.0046\nMETRIC lane=metric.gauge_relative service=payment metric=nodejs_eventloop_delay_stddev_seconds type=gauge direction=increased unit=seconds before=0.0011 incident=0.0016\nMETRIC lane=metric.histogram_mean service=checkout metric=http_client_request_body_size_bytes_mean type=histogram_mean direction=decreased unit=bytes label.http_request_method=POST label.http_response_status_code=200 before=5.2e+02 incident=4.8e+02\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=decreased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=12 incident=4.7\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=decreased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=23 incident=5.2\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=decreased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=3.6e+02 incident=3e+02\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=increased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=76 incident=1e+02\nMETRIC lane=metric.new_status service=checkout metric=rpc_client_call_duration_seconds_count type=histogram_count direction=appeared unit=events/second label.rpc_method=oteldemo.PaymentService/Charge incident=0.044\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_calls_total type=counter direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.067\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_calls_total type=counter direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.067\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_duration_milliseconds_count type=histogram_count direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.053\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_duration_milliseconds_count type=histogram_count direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.053\nMETRIC lane=metric.unknown_presence service=checkout metric=go_goroutine_count type=unknown unit=reported_unit\nMETRIC lane=metric.unknown_presence service=checkout metric=target_info type=unknown unit=reported_unit\nMETRIC lane=metric.unknown_presence service=checkout metric=target_info type=unknown unit=reported_unit\nLOG lane=log.disappeared service=checkout severity=INFO pattern=\"order confirmation email sent\" change=disappeared\nLOG lane=log.disappeared service=checkout severity=INFO pattern=\"order placed\" change=disappeared\nLOG lane=log.disappeared service=checkout severity=INFO pattern=\"payment went through\" change=disappeared\nLOG lane=log.info_change service=checkout severity=INFO pattern=\"[PlaceOrder]\" change=decreased\nLOG lane=log.info_change service=checkout severity=INFO pattern=\"client/metadata fetching metadata for all topics from broker kafka:9092\" change=appeared\nLOG lane=log.info_change service=payment severity=INFO pattern=\"Charge request received.\" change=decreased\nTRACE lane=trace.edge kind=edge service=checkout callee=payment error=increased latency=increased\nTRACE lane=trace.edge kind=edge service=checkout callee=product-catalog error=unchanged latency=increased\nTRACE lane=trace.edge kind=edge service=checkout callee=shipping error=unchanged latency=increased\nTRACE lane=trace.edge kind=edge service=frontend callee=checkout error=increased latency=decreased\nTRACE lane=trace.edge kind=edge service=frontend-proxy callee=frontend error=unchanged latency=decreased\nTRACE lane=trace.error kind=operation service=checkout operation=oteldemo.CheckoutService/PlaceOrder error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=checkout operation=oteldemo.PaymentService/Charge error=increased latency=increased\nTRACE lane=trace.error kind=operation service=frontend operation=\"executing api route (pages) /api/checkout\" error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=frontend operation=oteldemo.CheckoutService/PlaceOrder error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=payment operation=charge error=increased latency=increased\nTRACE lane=trace.latency_decrease kind=operation service=frontend operation=\"POST /api/checkout\" error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend operation=\"executing api route (pages) /api/checkout\" error=increased latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=POST error=unchanged latency=decreased\nTRACE lane=trace.latency_increase kind=operation service=checkout operation=oteldemo.ProductCatalogService/GetProduct error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=checkout operation=prepareOrderItemsAndShippingQuoteFromCart error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=frontend operation=\"GET /api/products/[productId]/index\" error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=frontend operation=\"executing api route (pages) /api/products/[productId]/index\" error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=frontend-proxy operation=GET error=unchanged latency=increased\n",
+    "diagnostics": {
+      "active_modalities": [
+        "metric",
+        "log",
+        "trace"
+      ],
+      "channels": {
+        "metric": {
+          "query_view": "checkout go_memory_allocated_bytes_total counter decreased bytes/second\ncheckout go_memory_allocations_total counter decreased events/second\ncheckout k8s_pod_network_io_bytes_total counter decreased bytes/second direction receive\ncheckout k8s_pod_network_io_bytes_total counter decreased bytes/second direction transmit\npayment k8s_pod_network_io_bytes_total counter increased bytes/second direction transmit\ncheckout container_memory_available_bytes gauge increased bytes\ncheckout container_memory_page_faults_ratio gauge increased ratio\ncheckout container_memory_working_set_bytes gauge decreased bytes\ncheckout k8s_pod_cpu_usage gauge decreased reported_unit\npayment nodejs_eventloop_delay_max_seconds gauge increased seconds\ncheckout container_cpu_usage gauge decreased reported_unit\ncheckout k8s_pod_cpu_usage gauge decreased reported_unit\npayment nodejs_eventloop_delay_max_seconds gauge increased seconds\npayment nodejs_eventloop_delay_min_seconds gauge decreased seconds\npayment nodejs_eventloop_delay_stddev_seconds gauge increased seconds\ncheckout http_client_request_body_size_bytes_mean histogram_mean decreased bytes http_request_method POST http_response_status_code 200\ncheckout traces_span_metrics_duration_milliseconds_mean histogram_mean decreased milliseconds status_code STATUS_CODE_UNSET\ncheckout traces_span_metrics_duration_milliseconds_mean histogram_mean decreased milliseconds status_code STATUS_CODE_UNSET\ncheckout traces_span_metrics_duration_milliseconds_mean histogram_mean decreased milliseconds status_code STATUS_CODE_UNSET\ncheckout traces_span_metrics_duration_milliseconds_mean histogram_mean increased milliseconds status_code STATUS_CODE_UNSET\ncheckout rpc_client_call_duration_seconds_count histogram_count appeared events/second rpc_method oteldemo.PaymentService/Charge\npayment traces_span_metrics_calls_total counter appeared events/second status_code STATUS_CODE_ERROR\npayment traces_span_metrics_calls_total counter appeared events/second status_code STATUS_CODE_ERROR\npayment traces_span_metrics_duration_milliseconds_count histogram_count appeared events/second status_code STATUS_CODE_ERROR\npayment traces_span_metrics_duration_milliseconds_count histogram_count appeared events/second status_code STATUS_CODE_ERROR\ncheckout go_goroutine_count unknown reported_unit\ncheckout target_info unknown reported_unit\ncheckout target_info unknown reported_unit\n",
+          "top10": [
+            {
+              "rank": 1,
+              "incident_id": "H018",
+              "bm25_score": 53.630114225912216
+            },
+            {
+              "rank": 2,
+              "incident_id": "H006",
+              "bm25_score": 46.21674279233104
+            },
+            {
+              "rank": 3,
+              "incident_id": "H009",
+              "bm25_score": 46.21674279233104
+            },
+            {
+              "rank": 4,
+              "incident_id": "H010",
+              "bm25_score": 46.21674279233104
+            },
+            {
+              "rank": 5,
+              "incident_id": "H004",
+              "bm25_score": 38.61240785740782
+            },
+            {
+              "rank": 6,
+              "incident_id": "H003",
+              "bm25_score": 35.93737148375949
+            },
+            {
+              "rank": 7,
+              "incident_id": "H002",
+              "bm25_score": 34.82523287874525
+            },
+            {
+              "rank": 8,
+              "incident_id": "H015",
+              "bm25_score": 32.088481171566386
+            },
+            {
+              "rank": 9,
+              "incident_id": "H014",
+              "bm25_score": 25.783091059858577
+            },
+            {
+              "rank": 10,
+              "incident_id": "H001",
+              "bm25_score": 23.27878936097619
+            }
+          ]
+        },
+        "log": {
+          "query_view": "checkout INFO disappeared order confirmation email sent\ncheckout INFO disappeared order placed\ncheckout INFO disappeared payment went through\ncheckout INFO decreased [PlaceOrder]\ncheckout INFO appeared client/metadata fetching metadata for all topics from broker kafka:9092\npayment INFO decreased Charge request received.\n",
+          "top10": [
+            {
+              "rank": 1,
+              "incident_id": "H016",
+              "bm25_score": 16.627496890453276
+            },
+            {
+              "rank": 2,
+              "incident_id": "H013",
+              "bm25_score": 15.751511688419635
+            },
+            {
+              "rank": 3,
+              "incident_id": "H015",
+              "bm25_score": 10.721865356038576
+            },
+            {
+              "rank": 4,
+              "incident_id": "H010",
+              "bm25_score": 7.3999668858330185
+            },
+            {
+              "rank": 5,
+              "incident_id": "H012",
+              "bm25_score": 7.334029318343318
+            },
+            {
+              "rank": 6,
+              "incident_id": "H004",
+              "bm25_score": 5.481038396851049
+            },
+            {
+              "rank": 7,
+              "incident_id": "H006",
+              "bm25_score": 4.3646443878917
+            },
+            {
+              "rank": 8,
+              "incident_id": "H005",
+              "bm25_score": 2.602719139172361
+            },
+            {
+              "rank": 9,
+              "incident_id": "H001",
+              "bm25_score": 0.3165647864860358
+            },
+            {
+              "rank": 10,
+              "incident_id": "H008",
+              "bm25_score": 0.3165647864860358
+            }
+          ]
+        },
+        "trace": {
+          "query_view": "edge checkout callee payment error increased latency increased\nedge checkout callee product-catalog error unchanged latency increased\nedge checkout callee shipping error unchanged latency increased\nedge frontend callee checkout error increased latency decreased\nedge frontend-proxy callee frontend error unchanged latency decreased\noperation checkout operation oteldemo.CheckoutService/PlaceOrder error increased latency decreased\noperation checkout operation oteldemo.PaymentService/Charge error increased latency increased\noperation frontend operation executing api route (pages) /api/checkout error increased latency decreased\noperation frontend operation oteldemo.CheckoutService/PlaceOrder error increased latency decreased\noperation payment operation charge error increased latency increased\noperation frontend operation POST /api/checkout error unchanged latency decreased\noperation frontend operation executing api route (pages) /api/checkout error increased latency decreased\noperation frontend-proxy operation POST error unchanged latency decreased\noperation checkout operation oteldemo.ProductCatalogService/GetProduct error unchanged latency increased\noperation checkout operation prepareOrderItemsAndShippingQuoteFromCart error unchanged latency increased\noperation frontend operation GET /api/products/[productId]/index error unchanged latency increased\noperation frontend operation executing api route (pages) /api/products/[productId]/index error unchanged latency increased\noperation frontend-proxy operation GET error unchanged latency increased\n",
+          "top10": [
+            {
+              "rank": 1,
+              "incident_id": "H022",
+              "bm25_score": 48.982794044505944
+            },
+            {
+              "rank": 2,
+              "incident_id": "H003",
+              "bm25_score": 48.79279812360328
+            },
+            {
+              "rank": 3,
+              "incident_id": "H006",
+              "bm25_score": 42.74122326312552
+            },
+            {
+              "rank": 4,
+              "incident_id": "H009",
+              "bm25_score": 39.31346931043667
+            },
+            {
+              "rank": 5,
+              "incident_id": "H001",
+              "bm25_score": 38.29461617191621
+            },
+            {
+              "rank": 6,
+              "incident_id": "H012",
+              "bm25_score": 34.209254435740576
+            },
+            {
+              "rank": 7,
+              "incident_id": "H005",
+              "bm25_score": 32.60326880661882
+            },
+            {
+              "rank": 8,
+              "incident_id": "H013",
+              "bm25_score": 32.01631259089284
+            },
+            {
+              "rank": 9,
+              "incident_id": "H017",
+              "bm25_score": 31.030480795016054
+            },
+            {
+              "rank": 10,
+              "incident_id": "H004",
+              "bm25_score": 30.43614874256294
+            }
+          ]
+        }
+      },
+      "rrf_ranking": [
+        {
+          "rank": 1,
+          "incident_id": "H006",
+          "rrf_score": 0.04692742126540875,
+          "contributions": {
+            "log": 0.014925373134328358,
+            "metric": 0.016129032258064516,
+            "trace": 0.015873015873015872
+          },
+          "channel_ranks": {
+            "log": 7,
+            "metric": 2,
+            "trace": 3
+          }
+        },
+        {
+          "rank": 2,
+          "incident_id": "H004",
+          "rrf_score": 0.04482184482184482,
+          "contributions": {
+            "log": 0.015151515151515152,
+            "metric": 0.015384615384615385,
+            "trace": 0.014285714285714285
+          },
+          "channel_ranks": {
+            "log": 6,
+            "metric": 5,
+            "trace": 10
+          }
+        },
+        {
+          "rank": 3,
+          "incident_id": "H001",
+          "rrf_score": 0.04416308329351808,
+          "contributions": {
+            "log": 0.014492753623188406,
+            "metric": 0.014285714285714285,
+            "trace": 0.015384615384615385
+          },
+          "channel_ranks": {
+            "log": 9,
+            "metric": 10,
+            "trace": 5
+          }
+        },
+        {
+          "rank": 4,
+          "incident_id": "H009",
+          "rrf_score": 0.03149801587301587,
+          "contributions": {
+            "metric": 0.015873015873015872,
+            "trace": 0.015625
+          },
+          "channel_ranks": {
+            "metric": 3,
+            "trace": 4
+          }
+        },
+        {
+          "rank": 5,
+          "incident_id": "H003",
+          "rrf_score": 0.03128054740957967,
+          "contributions": {
+            "metric": 0.015151515151515152,
+            "trace": 0.016129032258064516
+          },
+          "channel_ranks": {
+            "metric": 6,
+            "trace": 2
+          }
+        },
+        {
+          "rank": 6,
+          "incident_id": "H010",
+          "rrf_score": 0.03125,
+          "contributions": {
+            "log": 0.015625,
+            "metric": 0.015625
+          },
+          "channel_ranks": {
+            "log": 4,
+            "metric": 4
+          }
+        },
+        {
+          "rank": 7,
+          "incident_id": "H013",
+          "rrf_score": 0.030834914611005692,
+          "contributions": {
+            "log": 0.016129032258064516,
+            "trace": 0.014705882352941176
+          },
+          "channel_ranks": {
+            "log": 2,
+            "trace": 8
+          }
+        },
+        {
+          "rank": 8,
+          "incident_id": "H015",
+          "rrf_score": 0.03057889822595705,
+          "contributions": {
+            "log": 0.015873015873015872,
+            "metric": 0.014705882352941176
+          },
+          "channel_ranks": {
+            "log": 3,
+            "metric": 8
+          }
+        },
+        {
+          "rank": 9,
+          "incident_id": "H012",
+          "rrf_score": 0.030536130536130537,
+          "contributions": {
+            "log": 0.015384615384615385,
+            "trace": 0.015151515151515152
+          },
+          "channel_ranks": {
+            "log": 5,
+            "trace": 6
+          }
+        },
+        {
+          "rank": 10,
+          "incident_id": "H005",
+          "rrf_score": 0.029631255487269532,
+          "contributions": {
+            "log": 0.014705882352941176,
+            "trace": 0.014925373134328358
+          },
+          "channel_ranks": {
+            "log": 8,
+            "trace": 7
+          }
+        },
+        {
+          "rank": 11,
+          "incident_id": "H016",
+          "rrf_score": 0.01639344262295082,
+          "contributions": {
+            "log": 0.01639344262295082
+          },
+          "channel_ranks": {
+            "log": 1
+          }
+        },
+        {
+          "rank": 12,
+          "incident_id": "H018",
+          "rrf_score": 0.01639344262295082,
+          "contributions": {
+            "metric": 0.01639344262295082
+          },
+          "channel_ranks": {
+            "metric": 1
+          }
+        },
+        {
+          "rank": 13,
+          "incident_id": "H022",
+          "rrf_score": 0.01639344262295082,
+          "contributions": {
+            "trace": 0.01639344262295082
+          },
+          "channel_ranks": {
+            "trace": 1
+          }
+        },
+        {
+          "rank": 14,
+          "incident_id": "H002",
+          "rrf_score": 0.014925373134328358,
+          "contributions": {
+            "metric": 0.014925373134328358
+          },
+          "channel_ranks": {
+            "metric": 7
+          }
+        },
+        {
+          "rank": 15,
+          "incident_id": "H014",
+          "rrf_score": 0.014492753623188406,
+          "contributions": {
+            "metric": 0.014492753623188406
+          },
+          "channel_ranks": {
+            "metric": 9
+          }
+        },
+        {
+          "rank": 16,
+          "incident_id": "H017",
+          "rrf_score": 0.014492753623188406,
+          "contributions": {
+            "trace": 0.014492753623188406
+          },
+          "channel_ranks": {
+            "trace": 9
+          }
+        },
+        {
+          "rank": 17,
+          "incident_id": "H008",
+          "rrf_score": 0.014285714285714285,
+          "contributions": {
+            "log": 0.014285714285714285
+          },
+          "channel_ranks": {
+            "log": 10
+          }
+        }
+      ],
+      "final_top3": [
+        "H006",
+        "H004",
+        "H001"
+      ]
+    },
+    "query_input": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\reasoning_core_freeze_gate_20261001_runs\\6042abea-caae-4e3c-b4e9-baaa988f8f8e\\incident_evidence.json"
+  },
+  "domain_knowledge": {
+    "implementation": "retrieval_experiment.src.bm25_retriever.BM25Index",
+    "query": "METRIC lane=metric.counter_rate service=checkout metric=go_memory_allocated_bytes_total type=counter direction=decreased unit=bytes/second before=2.2e+04 incident=2.2e+04\nMETRIC lane=metric.counter_rate service=checkout metric=go_memory_allocations_total type=counter direction=decreased unit=events/second before=1.6e+02 incident=1.3e+02\nMETRIC lane=metric.counter_rate service=checkout metric=k8s_pod_network_io_bytes_total type=counter direction=decreased unit=bytes/second label.direction=receive before=3.6e+02 incident=3.3e+02\nMETRIC lane=metric.counter_rate service=checkout metric=k8s_pod_network_io_bytes_total type=counter direction=decreased unit=bytes/second label.direction=transmit before=1.4e+03 incident=1.1e+03\nMETRIC lane=metric.counter_rate service=payment metric=k8s_pod_network_io_bytes_total type=counter direction=increased unit=bytes/second label.direction=transmit before=3e+02 incident=4.2e+02\nMETRIC lane=metric.gauge_absolute service=checkout metric=container_memory_available_bytes type=gauge direction=increased unit=bytes before=5e+06 incident=5.9e+06\nMETRIC lane=metric.gauge_absolute service=checkout metric=container_memory_page_faults_ratio type=gauge direction=increased unit=ratio before=1.9e+06 incident=1.9e+06\nMETRIC lane=metric.gauge_absolute service=checkout metric=container_memory_working_set_bytes type=gauge direction=decreased unit=bytes before=1.6e+07 incident=1.5e+07\nMETRIC lane=metric.gauge_absolute service=checkout metric=k8s_pod_cpu_usage type=gauge direction=decreased unit=reported_unit before=0.021 incident=0.011\nMETRIC lane=metric.gauge_absolute service=payment metric=nodejs_eventloop_delay_max_seconds type=gauge direction=increased unit=seconds before=0.039 incident=0.087\nMETRIC lane=metric.gauge_relative service=checkout metric=container_cpu_usage type=gauge direction=decreased unit=reported_unit before=0.024 incident=0.016\nMETRIC lane=metric.gauge_relative service=checkout metric=k8s_pod_cpu_usage type=gauge direction=decreased unit=reported_unit before=0.021 incident=0.011\nMETRIC lane=metric.gauge_relative service=payment metric=nodejs_eventloop_delay_max_seconds type=gauge direction=increased unit=seconds before=0.039 incident=0.087\nMETRIC lane=metric.gauge_relative service=payment metric=nodejs_eventloop_delay_min_seconds type=gauge direction=decreased unit=seconds before=0.0083 incident=0.0046\nMETRIC lane=metric.gauge_relative service=payment metric=nodejs_eventloop_delay_stddev_seconds type=gauge direction=increased unit=seconds before=0.0011 incident=0.0016\nMETRIC lane=metric.histogram_mean service=checkout metric=http_client_request_body_size_bytes_mean type=histogram_mean direction=decreased unit=bytes label.http_request_method=POST label.http_response_status_code=200 before=5.2e+02 incident=4.8e+02\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=decreased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=12 incident=4.7\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=decreased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=23 incident=5.2\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=decreased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=3.6e+02 incident=3e+02\nMETRIC lane=metric.histogram_mean service=checkout metric=traces_span_metrics_duration_milliseconds_mean type=histogram_mean direction=increased unit=milliseconds label.status_code=STATUS_CODE_UNSET before=76 incident=1e+02\nMETRIC lane=metric.new_status service=checkout metric=rpc_client_call_duration_seconds_count type=histogram_count direction=appeared unit=events/second label.rpc_method=oteldemo.PaymentService/Charge incident=0.044\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_calls_total type=counter direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.067\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_calls_total type=counter direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.067\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_duration_milliseconds_count type=histogram_count direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.053\nMETRIC lane=metric.new_status service=payment metric=traces_span_metrics_duration_milliseconds_count type=histogram_count direction=appeared unit=events/second label.status_code=STATUS_CODE_ERROR incident=0.053\nMETRIC lane=metric.unknown_presence service=checkout metric=go_goroutine_count type=unknown unit=reported_unit\nMETRIC lane=metric.unknown_presence service=checkout metric=target_info type=unknown unit=reported_unit\nMETRIC lane=metric.unknown_presence service=checkout metric=target_info type=unknown unit=reported_unit\nLOG lane=log.disappeared service=checkout severity=INFO pattern=\"order confirmation email sent\" change=disappeared\nLOG lane=log.disappeared service=checkout severity=INFO pattern=\"order placed\" change=disappeared\nLOG lane=log.disappeared service=checkout severity=INFO pattern=\"payment went through\" change=disappeared\nLOG lane=log.info_change service=checkout severity=INFO pattern=\"[PlaceOrder]\" change=decreased\nLOG lane=log.info_change service=checkout severity=INFO pattern=\"client/metadata fetching metadata for all topics from broker kafka:9092\" change=appeared\nLOG lane=log.info_change service=payment severity=INFO pattern=\"Charge request received.\" change=decreased\nTRACE lane=trace.edge kind=edge service=checkout callee=payment error=increased latency=increased\nTRACE lane=trace.edge kind=edge service=checkout callee=product-catalog error=unchanged latency=increased\nTRACE lane=trace.edge kind=edge service=checkout callee=shipping error=unchanged latency=increased\nTRACE lane=trace.edge kind=edge service=frontend callee=checkout error=increased latency=decreased\nTRACE lane=trace.edge kind=edge service=frontend-proxy callee=frontend error=unchanged latency=decreased\nTRACE lane=trace.error kind=operation service=checkout operation=oteldemo.CheckoutService/PlaceOrder error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=checkout operation=oteldemo.PaymentService/Charge error=increased latency=increased\nTRACE lane=trace.error kind=operation service=frontend operation=\"executing api route (pages) /api/checkout\" error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=frontend operation=oteldemo.CheckoutService/PlaceOrder error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=payment operation=charge error=increased latency=increased\nTRACE lane=trace.latency_decrease kind=operation service=frontend operation=\"POST /api/checkout\" error=unchanged latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend operation=\"executing api route (pages) /api/checkout\" error=increased latency=decreased\nTRACE lane=trace.latency_decrease kind=operation service=frontend-proxy operation=POST error=unchanged latency=decreased\nTRACE lane=trace.latency_increase kind=operation service=checkout operation=oteldemo.ProductCatalogService/GetProduct error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=checkout operation=prepareOrderItemsAndShippingQuoteFromCart error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=frontend operation=\"GET /api/products/[productId]/index\" error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=frontend operation=\"executing api route (pages) /api/products/[productId]/index\" error=unchanged latency=increased\nTRACE lane=trace.latency_increase kind=operation service=frontend-proxy operation=GET error=unchanged latency=increased\n",
+    "ranked": [
+      [
+        "kubernetes.container_state.waiting",
+        19.493037638581544
+      ],
+      [
+        "kubernetes.pod_phase.pending",
+        0.0
+      ],
+      [
+        "kubernetes.secret.required_startup",
+        0.0
+      ]
+    ]
+  },
+  "history_ids": [
+    "H006",
+    "H004",
+    "H001"
+  ],
+  "knowledge_ids": [
+    "kubernetes.container_state.waiting"
+  ],
+  "history_store": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\retrieval_experiment\\corpus\\historical_incidents.jsonl",
+  "knowledge_store": "D:\\Dev\\SideProjects\\rca-ai\\otel_demo_dataset\\missing_secret_sourced_repair_20261001\\knowledge.json",
+  "retrieval_call_count": {
+    "history": 1,
+    "domain_knowledge": 1
+  }
+}

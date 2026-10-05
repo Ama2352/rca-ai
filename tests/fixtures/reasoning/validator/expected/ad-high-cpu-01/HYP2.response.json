@@ -1,0 +1,46 @@
+{
+  "hypothesis_id": "HYP2",
+  "decision": "KEEP_QUALIFIED",
+  "support_level": "PLAUSIBLE",
+  "incident_basis": {
+    "evidence": [
+      "F1",
+      "F2",
+      "F5",
+      "F6",
+      "F7"
+    ]
+  },
+  "hard_violations": [],
+  "qualifications": [
+    {
+      "claim": "The rise in targeted requests for assembly, accessories, and non‑targeted ads increased the computational load on the ad service, leading to the observed CPU surge.",
+      "issue": "Causal claim not directly supported by current facts; overstates certainty.",
+      "fact_refs": [
+        "F1",
+        "F2",
+        "F5",
+        "F6",
+        "F7"
+      ],
+      "observed_form": "Assembly requests increased from 0 to 3, accessories from 0 to 2, non‑targeted from 0 to 1 (log counts); CPU usage median increased from 0.0017 to 2.996 (CPU metric)."
+    }
+  ],
+  "relation_assessment": {
+    "relation": "increase in specific ad request types caused CPU surge",
+    "support_level": "PLAUSIBLE",
+    "fact_refs": [
+      "F1",
+      "F2",
+      "F5",
+      "F6",
+      "F7"
+    ],
+    "reason": "Correlation between higher request counts (F5‑F7) and CPU usage rise (F1‑F2) is observed, but no direct measurement of per‑request CPU cost; other workload changes could also contribute."
+  },
+  "unresolved": [
+    "Exact CPU cost per request type",
+    "Total request volume for each type during the incident",
+    "Whether other services also saw a shift in request patterns"
+  ]
+}

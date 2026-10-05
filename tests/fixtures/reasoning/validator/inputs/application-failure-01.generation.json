@@ -1,0 +1,108 @@
+{
+  "hypotheses": [
+    {
+      "id": "HYP1",
+      "explanation": "The payment service is rejecting charge requests due to a credential or validation failure, causing increased error spans in payment and downstream errors in checkout and frontend operations",
+      "explains_fact_refs": [
+        "F22",
+        "F23",
+        "F24",
+        "F25",
+        "F39",
+        "F49",
+        "F37",
+        "F38",
+        "F46"
+      ],
+      "supporting_fact_refs": [
+        "F22",
+        "F23",
+        "F24",
+        "F25",
+        "F39",
+        "F49",
+        "F37",
+        "F38",
+        "F46",
+        "F31"
+      ],
+      "history_refs": [
+        "H1",
+        "H2"
+      ],
+      "knowledge_refs": [],
+      "assumptions": [
+        "The STATUS_CODE_ERROR spans correspond to request validation rejections",
+        "Payment request payloads contain invalid or missing credentials",
+        "The validation failure propagates as errors to downstream services"
+      ],
+      "unresolved": [
+        "Inspect payment service logs for validation error messages",
+        "Capture the exact error codes and messages returned by payment during charge requests",
+        "Verify whether recent credential or configuration changes were deployed to payment"
+      ]
+    },
+    {
+      "id": "HYP2",
+      "explanation": "A slowdown in Kafka broker metadata fetching is delaying checkout processing, leading to increased errors and latency anomalies in checkout and its downstream calls",
+      "explains_fact_refs": [
+        "F29",
+        "F35",
+        "F36",
+        "F49"
+      ],
+      "supporting_fact_refs": [
+        "F29",
+        "F35",
+        "F36",
+        "F49"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "assumptions": [
+        "Metadata fetch delays directly impact checkout request handling",
+        "The observed increase in kafka metadata fetches coincides temporally with checkout errors",
+        "Checkout’s call to payment is affected by the processing delay"
+      ],
+      "unresolved": [
+        "Obtain Kafka broker latency and request metrics during the incident",
+        "Correlate timestamps of metadata fetch spikes with checkout error spikes",
+        "Check for any recent changes to Kafka client configuration in checkout"
+      ]
+    },
+    {
+      "id": "HYP3",
+      "explanation": "Reduced memory allocation in the checkout service is causing resource contention, which degrades its performance and triggers errors in checkout‑payment interactions and frontend calls",
+      "explains_fact_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F35",
+        "F36",
+        "F49",
+        "F48"
+      ],
+      "supporting_fact_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F35",
+        "F36",
+        "F49",
+        "F48"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "assumptions": [
+        "Memory allocation drops lead to processing slowdowns in checkout",
+        "The slowdown manifests as increased error rates in checkout operations",
+        "Frontend‑checkout edge latency changes are a symptom of the same contention"
+      ],
+      "unresolved": [
+        "Gather CPU and memory usage trends for checkout pods during the incident",
+        "Determine if any garbage‑collection or OOM events occurred",
+        "Review recent deployments or configuration changes affecting checkout’s resource limits"
+      ]
+    }
+  ]
+}

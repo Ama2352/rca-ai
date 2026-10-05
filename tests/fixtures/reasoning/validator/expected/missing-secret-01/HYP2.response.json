@@ -1,0 +1,58 @@
+{
+  "hypothesis_id": "HYP2",
+  "decision": "KEEP_QUALIFIED",
+  "support_level": "PLAUSIBLE",
+  "incident_basis": {
+    "evidence": [
+      "F6",
+      "F8",
+      "F9",
+      "F2",
+      "F13",
+      "F14"
+    ]
+  },
+  "hard_violations": [],
+  "qualifications": [
+    {
+      "claim": "The Secret may exist",
+      "issue": "overstates existence of secret without supporting evidence",
+      "fact_refs": [
+        "F8"
+      ],
+      "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found"
+    },
+    {
+      "claim": "RBAC rules for the pod's service account do not grant access to the secret",
+      "issue": "asserts permission denial without current evidence",
+      "fact_refs": [],
+      "observed_form": "no current fact confirms RBAC denial"
+    },
+    {
+      "claim": "Access denial manifests as CreateContainerConfigError during container config creation",
+      "issue": "assumes specific mapping of error to permission issue without supporting fact",
+      "fact_refs": [
+        "F9"
+      ],
+      "observed_form": "waiting_reason is CreateContainerConfigError"
+    }
+  ],
+  "relation_assessment": {
+    "relation": "Service account permission denial prevents secret access, causing CreateContainerConfigError and container waiting state",
+    "support_level": "PLAUSIBLE",
+    "fact_refs": [
+      "F6",
+      "F8",
+      "F9",
+      "F13",
+      "F14",
+      "F2"
+    ],
+    "reason": "Current facts show the container is waiting with a CreateContainerConfigError and a secret-not-found message, but they do not confirm whether the secret exists or if RBAC denial is the cause; thus the causal link is plausible but not strongly supported."
+  },
+  "unresolved": [
+    "Inspect the service account's RoleBinding/ClusterRoleBinding for secret read permissions.",
+    "Verify the secret's existence and namespace alignment.",
+    "Check kube‑apiserver audit logs for permission‑denied events related to the secret."
+  ]
+}

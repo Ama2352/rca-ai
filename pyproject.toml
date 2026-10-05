@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rca-ai-demo"
+version = "0.1.0"
+description = "Source-faithful RCA AI demo, reconstructed from a frozen architecture"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx",
+    "jsonschema",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

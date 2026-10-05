@@ -1,0 +1,593 @@
+[
+  {
+    "evidence": [
+      {
+        "fact_id": "F22",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "fields",
+        "value": {
+          "change": "appeared",
+          "incident": 0.06666666666666667,
+          "incident_window_delta": 5.0,
+          "labels": {
+            "collector_instance_id": "c7b959d7-efca-499d-a9a0-2c01890f86e2",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0",
+            "span_kind": "SPAN_KIND_INTERNAL",
+            "span_name": "charge",
+            "status_code": "STATUS_CODE_ERROR"
+          },
+          "metric": "traces_span_metrics_calls_total",
+          "service": "payment",
+          "support": {
+            "baseline": 0,
+            "incident": 6
+          },
+          "type": "counter",
+          "unit": "events/second"
+        },
+        "source_ref": "metric:022",
+        "source_path": "/facts/21/fields"
+      },
+      {
+        "fact_id": "F23",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "fields",
+        "value": {
+          "change": "appeared",
+          "incident": 0.06666666666666667,
+          "incident_window_delta": 5.0,
+          "labels": {
+            "collector_instance_id": "c7b959d7-efca-499d-a9a0-2c01890f86e2",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0",
+            "span_kind": "SPAN_KIND_SERVER",
+            "span_name": "oteldemo.PaymentService/Charge",
+            "status_code": "STATUS_CODE_ERROR"
+          },
+          "metric": "traces_span_metrics_calls_total",
+          "service": "payment",
+          "support": {
+            "baseline": 0,
+            "incident": 6
+          },
+          "type": "counter",
+          "unit": "events/second"
+        },
+        "source_ref": "metric:023",
+        "source_path": "/facts/22/fields"
+      },
+      {
+        "fact_id": "F24",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "fields",
+        "value": {
+          "change": "appeared",
+          "incident": 0.05333333333333334,
+          "incident_event_count": 4.0,
+          "labels": {
+            "collector_instance_id": "c7b959d7-efca-499d-a9a0-2c01890f86e2",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0",
+            "span_kind": "SPAN_KIND_INTERNAL",
+            "span_name": "charge",
+            "status_code": "STATUS_CODE_ERROR"
+          },
+          "metric": "traces_span_metrics_duration_milliseconds_count",
+          "service": "payment",
+          "support": {
+            "baseline": 0,
+            "incident": 6
+          },
+          "type": "histogram_count",
+          "unit": "events/second"
+        },
+        "source_ref": "metric:024",
+        "source_path": "/facts/23/fields"
+      },
+      {
+        "fact_id": "F25",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "fields",
+        "value": {
+          "change": "appeared",
+          "incident": 0.05333333333333334,
+          "incident_event_count": 4.0,
+          "labels": {
+            "collector_instance_id": "c7b959d7-efca-499d-a9a0-2c01890f86e2",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0",
+            "span_kind": "SPAN_KIND_SERVER",
+            "span_name": "oteldemo.PaymentService/Charge",
+            "status_code": "STATUS_CODE_ERROR"
+          },
+          "metric": "traces_span_metrics_duration_milliseconds_count",
+          "service": "payment",
+          "support": {
+            "baseline": 0,
+            "incident": 6
+          },
+          "type": "histogram_count",
+          "unit": "events/second"
+        },
+        "source_ref": "metric:025",
+        "source_path": "/facts/24/fields"
+      },
+      {
+        "fact_id": "F39",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 1.7266,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 11.338666666666667,
+          "kind": "operation",
+          "latency": "increased",
+          "latency_change_ms": 9.612066666666667,
+          "operation": "charge",
+          "service": "payment",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:005",
+        "source_path": "/facts/38/fields"
+      },
+      {
+        "fact_id": "F49",
+        "entity": {
+          "type": "observed_edge",
+          "id": "trace:015"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 2.1792000000000002,
+          "callee": "payment",
+          "caller": "checkout",
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 14.3305,
+          "kind": "edge",
+          "latency": "increased",
+          "latency_change_ms": 12.1513,
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:015",
+        "source_path": "/facts/48/fields"
+      },
+      {
+        "fact_id": "F37",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 412.8972,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 292.3353333333333,
+          "kind": "operation",
+          "latency": "decreased",
+          "latency_change_ms": -120.56186666666667,
+          "operation": "executing api route (pages) /api/checkout",
+          "service": "frontend",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:003",
+        "source_path": "/facts/36/fields"
+      },
+      {
+        "fact_id": "F38",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 332.53679999999997,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 290.27500000000003,
+          "kind": "operation",
+          "latency": "decreased",
+          "latency_change_ms": -42.26179999999994,
+          "operation": "oteldemo.CheckoutService/PlaceOrder",
+          "service": "frontend",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:004",
+        "source_path": "/facts/37/fields"
+      },
+      {
+        "fact_id": "F46",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 412.8972,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 292.3353333333333,
+          "kind": "operation",
+          "latency": "decreased",
+          "latency_change_ms": -120.56186666666667,
+          "operation": "executing api route (pages) /api/checkout",
+          "service": "frontend",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:012",
+        "source_path": "/facts/45/fields"
+      }
+    ],
+    "history": [
+      {
+        "alias": "H1",
+        "source_id": "H006",
+        "source_type": "HISTORY",
+        "record": {
+          "incident_id": "H006",
+          "historical_evidence": "METRIC lane=metric.new_status service=checkout metric=rpc_client_requests_total type=counter unit=events/second label.status=ERROR support=0/1\nLOG lane=log.new_severe service=payment severity=WARN pattern=\"Gateway refused charge authorization\" change=appeared\nTRACE lane=trace.error kind=operation service=checkout operation=PaymentService/Charge error=increased latency=decreased\nTRACE lane=trace.error kind=operation service=payment operation=Charge error=increased latency=unchanged\n",
+          "root_cause": "Payment application rejects charge requests",
+          "affected_component": "payment",
+          "recommended_action": "Inspect payment request validation and credentials; correct rejected request data.",
+          "resolution_note": "Seeded resolved historical variant for retrieval testing."
+        }
+      },
+      {
+        "alias": "H2",
+        "source_id": "H004",
+        "source_type": "HISTORY",
+        "record": {
+          "incident_id": "H004",
+          "historical_evidence": "METRIC lane=metric.new_status service=payment metric=rpc_client_requests_total type=counter unit=events/second label.status=ERROR support=0/1\nLOG lane=log.new_severe service=payment severity=WARN pattern=\"Charge request rejected during credential validation\" change=appeared\nTRACE lane=trace.error kind=operation service=payment operation=Authorize error=increased latency=decreased\n",
+          "root_cause": "Payment application rejects charge requests",
+          "affected_component": "payment",
+          "recommended_action": "Inspect payment request validation and credentials; correct rejected request data.",
+          "resolution_note": "Seeded resolved historical variant for retrieval testing."
+        }
+      }
+    ],
+    "domain_knowledge": []
+  },
+  {
+    "evidence": [
+      {
+        "fact_id": "F29",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "change": "increased",
+          "pattern": "client/metadata fetching metadata for all topics from broker kafka:9092",
+          "rate_change_per_min": 0.5,
+          "service": "checkout",
+          "severity": "INFO",
+          "support": {
+            "baseline": 0,
+            "incident": 1
+          }
+        },
+        "source_ref": "log:001",
+        "source_path": "/facts/28/fields"
+      },
+      {
+        "fact_id": "F35",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 310.7776,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 269.86483333333337,
+          "kind": "operation",
+          "latency": "decreased",
+          "latency_change_ms": -40.91276666666664,
+          "operation": "oteldemo.CheckoutService/PlaceOrder",
+          "service": "checkout",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:001",
+        "source_path": "/facts/34/fields"
+      },
+      {
+        "fact_id": "F36",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 5.1148,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 17.713666666666665,
+          "kind": "operation",
+          "latency": "increased",
+          "latency_change_ms": 12.598866666666666,
+          "operation": "oteldemo.PaymentService/Charge",
+          "service": "checkout",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:002",
+        "source_path": "/facts/35/fields"
+      },
+      {
+        "fact_id": "F49",
+        "entity": {
+          "type": "observed_edge",
+          "id": "trace:015"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 2.1792000000000002,
+          "callee": "payment",
+          "caller": "checkout",
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 14.3305,
+          "kind": "edge",
+          "latency": "increased",
+          "latency_change_ms": 12.1513,
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:015",
+        "source_path": "/facts/48/fields"
+      }
+    ],
+    "history": [],
+    "domain_knowledge": []
+  },
+  {
+    "evidence": [
+      {
+        "fact_id": "F1",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "before": 21949.955555555556,
+          "before_window_delta": 1975496.0,
+          "change": "decreased",
+          "incident": 21770.438095238096,
+          "incident_window_delta": 2285896.0,
+          "labels": {
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "metric": "go_memory_allocated_bytes_total",
+          "service": "checkout",
+          "support": {
+            "baseline": 7,
+            "incident": 8
+          },
+          "type": "counter",
+          "unit": "bytes/second"
+        },
+        "source_ref": "metric:001",
+        "source_path": "/facts/0/fields"
+      },
+      {
+        "fact_id": "F2",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "before": 161.0888888888889,
+          "before_window_delta": 14498.0,
+          "change": "decreased",
+          "incident": 133.35238095238094,
+          "incident_window_delta": 14002.0,
+          "labels": {
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "metric": "go_memory_allocations_total",
+          "service": "checkout",
+          "support": {
+            "baseline": 7,
+            "incident": 8
+          },
+          "type": "counter",
+          "unit": "events/second"
+        },
+        "source_ref": "metric:002",
+        "source_path": "/facts/1/fields"
+      },
+      {
+        "fact_id": "F3",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "before": 359.35555555555555,
+          "before_window_delta": 32342.0,
+          "change": "decreased",
+          "incident": 329.83809523809526,
+          "incident_window_delta": 34633.0,
+          "labels": {
+            "direction": "receive",
+            "interface": "eth0",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "metric": "k8s_pod_network_io_bytes_total",
+          "service": "checkout",
+          "support": {
+            "baseline": 7,
+            "incident": 8
+          },
+          "type": "counter",
+          "unit": "bytes/second"
+        },
+        "source_ref": "metric:003",
+        "source_path": "/facts/2/fields"
+      },
+      {
+        "fact_id": "F35",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 310.7776,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 269.86483333333337,
+          "kind": "operation",
+          "latency": "decreased",
+          "latency_change_ms": -40.91276666666664,
+          "operation": "oteldemo.CheckoutService/PlaceOrder",
+          "service": "checkout",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:001",
+        "source_path": "/facts/34/fields"
+      },
+      {
+        "fact_id": "F36",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 5.1148,
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 17.713666666666665,
+          "kind": "operation",
+          "latency": "increased",
+          "latency_change_ms": 12.598866666666666,
+          "operation": "oteldemo.PaymentService/Charge",
+          "service": "checkout",
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:002",
+        "source_path": "/facts/35/fields"
+      },
+      {
+        "fact_id": "F48",
+        "entity": {
+          "type": "observed_edge",
+          "id": "trace:014"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 310.7776,
+          "callee": "checkout",
+          "caller": "frontend",
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 269.86483333333337,
+          "kind": "edge",
+          "latency": "decreased",
+          "latency_change_ms": -40.91276666666664,
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:014",
+        "source_path": "/facts/47/fields"
+      },
+      {
+        "fact_id": "F49",
+        "entity": {
+          "type": "observed_edge",
+          "id": "trace:015"
+        },
+        "field": "fields",
+        "value": {
+          "baseline_error_rate": 0.0,
+          "baseline_mean_ms": 2.1792000000000002,
+          "callee": "payment",
+          "caller": "checkout",
+          "error": "increased",
+          "incident_error_rate": 1.0,
+          "incident_mean_ms": 14.3305,
+          "kind": "edge",
+          "latency": "increased",
+          "latency_change_ms": 12.1513,
+          "support": {
+            "baseline": 5,
+            "incident": 6
+          }
+        },
+        "source_ref": "trace:015",
+        "source_path": "/facts/48/fields"
+      }
+    ],
+    "history": [],
+    "domain_knowledge": []
+  }
+]
