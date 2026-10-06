@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from rca_ai.domain.models import IncidentInput, to_dict
-from rca_ai.facts.builder import build_fact_view
+from rca_ai.domain.models import Fact, FactEntity, to_dict
 from rca_ai.facts.selector import request_bytes, select_facts
 
 
@@ -18,10 +17,13 @@ CASES = (
 
 
 def _load_selection_case(incident_id):
-    normalized = json.loads(
-        (FIXTURES / "inputs" / f"{incident_id}.normalized.json").read_text(encoding="utf-8")
-    )
-    facts = build_fact_view(IncidentInput(incident_id, normalized))
+    rows = json.loads(
+        (FIXTURES / "expected" / "fact_views" / f"{incident_id}.json").read_text(encoding="utf-8")
+    )["facts"]
+    facts = tuple(Fact(
+        row["fact_id"], FactEntity(**row["entity"]), row["field"], row["value"],
+        row["source_ref"], row["source_path"],
+    ) for row in rows)
     expected = json.loads(
         (FIXTURES / "expected" / "selections" / f"{incident_id}.json").read_text(encoding="utf-8")
     )

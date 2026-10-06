@@ -10,7 +10,7 @@ from typing import Any
 
 from rca_ai.domain.models import KnowledgeItem
 from rca_ai.retrieval._bm25 import BM25Index
-from rca_ai.retrieval.history import _query_for_retrieval_input
+from rca_ai.retrieval.history import _query_for_retrieval_projection
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -38,7 +38,7 @@ def load_knowledge_store(path: Path = DEFAULT_KNOWLEDGE_PATH) -> tuple[Mapping[s
 
 
 def retrieve_knowledge(
-    retrieval_input: Mapping[str, Any] | str,
+    retrieval_projection: Mapping[str, Any],
     store: Path = DEFAULT_KNOWLEDGE_PATH,
 ) -> KnowledgeRetrievalResult:
     """Retrieve top-three positive BM25 K items from an exact frozen query.
@@ -47,7 +47,7 @@ def retrieve_knowledge(
     `KnowledgeItem` and cannot enter current incident Evidence.
     """
 
-    query = _query_for_retrieval_input(retrieval_input)
+    query = _query_for_retrieval_projection(retrieval_projection)
     records = load_knowledge_store(store)
     indexed = {str(row["knowledge_key"]): f"{row['knowledge_key']} {row['claim']}" for row in records}
     ranking = tuple(BM25Index(indexed, k1=1.5, b=0.75).rank(query, k=3))

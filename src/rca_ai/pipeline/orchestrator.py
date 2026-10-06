@@ -9,7 +9,7 @@ Fact construction and selection deterministic.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from rca_ai.domain.models import Fact, IncidentInput, RCAResult, ValidationResult
+from rca_ai.domain.models import CanonicalIncidentEvidence, Fact, IncidentInput, RCAResult, ValidationResult
 from rca_ai.facts.builder import build_fact_view, verify_fact_view
 from rca_ai.facts.selector import SelectionResult, request_bytes, select_facts
 from rca_ai.pipeline.assembler import assemble_result
@@ -21,6 +21,7 @@ from rca_ai.reasoning.generator import (
 from rca_ai.reasoning.validator import HypothesisValidator, ValidationExecution
 from rca_ai.retrieval.history import HistoryRetrievalResult, retrieve_history
 from rca_ai.retrieval.knowledge import KnowledgeRetrievalResult, retrieve_knowledge
+from rca_ai.retrieval.projection import RetrievalProjection, project_retrieval
 
 
 @dataclass(frozen=True)
@@ -33,9 +34,11 @@ class PipelineRunResult:
     """
 
     incident_id: str
+    evidence: CanonicalIncidentEvidence
     facts: tuple[Fact, ...]
     fact_integrity: bool
     selection: SelectionResult
+    retrieval_projection: RetrievalProjection
     history: HistoryRetrievalResult
     knowledge: KnowledgeRetrievalResult
     generation: GenerationResult
@@ -68,16 +71,14 @@ class RCAPipeline:
         outer runner to save; keeping writes out of this method makes repeated
         runs reproducible and easy to test.
         """
-        if incident.retrieval_input is None:
-            raise ValueError("IncidentInput.retrieval_input is required by the frozen retrieval flow")
-
         facts = build_fact_view(incident)
         fact_integrity = verify_fact_view(facts, incident)
         if not fact_integrity:
             raise ValueError("Fresh Fact View failed deterministic integrity verification")
 
-        history = retrieve_history(incident.retrieval_input)
-        knowledge = retrieve_knowledge(incident.retrieval_input)
+        retrieval_projection = project_retrieval(incident.evidence)
+        history = retrieve_history(retrieval_projection.payload)
+        knowledge = retrieve_knowledge(retrieval_projection.payload)
 
         def exact_request_size(candidate_facts: tuple[Fact, ...]) -> int:
             request = build_generator_request(candidate_facts, history, knowledge)
@@ -105,9 +106,11 @@ class RCAPipeline:
         )
         return PipelineRunResult(
             incident_id=incident.incident_id,
+            evidence=incident.evidence,
             facts=facts,
             fact_integrity=fact_integrity,
             selection=selection,
+            retrieval_projection=retrieval_projection,
             history=history,
             knowledge=knowledge,
             generation=generation,

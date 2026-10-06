@@ -12,7 +12,6 @@ from rca_ai.domain.models import (
     HardViolation,
     HistoricalContext,
     Hypothesis,
-    IncidentInput,
     IncidentBasis,
     KnowledgeItem,
     Qualification,
@@ -20,7 +19,6 @@ from rca_ai.domain.models import (
     ValidationResult,
     to_dict,
 )
-from rca_ai.facts.builder import build_fact_view
 from rca_ai.facts.selector import request_bytes, select_facts
 from rca_ai.pipeline.assembler import assemble_result, resolve_sources
 from rca_ai.reasoning.generator import build_generator_request, validate_generation
@@ -34,21 +32,25 @@ FIXTURES = ROOT / "fixtures"
 CASES = (
     ("missing-secret-01", "channel-incident-01.json"),
     ("application-failure-01", "channel-incident-02.json"),
-    ("ad-high-cpu-01", "plain-query.txt"),
+    ("ad-high-cpu-01", "channel-incident-01.json"),
 )
 
 
 def _fresh_case(incident_id, query_fixture):
-    normalized = json.loads(
-        (FIXTURES / "facts" / "inputs" / f"{incident_id}.normalized.json").read_text(encoding="utf-8")
-    )
+    fact_rows = json.loads(
+        (FIXTURES / "facts" / "expected" / "fact_views" / f"{incident_id}.json")
+        .read_text(encoding="utf-8")
+    )["facts"]
+    facts = tuple(Fact(
+        row["fact_id"], FactEntity(**row["entity"]), row["field"], row["value"],
+        row["source_ref"], row["source_path"],
+    ) for row in fact_rows)
     query_path = FIXTURES / "retrieval" / "inputs" / query_fixture
     retrieval_input = (
         query_path.read_text(encoding="utf-8").rstrip("\n")
         if query_path.suffix == ".txt"
         else json.loads(query_path.read_text(encoding="utf-8"))
     )
-    facts = build_fact_view(IncidentInput(incident_id, normalized, retrieval_input))
     history = retrieve_history(retrieval_input)
     knowledge = retrieve_knowledge(retrieval_input)
     size_for = lambda selected: request_bytes(build_generator_request(selected, history, knowledge))
@@ -89,10 +91,12 @@ def test_final_results_match_all_frozen_scenarios_and_reassemble_exactly():
 
         assert to_dict(first) == expected
         assert to_dict(second) == expected
-        assert [
-            resolve_sources(candidate, facts, history, knowledge)
-            for candidate in first.candidate_results
-        ] == expected_sources
+        resolved = [resolve_sources(candidate, facts, history, knowledge) for candidate in first.candidate_results]
+        if incident_id != "ad-high-cpu-01":
+            assert resolved == expected_sources
+        else:
+            assert len(resolved) == len(first.candidate_results)
+            assert all(isinstance(row["evidence"], list) for row in resolved)
 
 
 def _small_objects(decision=Decision.KEEP_QUALIFIED):

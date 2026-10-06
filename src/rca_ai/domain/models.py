@@ -15,18 +15,54 @@ from rca_ai.domain.enums import Decision, SupportLevel
 
 
 @dataclass(frozen=True)
-class IncidentInput:
-    """Thin demo-boundary envelope around a source-faithful normalized payload.
+class EvidenceEntity:
+    """Explicit owner of a canonical telemetry observation or Fact."""
 
-    The three frozen fixtures have different normalized shapes, so this model
-    keeps their payload opaque. A separate retrieval input is optional because
-    some frozen retrieval paths consume a query representation distinct from
-    the normalized evidence. Neither field is semantically rewritten here.
+    type: str
+    id: str
+
+
+@dataclass(frozen=True)
+class EvidenceSource:
+    """Stable canonical reference plus original source locators."""
+
+    source_ref: str
+    source_path: str
+    locators: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class CanonicalObservation:
+    """One source-faithful structured observation crossing into the RCA Core.
+
+    Signal, entity ownership, field/value, and source are telemetry semantics;
+    attributes retain modality context for deterministic retrieval rendering.
+    This type has no diagnosis, importance, or retrieval decision fields.
     """
 
+    observation_id: str
+    signal: str
+    entity: EvidenceEntity
+    field: str
+    value: Any
+    attributes: Mapping[str, Any]
+    source: EvidenceSource
+
+
+@dataclass(frozen=True)
+class CanonicalIncidentEvidence:
+    """Canonical Processor output: one window and ordered observations."""
+
+    window: Mapping[str, Any]
+    observations: tuple[CanonicalObservation, ...]
+
+
+@dataclass(frozen=True)
+class IncidentInput:
+    """RCA boundary envelope; all evidence and provenance arrive together."""
+
     incident_id: str
-    normalized_evidence: Mapping[str, Any]
-    retrieval_input: Mapping[str, Any] | str | None = None
+    evidence: CanonicalIncidentEvidence
 
 
 @dataclass(frozen=True)
@@ -215,3 +251,36 @@ def to_dict(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     raise TypeError(f"Value of type {type(value).__name__} is not JSON-compatible")
+
+
+def canonical_evidence_from_dict(value: Mapping[str, Any]) -> CanonicalIncidentEvidence:
+    """Parse the Processor's canonical JSON shape without telemetry inference."""
+    if not isinstance(value.get("window"), Mapping):
+        raise ValueError("CanonicalIncidentEvidence.window must be an object")
+    rows = value.get("observations")
+    if not isinstance(rows, list):
+        raise ValueError("CanonicalIncidentEvidence.observations must be an array")
+    observations = []
+    for row in rows:
+        try:
+            entity = row["entity"]
+            source = row["source"]
+            observations.append(CanonicalObservation(
+                observation_id=str(row["observation_id"]),
+                signal=str(row["signal"]),
+                entity=EvidenceEntity(str(entity["type"]), str(entity["id"])),
+                field=str(row["field"]),
+                value=row["value"],
+                attributes=row["attributes"],
+                source=EvidenceSource(
+                    source_ref=str(source["source_ref"]),
+                    source_path=str(source["source_path"]),
+                    locators=tuple(str(item) for item in source.get("locators", ())),
+                ),
+            ))
+        except (KeyError, TypeError) as exc:
+            raise ValueError("Malformed canonical observation") from exc
+    ids = [item.observation_id for item in observations]
+    if len(ids) != len(set(ids)):
+        raise ValueError("Canonical observation IDs must be unique")
+    return CanonicalIncidentEvidence(dict(value["window"]), tuple(observations))

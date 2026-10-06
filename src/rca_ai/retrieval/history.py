@@ -1,10 +1,4 @@
-"""Frozen local History retrieval; returned records remain precedent-only H.
-
-The two strategies are intentional, not duplicated design: the validated
-fresh demo used channel BM25 plus RRF for structured incident-evidence payloads
-and plain BM25 for a text query. The clean API selects by this input contract,
-not by incident name, preserving the exact two frozen behaviors.
-"""
+"""Frozen channel-based History retrieval; returned records remain H precedent."""
 
 from __future__ import annotations
 
@@ -215,46 +209,22 @@ def _channel_retrieval(query: str, corpus: tuple[Mapping[str, Any], ...]) -> tup
     return items, diagnostics
 
 
-def _plain_retrieval(query: str, corpus: tuple[Mapping[str, Any], ...]) -> tuple[tuple[HistoricalContext, ...], list[dict[str, Any]]]:
-    documents = {str(row["incident_id"]): str(row["retrieval_text"]) for row in corpus}
-    ranked = BM25Index(documents, k1=1.5, b=0.75).rank(query, k=3)
-    by_id = {str(row["incident_id"]): row for row in corpus}
-    items: list[HistoricalContext] = []
-    for rank, (incident_id, score) in enumerate(ranked, 1):
-        source = by_id[incident_id]
-        record = {key: source[key] for key in (
-            "incident_id", "affected_component", "retrieval_text", "root_cause", "recommended_action", "resolution_note"
-        ) if key in source}
-        items.append(_make_context(f"H{rank}", record))
-    scores = [
-        {"rank": rank, "incident_id": incident_id, "bm25_score": score}
-        for rank, (incident_id, score) in enumerate(ranked, 1)
-    ]
-    return tuple(items), scores
+def retrieve_history(retrieval_projection: Mapping[str, Any], store: Path = DEFAULT_HISTORY_PATH) -> HistoryRetrievalResult:
+    """Retrieve H precedent from the structured RCA retrieval projection.
 
-
-def retrieve_history(retrieval_input: Mapping[str, Any] | str, store: Path = DEFAULT_HISTORY_PATH) -> HistoryRetrievalResult:
-    """Retrieve current-query matches as H precedent using the frozen input contract.
-
-    A structured IncidentEvidence mapping uses channel BM25+RRF; a plain query
-    string uses the frozen single-index BM25 path. No scenario IDs are read.
+    Requiring the projection object prevents caller representation from
+    selecting an algorithm. Every canonical incident uses the same channel
+    BM25 and RRF path.
     """
-
+    if not isinstance(retrieval_projection, Mapping):
+        raise TypeError("retrieval_projection must be a structured mapping")
     corpus = load_history_store(store)
-    if isinstance(retrieval_input, str):
-        query = retrieval_input
-        items, ranking = _plain_retrieval(query, corpus)
-        return HistoryRetrievalResult(query, "plain_bm25", items, {"ranked": ranking})
-    if not isinstance(retrieval_input, Mapping):
-        raise TypeError("retrieval_input must be a normalized mapping or plain query string")
-    query = _canonical_query(retrieval_input)
+    query = _canonical_query(retrieval_projection)
     items, diagnostics = _channel_retrieval(query, corpus)
     return HistoryRetrievalResult(query, "channel_bm25_rrf", items, {"diagnostics": diagnostics})
 
 
-def _query_for_retrieval_input(retrieval_input: Mapping[str, Any] | str) -> str:
-    if isinstance(retrieval_input, str):
-        return retrieval_input
-    if isinstance(retrieval_input, Mapping):
-        return _canonical_query(retrieval_input)
-    raise TypeError("retrieval_input must be a normalized mapping or plain query string")
+def _query_for_retrieval_projection(retrieval_projection: Mapping[str, Any]) -> str:
+    if not isinstance(retrieval_projection, Mapping):
+        raise TypeError("retrieval_projection must be a structured mapping")
+    return _canonical_query(retrieval_projection)

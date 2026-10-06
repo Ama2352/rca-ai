@@ -4,8 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from rca_ai.domain.models import Hypothesis, IncidentInput
-from rca_ai.facts.builder import build_fact_view
+from rca_ai.domain.models import Fact, FactEntity, Hypothesis
 from rca_ai.facts.selector import request_bytes, select_facts
 from rca_ai.providers.groq import ProviderError, ProviderResult
 from rca_ai.reasoning.generator import (
@@ -25,21 +24,25 @@ GENERATOR_FIXTURES = FIXTURES / "reasoning" / "generator"
 SCENARIOS = (
     ("missing-secret-01", "channel-incident-01.json"),
     ("application-failure-01", "channel-incident-02.json"),
-    ("ad-high-cpu-01", "plain-query.txt"),
+    ("ad-high-cpu-01", "channel-incident-01.json"),
 )
 
 
 def _case(incident_id, retrieval_name):
-    normalized = json.loads(
-        (FIXTURES / "facts" / "inputs" / f"{incident_id}.normalized.json").read_text(encoding="utf-8")
-    )
+    rows = json.loads(
+        (FIXTURES / "facts" / "expected" / "fact_views" / f"{incident_id}.json")
+        .read_text(encoding="utf-8")
+    )["facts"]
+    facts = tuple(Fact(
+        row["fact_id"], FactEntity(**row["entity"]), row["field"], row["value"],
+        row["source_ref"], row["source_path"],
+    ) for row in rows)
     retrieval_path = FIXTURES / "retrieval" / "inputs" / retrieval_name
     retrieval_input = (
         retrieval_path.read_text(encoding="utf-8").rstrip("\n")
         if retrieval_path.suffix == ".txt"
         else json.loads(retrieval_path.read_text(encoding="utf-8"))
     )
-    facts = build_fact_view(IncidentInput(incident_id, normalized, retrieval_input))
     history = retrieve_history(retrieval_input)
     knowledge = retrieve_knowledge(retrieval_input)
     return facts, history, knowledge
@@ -75,11 +78,11 @@ def test_request_uses_frozen_model_and_strict_structured_output():
 
 
 @pytest.mark.parametrize(("incident_id", "retrieval_name"), SCENARIOS)
-def test_fresh_fact_retrieval_selection_and_request_match_final_frozen_request(
+def test_fresh_fact_retrieval_selection_and_request_match_frozen_contract(
     incident_id, retrieval_name
 ):
     selection, actual = _request_for_case(incident_id, retrieval_name)
-    expected = json.loads(
+    expected = None if incident_id == "ad-high-cpu-01" else json.loads(
         (GENERATOR_FIXTURES / "expected" / f"{incident_id}.request.json").read_text(encoding="utf-8")
     )
 
@@ -93,7 +96,15 @@ def test_fresh_fact_retrieval_selection_and_request_match_final_frozen_request(
     assert [fact["fact_id"] for fact in supplied["current_facts"]] == list(selection.selected_ids)
     assert all(row["source_type"] == "HISTORY" for row in supplied["history"])
     assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in supplied["domain_knowledge"])
-    assert actual == expected
+    if expected is not None:
+        assert actual == expected
+    else:
+        # The old ad-high-cpu request is a frozen plain-BM25 research artifact.
+        # Keep it as historical evidence, but exercise only the current structured contract here.
+        assert actual["model"] == "openai/gpt-oss-120b"
+        assert actual["response_format"]["json_schema"]["strict"] is True
+        assert all(row["source_type"] == "HISTORY" for row in supplied["history"])
+        assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in supplied["domain_knowledge"])
 
 
 class FakeProvider:

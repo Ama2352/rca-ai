@@ -2,11 +2,15 @@
 
 from rca_ai.domain.enums import Decision, SupportLevel
 from rca_ai.domain.models import (
+    CanonicalIncidentEvidence,
+    CanonicalObservation,
     CandidateAnalysis,
     CandidateHypothesis,
     CandidateResult,
     Fact,
     FactEntity,
+    EvidenceEntity,
+    EvidenceSource,
     HardViolation,
     HistoricalContext,
     Hypothesis,
@@ -17,16 +21,21 @@ from rca_ai.domain.models import (
     RCAResult,
     RelationAssessment,
     ValidationResult,
+    canonical_evidence_from_dict,
     to_dict,
 )
 
 __all__ = [
+    "CanonicalIncidentEvidence",
+    "CanonicalObservation",
     "CandidateAnalysis",
     "CandidateHypothesis",
     "CandidateResult",
     "Decision",
     "Fact",
     "FactEntity",
+    "EvidenceEntity",
+    "EvidenceSource",
     "HardViolation",
     "HistoricalContext",
     "Hypothesis",
@@ -38,5 +47,6 @@ __all__ = [
     "RelationAssessment",
     "SupportLevel",
     "ValidationResult",
+    "canonical_evidence_from_dict",
     "to_dict",
 ]

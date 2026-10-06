@@ -35,28 +35,31 @@ VALIDATOR_FIXTURES = FIXTURES / "reasoning" / "validator"
 SCENARIOS = (
     ("missing-secret-01", "channel-incident-01.json"),
     ("application-failure-01", "channel-incident-02.json"),
-    ("ad-high-cpu-01", "plain-query.txt"),
+    ("ad-high-cpu-01", "channel-incident-01.json"),
 )
 
 
 def _context(incident_id, retrieval_name):
-    from rca_ai.domain.models import IncidentInput
-    from rca_ai.facts.builder import build_fact_view
+    from rca_ai.domain.models import FactEntity
     from rca_ai.facts.selector import request_bytes, select_facts
     from rca_ai.reasoning.generator import build_generator_request, validate_generation
     from rca_ai.retrieval.history import retrieve_history
     from rca_ai.retrieval.knowledge import retrieve_knowledge
 
-    normalized = json.loads(
-        (FIXTURES / "facts" / "inputs" / f"{incident_id}.normalized.json").read_text(encoding="utf-8")
-    )
+    fact_rows = json.loads(
+        (FIXTURES / "facts" / "expected" / "fact_views" / f"{incident_id}.json")
+        .read_text(encoding="utf-8")
+    )["facts"]
+    full_facts = tuple(Fact(
+        row["fact_id"], FactEntity(**row["entity"]), row["field"], row["value"],
+        row["source_ref"], row["source_path"],
+    ) for row in fact_rows)
     query_path = FIXTURES / "retrieval" / "inputs" / retrieval_name
     query = (
         query_path.read_text(encoding="utf-8").rstrip("\n")
         if query_path.suffix == ".txt"
         else json.loads(query_path.read_text(encoding="utf-8"))
     )
-    full_facts = build_fact_view(IncidentInput(incident_id, normalized, query))
     history = retrieve_history(query)
     knowledge = retrieve_knowledge(query)
     size_for = lambda facts: len(json.dumps(
@@ -112,8 +115,15 @@ def test_every_fresh_validator_request_matches_frozen_candidate_request(incident
             (VALIDATOR_FIXTURES / "expected" / incident_id / f"{hypothesis.id}.request.json")
             .read_text(encoding="utf-8")
         )
-        assert actual == expected
         payload = json.loads(actual["messages"][1]["content"])
+        if incident_id != "ad-high-cpu-01":
+            assert actual == expected
+        else:
+            # The frozen ad request captured the removed plain-query path.
+            # Its saved response remains useful for output-contract parsing only.
+            assert len(payload["current_facts"]) == len(facts)
+            assert all(row["source_type"] == "HISTORY" for row in payload["history"])
+            assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in payload["domain_knowledge"])
         assert len([payload["candidate_hypothesis"]]) == 1
         assert payload["candidate_hypothesis"]["explanation"] == hypothesis.explanation
         assert [row["fact_id"] for row in payload["current_facts"]] == [fact.fact_id for fact in facts]

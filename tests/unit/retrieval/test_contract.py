@@ -58,30 +58,11 @@ def test_history_retrieval_reconstructs_channel_queries_and_frozen_rankings():
         assert retrieve_history(payload) == result
 
 
-def test_plain_bm25_history_uses_exact_query_and_frozen_scores():
-    query = (FIXTURES / "inputs" / "plain-query.txt").read_text(encoding="utf-8")
-    expected = _json(FIXTURES / "expected" / "retrieval-03.json")
-    result = retrieve_history(query)
-    assert result.strategy == "plain_bm25"
-    assert result.query == expected["history"]["query"]
-    assert [item.source_id for item in result.items] == expected["history_ids"]
-    assert result.metadata["ranked"] == [
-        {"rank": rank, "incident_id": row[0], "bm25_score": row[1]}
-        for rank, row in enumerate(expected["history"]["ranked"], 1)
-    ]
-    assert all(isinstance(item, HistoricalContext) for item in result.items)
-    assert all(item.source_id == item.record["incident_id"] for item in result.items)
-    assert all("retrieval_rank" not in item.record and "bm25_score" not in item.record for item in result.items)
-    source_by_id = {row["incident_id"]: row for row in load_history_store()}
-    record_fields = ("incident_id", "affected_component", "retrieval_text", "root_cause", "recommended_action", "resolution_note")
-    assert all(item.record == {key: source_by_id[item.source_id][key] for key in record_fields if key in source_by_id[item.source_id]} for item in result.items)
-    assert retrieve_history(query) == result
-
-
 def test_history_store_reads_do_not_mutate_loaded_records():
     loaded = load_history_store(HISTORY / "historical_incidents.jsonl")
     before = copy.deepcopy(loaded)
-    retrieve_history("ad CPU utilization increased")
+    payload = _json(FIXTURES / "inputs" / "channel-incident-01.json")
+    retrieve_history(payload)
     assert loaded == before
 
 
@@ -98,7 +79,6 @@ def test_knowledge_store_hash_and_source_records_are_preserved():
     (
         ("channel-incident-01.json", "retrieval-01.json"),
         ("channel-incident-02.json", "retrieval-02.json"),
-        ("plain-query.txt", "retrieval-03.json"),
     ),
 )
 def test_knowledge_retrieval_matches_frozen_query_order_scores_and_aliases(fixture_name, expected_name):
@@ -118,6 +98,20 @@ def test_knowledge_retrieval_matches_frozen_query_order_scores_and_aliases(fixtu
     source_by_id = {row["knowledge_key"]: row for row in load_knowledge_store()}
     assert all(item.record == source_by_id[item.source_id] for item in result.items)
     assert retrieve_knowledge(retrieval_input) == result
+
+
+def test_legacy_plain_query_fixture_is_not_a_runtime_input():
+    plain_query = (FIXTURES / "inputs" / "plain-query.txt").read_text(encoding="utf-8")
+    with pytest.raises(TypeError, match="structured mapping"):
+        retrieve_history(plain_query)
+    with pytest.raises(TypeError, match="structured mapping"):
+        retrieve_knowledge(plain_query)
+
+
+def test_history_runtime_has_no_plain_retrieval_implementation_or_type_dispatch():
+    source = (PROJECT_ROOT / "src" / "rca_ai" / "retrieval" / "history.py").read_text(encoding="utf-8")
+    assert "_plain_retrieval" not in source
+    assert "isinstance(retrieval_input, str)" not in source
 
 
 def test_weakly_relevant_positive_knowledge_is_not_semantically_filtered():

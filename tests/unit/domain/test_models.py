@@ -8,8 +8,12 @@ from rca_ai.domain.models import (
     CandidateAnalysis,
     CandidateHypothesis,
     CandidateResult,
+    CanonicalIncidentEvidence,
+    CanonicalObservation,
     Fact,
     FactEntity,
+    EvidenceEntity,
+    EvidenceSource,
     HistoricalContext,
     Hypothesis,
     IncidentBasis,
@@ -63,16 +67,21 @@ def test_fact_preserves_nested_source_value_and_has_no_inference_fields():
         fact.field = "generated_cause"
 
 
-def test_incident_input_keeps_normalized_payload_opaque():
-    normalized = {"events": [{"name": "Failed", "count": 6}]}
-    retrieval_input = "service=telemetry-docs phase=Pending"
-    incident = IncidentInput("example-incident", normalized, retrieval_input)
+def test_incident_input_has_one_canonical_evidence_boundary():
+    evidence = CanonicalIncidentEvidence(
+        window={"baseline_start": 0, "incident_start": 1, "incident_end": 2},
+        observations=(CanonicalObservation(
+            observation_id="obs-1", signal="kubernetes",
+            entity=EvidenceEntity("container", "docs"), field="waiting_reason",
+            value="CreateContainerConfigError", attributes={"phase": "Pending"},
+            source=EvidenceSource("src-1", "/observations/0/waiting_reason", ("pods.json:0",)),
+        ),),
+    )
+    incident = IncidentInput("example-incident", evidence)
 
-    assert to_dict(incident) == {
-        "incident_id": "example-incident",
-        "normalized_evidence": normalized,
-        "retrieval_input": retrieval_input,
-    }
+    assert to_dict(incident) == {"incident_id": "example-incident", "evidence": to_dict(evidence)}
+    assert not hasattr(incident, "normalized_evidence")
+    assert not hasattr(incident, "retrieval_input")
 
 
 def test_history_and_knowledge_are_distinct_provenance_models():
