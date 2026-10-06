@@ -1,0 +1,182 @@
+{
+  "incident_id": "missing-secret-01",
+  "candidate_results": [
+    {
+      "incident_id": "missing-secret-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "STRONG"
+      },
+      "hypothesis": {
+        "id": "HYP1",
+        "explanation": "The container cannot start because the required Secret \"eda-capture-secret-does-not-exist\" referenced in its configuration is missing, causing a CreateContainerConfigError and putting the pod in a waiting state.",
+        "assumptions": [
+          "The pod spec references secret \"eda-capture-secret-does-not-exist\".",
+          "The secret is not present in the namespace at deployment time.",
+          "The secret is required (non‑optional) for container startup."
+        ],
+        "unresolved": [
+          "Confirm whether the secret exists in the namespace.",
+          "Check the exact secret name used in the pod spec for typos.",
+          "Determine if the secret was intended to be optional or mandatory."
+        ]
+      },
+      "evidence_refs": [
+        "F6",
+        "F8",
+        "F9",
+        "F2"
+      ],
+      "history_refs": [
+        "H1",
+        "H3"
+      ],
+      "knowledge_refs": [
+        "K2",
+        "K3"
+      ],
+      "qualifications": [
+        {
+          "claim": "required Secret \"eda-capture-secret-does-not-exist\"",
+          "issue": "overstates requirement; hypothesis assumes the secret is mandatory without direct evidence",
+          "fact_refs": [
+            "F8"
+          ],
+          "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found"
+        },
+        {
+          "claim": "container cannot start",
+          "issue": "overstates certainty; container is in waiting state, which may be temporary",
+          "fact_refs": [
+            "F6"
+          ],
+          "observed_form": "container state \"waiting\""
+        }
+      ],
+      "validation_unresolved": [
+        "Confirm whether the secret exists in the namespace.",
+        "Check the exact secret name used in the pod spec for typos.",
+        "Determine if the secret was intended to be optional or mandatory."
+      ]
+    },
+    {
+      "incident_id": "missing-secret-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP2",
+        "explanation": "The Secret may exist but the pod's service account lacks permission to read it, leading to a CreateContainerConfigError and the container remaining in a waiting state.",
+        "assumptions": [
+          "The referenced secret is present in the namespace.",
+          "RBAC rules for the pod's service account do not grant access to the secret.",
+          "Access denial manifests as CreateContainerConfigError during container config creation."
+        ],
+        "unresolved": [
+          "Inspect the service account's RoleBinding/ClusterRoleBinding for secret read permissions.",
+          "Verify the secret's existence and namespace alignment.",
+          "Check kube‑apiserver audit logs for permission‑denied events related to the secret."
+        ]
+      },
+      "evidence_refs": [
+        "F6",
+        "F8",
+        "F9",
+        "F2",
+        "F13",
+        "F14"
+      ],
+      "history_refs": [
+        "H1"
+      ],
+      "knowledge_refs": [
+        "K3"
+      ],
+      "qualifications": [
+        {
+          "claim": "The Secret may exist",
+          "issue": "overstates existence of secret without supporting evidence",
+          "fact_refs": [
+            "F8"
+          ],
+          "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found"
+        },
+        {
+          "claim": "RBAC rules for the pod's service account do not grant access to the secret",
+          "issue": "asserts permission denial without current evidence",
+          "fact_refs": [],
+          "observed_form": "no current fact confirms RBAC denial"
+        },
+        {
+          "claim": "Access denial manifests as CreateContainerConfigError during container config creation",
+          "issue": "assumes specific mapping of error to permission issue without supporting fact",
+          "fact_refs": [
+            "F9"
+          ],
+          "observed_form": "waiting_reason is CreateContainerConfigError"
+        }
+      ],
+      "validation_unresolved": [
+        "Inspect the service account's RoleBinding/ClusterRoleBinding for secret read permissions.",
+        "Verify the secret's existence and namespace alignment.",
+        "Check kube‑apiserver audit logs for permission‑denied events related to the secret."
+      ]
+    },
+    {
+      "incident_id": "missing-secret-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP3",
+        "explanation": "A node‑level issue (e.g., kubelet or volume plugin failure) prevents the secret from being mounted, causing the container to stay in a waiting state with a CreateContainerConfigError.",
+        "assumptions": [
+          "The secret is correctly defined and accessible in the cluster.",
+          "The node hosting the pod experiences a secret‑mount or volume plugin failure.",
+          "Kubelet reports the failure as a CreateContainerConfigError during container setup."
+        ],
+        "unresolved": [
+          "Examine kubelet logs on the node for secret‑mount errors.",
+          "Validate the volume plugin configuration for secret volumes.",
+          "Determine if the issue is isolated to a specific node or affects multiple nodes."
+        ]
+      },
+      "evidence_refs": [
+        "F6",
+        "F8",
+        "F9",
+        "F2"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [
+        "K2"
+      ],
+      "qualifications": [
+        {
+          "claim": "A node‑level issue (e.g., kubelet or volume plugin failure) prevents the secret from being mounted",
+          "issue": "overstates origin; current facts only show secret not found, not node‑level failure",
+          "fact_refs": [
+            "F8",
+            "F9"
+          ],
+          "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found indicates missing or mis‑named secret, not necessarily a node‑level problem"
+        },
+        {
+          "claim": "The secret is correctly defined and accessible in the cluster",
+          "issue": "overstates state; observed fact shows secret missing",
+          "fact_refs": [
+            "F8"
+          ],
+          "observed_form": "secret \"eda-capture-secret-does-not-exist\" not found"
+        }
+      ],
+      "validation_unresolved": [
+        "Examine kubelet logs on the node for secret‑mount errors.",
+        "Validate the volume plugin configuration for secret volumes.",
+        "Determine if the issue is isolated to a specific node or affects multiple nodes."
+      ]
+    }
+  ]
+}

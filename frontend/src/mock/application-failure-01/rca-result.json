@@ -1,0 +1,183 @@
+{
+  "incident_id": "application-failure-01",
+  "candidate_results": [
+    {
+      "incident_id": "application-failure-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP1",
+        "explanation": "The payment service is rejecting charge requests due to a credential or validation failure, causing increased error spans in payment and downstream errors in checkout and frontend operations",
+        "assumptions": [
+          "The STATUS_CODE_ERROR spans correspond to request validation rejections",
+          "Payment request payloads contain invalid or missing credentials",
+          "The validation failure propagates as errors to downstream services"
+        ],
+        "unresolved": [
+          "Inspect payment service logs for validation error messages",
+          "Capture the exact error codes and messages returned by payment during charge requests",
+          "Verify whether recent credential or configuration changes were deployed to payment"
+        ]
+      },
+      "evidence_refs": [
+        "F22",
+        "F23",
+        "F24",
+        "F25",
+        "F39",
+        "F49",
+        "F37",
+        "F38",
+        "F46"
+      ],
+      "history_refs": [
+        "H1",
+        "H2"
+      ],
+      "knowledge_refs": [],
+      "qualifications": [
+        {
+          "claim": "Payment service is rejecting charge requests due to a credential or validation failure",
+          "issue": "Cause not directly observed; assumption about credential/validation failure exceeds current evidence",
+          "fact_refs": [
+            "F22",
+            "F23",
+            "F39"
+          ],
+          "observed_form": "Current facts show increased error spans and STATUS_CODE_ERROR in payment service, but no logs or metrics indicating credential or validation failures"
+        }
+      ],
+      "validation_unresolved": [
+        "Inspect payment service logs for validation error messages",
+        "Capture the exact error codes and messages returned by payment during charge requests",
+        "Verify whether recent credential or configuration changes were deployed to payment"
+      ]
+    },
+    {
+      "incident_id": "application-failure-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP2",
+        "explanation": "A slowdown in Kafka broker metadata fetching is delaying checkout processing, leading to increased errors and latency anomalies in checkout and its downstream calls",
+        "assumptions": [
+          "Metadata fetch delays directly impact checkout request handling",
+          "The observed increase in kafka metadata fetches coincides temporally with checkout errors",
+          "Checkout’s call to payment is affected by the processing delay"
+        ],
+        "unresolved": [
+          "Obtain Kafka broker latency and request metrics during the incident",
+          "Correlate timestamps of metadata fetch spikes with checkout error spikes",
+          "Check for any recent changes to Kafka client configuration in checkout"
+        ]
+      },
+      "evidence_refs": [
+        "F29",
+        "F35",
+        "F36",
+        "F49"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "qualifications": [
+        {
+          "claim": "slowdown in Kafka broker metadata fetching is delaying checkout processing",
+          "issue": "overstates latency; only increased fetch activity observed",
+          "fact_refs": [
+            "F29"
+          ],
+          "observed_form": "observed increased metadata fetch pattern (client/metadata fetching metadata for all topics) without latency measurement"
+        },
+        {
+          "claim": "checkout processing delay caused the increased errors and latency anomalies downstream",
+          "issue": "causal claim not directly supported; only correlation observed",
+          "fact_refs": [
+            "F35",
+            "F36",
+            "F49"
+          ],
+          "observed_form": "checkout errors increased and latency changes observed, but no direct evidence linking to Kafka fetch slowdown"
+        }
+      ],
+      "validation_unresolved": [
+        "Obtain Kafka broker latency and request metrics during the incident",
+        "Correlate timestamps of metadata fetch spikes with checkout error spikes",
+        "Check for any recent changes to Kafka client configuration in checkout"
+      ]
+    },
+    {
+      "incident_id": "application-failure-01",
+      "analysis": {
+        "decision": "KEEP_QUALIFIED",
+        "support_level": "PLAUSIBLE"
+      },
+      "hypothesis": {
+        "id": "HYP3",
+        "explanation": "Reduced memory allocation in the checkout service is causing resource contention, which degrades its performance and triggers errors in checkout‑payment interactions and frontend calls",
+        "assumptions": [
+          "Memory allocation drops lead to processing slowdowns in checkout",
+          "The slowdown manifests as increased error rates in checkout operations",
+          "Frontend‑checkout edge latency changes are a symptom of the same contention"
+        ],
+        "unresolved": [
+          "Gather CPU and memory usage trends for checkout pods during the incident",
+          "Determine if any garbage‑collection or OOM events occurred",
+          "Review recent deployments or configuration changes affecting checkout’s resource limits"
+        ]
+      },
+      "evidence_refs": [
+        "F1",
+        "F2",
+        "F3",
+        "F35",
+        "F36",
+        "F48",
+        "F49"
+      ],
+      "history_refs": [],
+      "knowledge_refs": [],
+      "qualifications": [
+        {
+          "claim": "Reduced memory allocation in the checkout service is causing resource contention",
+          "issue": "overstates causation; resource contention not directly observed",
+          "fact_refs": [
+            "F1",
+            "F2"
+          ],
+          "observed_form": "memory allocation metrics (bytes allocated and allocation count) decreased during incident"
+        },
+        {
+          "claim": "degrades its performance",
+          "issue": "overstates performance impact without direct performance metrics",
+          "fact_refs": [
+            "F35",
+            "F36",
+            "F48",
+            "F49"
+          ],
+          "observed_form": "error rates increased and latency changes observed in checkout operations and edges"
+        },
+        {
+          "claim": "triggers errors in checkout‑payment interactions and frontend calls",
+          "issue": "overstates trigger relationship; errors observed but causal link not proven",
+          "fact_refs": [
+            "F35",
+            "F36",
+            "F48",
+            "F49"
+          ],
+          "observed_form": "error rates rose for checkout operations and for edges involving checkout and payment/frontend"
+        }
+      ],
+      "validation_unresolved": [
+        "Gather CPU and memory usage trends for checkout pods during the incident",
+        "Determine if any garbage‑collection or OOM events occurred",
+        "Review recent deployments or configuration changes affecting checkout’s resource limits"
+      ]
+    }
+  ]
+}
