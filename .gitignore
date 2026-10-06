@@ -10,3 +10,6 @@ dist/
 *.egg-info/
 artifacts/
 runs/
+/experiments/
+/scripts/experiments/
+/docs/superpowers/

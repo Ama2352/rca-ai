@@ -2,6 +2,14 @@
 
 The entries below preserve provenance for the earlier frozen RCA implementation that produced `R/rca_demo_milestone/artifacts/fresh_pipeline_smoke_20261004/summary.json`. That implementation and its saved normalized/query inputs remain historical regression controls. The current public Processor-to-Core boundary is the canonical evidence contract described in the update note at the end of this document.
 
+## Current prepared-demo status
+
+RCA Demo v1 is a separate prepared-input execution path. The version-controlled inputs are in `tests/fixtures/prepared_demo/`; `scripts/run_prepared_demo.py` invokes `PreparedDemoPipeline`, which builds and verifies all Facts, retrieves H/K, and bypasses the Fact Selector. It is verified for the three prepared scenarios only. The normal `RCAPipeline.run()` remains Selector-backed.
+
+The complete Generator and Validator requests are guarded by the configurable prepared-demo budget (default 7,000 estimated tokens using ceil(UTF-8 bytes / 4)). The estimate is not a provider tokenizer or quota guarantee. The prepared-demo Validator may make one identical-request retry for the exact structured Groq `json_validate_failed` error. Optional shared pacing is disabled by default. Recovery passed offline tests but was not exercised in the successful live runs.
+
+Accepted live status: missing-secret-01 PASS; application-failure-01 PASS with qualified hypotheses; ad-high-cpu-01 PASS with qualified hypotheses. These are prepared-demo outcomes, not claims of confirmed root causes or arbitrary telemetry support. See [architecture](architecture.md), [runbook](demo_runbook.md), and [verification](verification.md).
+
 Path prefixes below are exact Windows workspace roots:
 
 - `R` = `D:\Dev\SideProjects\rca-ai\otel_demo_dataset`
@@ -370,13 +378,13 @@ This was the Phase 0 proposal; most listed core modules were later implemented a
 
 **Current status:** implemented in the Processor v1.1 bridge and clean Core Layer 1.
 
-**Execution distinction:** the clean release runner currently uses `process_capture_canonical`, which emits the Processor's existing modality-selected observations. `process_capture_canonical_structural` is a separate structural-only experiment and is not connected to the release runner. No structural-only live three-scenario E2E pass is claimed; that validation remains pending.
+**Execution distinction:** the accepted RCA Demo v1 runner loads the three prepared canonical fixtures and invokes `PreparedDemoPipeline`; it does not invoke either Processor entry point. The Processor bridge and structural-only entry point remain separate integration/research paths. The prepared-demo live outcomes are recorded in [verification.md](verification.md).
 
 - Processor target: `rca_processor_v1_1/canonical.py` (`to_canonical_evidence`) and `process_capture_canonical`. It converts every selected metric/log/trace/Kubernetes observation to a stable, source-linked canonical observation. Processor log output no longer carries `retrieval_eligible` or `quarantine_reason`.
 - Core targets: `src/rca_ai/domain/models.py`, `src/rca_ai/facts/builder.py`, `src/rca_ai/retrieval/projection.py`, and `src/rca_ai/pipeline/orchestrator.py`.
 - The Fact projection is one canonical observation to one Fact. Entity ownership is resolved in the Processor contract; no Kubernetes field-name logic remains in Core.
 - Retrieval renderers and BM25/RRF engines are unchanged. Core owns the generic control-narration exclusion; an excluded log remains a Fact.
 - Historical normalized Fact Views and retrieval inputs remain controls only. Their scenario-specific curation is not reconstructed as policy.
-- Deterministic fake-provider integration covers all three saved captures in `tests/integration/pipeline/test_processor_canonical_e2e.py`.
+- Deterministic fake-provider integration covers all three saved captures in `tests/integration/pipeline/test_processor_canonical_e2e.py`; prepared-demo fixtures and tests are separate and live results are documented in `docs/verification.md`.
 
 The early sections above record the lineage of frozen algorithms and schemas. Where their old input fixture counts or query-source descriptions differ from this update, the canonical boundary migration is current and the old artifacts are historical comparison data.

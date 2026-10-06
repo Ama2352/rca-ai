@@ -1,0 +1,740 @@
+{
+  "manifest_version": 1,
+  "curation_note": "Prepared inputs are curated subsets of one later structural canonical capture per scenario. Each included CanonicalObservation is copied verbatim; no evidence is merged across captures and no diagnosis is embedded.",
+  "artifact_path_convention": "Artifact paths are relative to the clean project root.",
+  "budget_method": "Complete frozen build_generator_request serialized bytes; estimated tokens = ceil(bytes / 4); selected-request guard = 7000 estimated input tokens.",
+  "scenarios": {
+    "missing-secret-01": {
+      "input_file": "missing-secret-01.json",
+      "source_artifact": "artifacts/experiments/structural_e2e_offline_20261006T055954Z/missing-secret-01/canonical_evidence.json",
+      "source_sha256": "37c81f95859f1be7fbcfa3d5d86bbf391ca32eff67f0debc4633a2e85f380896",
+      "comparison_artifacts": [
+        "tests/fixtures/facts/expected/fact_views/missing-secret-01.json",
+        "artifacts/release_regression_20261005T072148Z/missing-secret-01/fact_view.json"
+      ],
+      "included_observations": [
+        {
+          "observation_id": "a85a7eff00aa98136235be9e",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "telemetry-docs"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "29bd0340654202a62b33899f",
+          "source_path": "/kubernetes/29",
+          "locators": [
+            "k8s_pods.json:items[25]",
+            "k8s_pods.json:items[25]/status/containerStatuses/0"
+          ],
+          "reason": "Records the target telemetry-docs container waiting state and CreateContainerConfigError."
+        },
+        {
+          "observation_id": "d5563ffafe9100e99220be7f",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "event_record",
+            "id": "4272a6c2c022238ce31e669a"
+          },
+          "field": "kubernetes.structural.event",
+          "source_ref": "4272a6c2c022238ce31e669a",
+          "source_path": "/kubernetes/53",
+          "locators": [
+            "k8s_events.json:items[21]",
+            "k8s_pods.json:items[25]"
+          ],
+          "reason": "Preserves the Kubernetes Failed event message verbatim for the pending pod."
+        },
+        {
+          "observation_id": "6636fb7ce8915e06f783091e",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "event_record",
+            "id": "564767007415971161839415"
+          },
+          "field": "kubernetes.structural.event",
+          "source_ref": "564767007415971161839415",
+          "source_path": "/kubernetes/52",
+          "locators": [
+            "k8s_events.json:items[20]"
+          ],
+          "reason": "Records creation of the ReplicaSet associated with the pending pod."
+        },
+        {
+          "observation_id": "a7d1572f4bb1c2ace84a414a",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "event_record",
+            "id": "9aec8c70113186817ea0b54e"
+          },
+          "field": "kubernetes.structural.event",
+          "source_ref": "9aec8c70113186817ea0b54e",
+          "source_path": "/kubernetes/51",
+          "locators": [
+            "k8s_events.json:items[19]"
+          ],
+          "reason": "Records the observed scale-up event for the affected ReplicaSet."
+        },
+        {
+          "observation_id": "d10a1a35a7c0b7deb0cd5ffb",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "telemetry-docs"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "3142d889a3cfeaa2d319be0b",
+          "source_path": "/kubernetes/30",
+          "locators": [
+            "k8s_pods.json:items[26]",
+            "k8s_pods.json:items[26]/status/containerStatuses/0"
+          ],
+          "reason": "Retains the separately observed running telemetry-docs pod as same-window context."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The selected source capture contains no log or trace observations; only Kubernetes observations were selected.",
+        "The capture also contains broad metric observations, but this bounded input omits them as redundant or unrelated to the selected direct Kubernetes state/event records.",
+        "Same-window co-occurrence does not establish that the selected records are a complete causal timeline."
+      ]
+    },
+    "application-failure-01": {
+      "input_file": "application-failure-01.json",
+      "source_artifact": "artifacts/experiments/structural_e2e_offline_20261006T055954Z/application-failure-01/canonical_evidence.json",
+      "source_sha256": "17eacb58324f4e1f959047df4cbfa5ce51e1902d38cde583989714164e80dba8",
+      "comparison_artifacts": [
+        "artifacts/release_regression_20261005T072148Z/application-failure-01/fact_view.json",
+        "artifacts/release_regression_20261005T072148Z/application-failure-01/fact_selection.json"
+      ],
+      "included_observations": [
+        {
+          "observation_id": "e6131312e9ae9202469dceac",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "checkout-5f68fdb986-qwzb6"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "f1f49e354a0bc57fa1487b94",
+          "source_path": "/metric/460",
+          "locators": [
+            "metrics.json:data.result[460]"
+          ],
+          "reason": "Observed checkout PlaceOrder INTERNAL-status request count/rate summary."
+        },
+        {
+          "observation_id": "dd78944f1426bef97da569ef",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "checkout-5f68fdb986-qwzb6"
+          },
+          "field": "metric.structural.histogram_mean",
+          "source_ref": "64bbd73ea94121ae91dd2140",
+          "source_path": "/metric/1015",
+          "locators": [
+            "metrics.json:data.result[462]",
+            "metrics.json:data.result[460]"
+          ],
+          "reason": "Observed checkout PlaceOrder INTERNAL-status duration summary."
+        },
+        {
+          "observation_id": "a1422bfa698ef2c94a531225",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "checkout-5f68fdb986-qwzb6"
+          },
+          "field": "metric.structural.histogram_mean",
+          "source_ref": "3c1a6087c86403e658a49426",
+          "source_path": "/metric/1009",
+          "locators": [
+            "metrics.json:data.result[424]",
+            "metrics.json:data.result[417]"
+          ],
+          "reason": "Observed checkout-side PaymentService/Charge metric with UNKNOWN status; retains the client-side service identity."
+        },
+        {
+          "observation_id": "1027275d9bd97b32d46d91ae",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "1e7c4e24bd7384dac5b0ceab",
+          "source_path": "/log/0",
+          "locators": [
+            "logs.json:datarows[0]",
+            "logs.json:datarows[8]",
+            "logs.json:datarows[16]",
+            "logs.json:datarows[24]",
+            "logs.json:datarows[32]",
+            "logs.json:datarows[40]",
+            "logs.json:datarows[44]",
+            "logs.json:datarows[47]",
+            "logs.json:datarows[50]",
+            "logs.json:datarows[53]",
+            "logs.json:datarows[56]"
+          ],
+          "reason": "Retains the checkout PlaceOrder log-pattern count summary."
+        },
+        {
+          "observation_id": "c161edcf0c550cb5d9334d23",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "payment"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "9e0e8d06fa69195302499aaf",
+          "source_path": "/log/6",
+          "locators": [
+            "logs.json:datarows[6]",
+            "logs.json:datarows[14]",
+            "logs.json:datarows[22]",
+            "logs.json:datarows[30]",
+            "logs.json:datarows[38]",
+            "logs.json:datarows[41]",
+            "logs.json:datarows[45]",
+            "logs.json:datarows[48]",
+            "logs.json:datarows[51]",
+            "logs.json:datarows[54]",
+            "logs.json:datarows[57]"
+          ],
+          "reason": "Retains the payment Charge request-received log-pattern count summary."
+        },
+        {
+          "observation_id": "823d2b475830b7bac53f7246",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "payment"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "f433cb48621ccc111b0eb43f",
+          "source_path": "/log/12",
+          "locators": [
+            "logs.json:datarows[42]",
+            "logs.json:datarows[46]",
+            "logs.json:datarows[49]",
+            "logs.json:datarows[52]",
+            "logs.json:datarows[55]",
+            "logs.json:datarows[58]"
+          ],
+          "reason": "Preserves the payment-owned Invalid token warning pattern and its original source locators."
+        },
+        {
+          "observation_id": "ad56ea564a0349050e79585b",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "payment"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "0fb450241c89b7f64f81e44e",
+          "source_path": "/log/7",
+          "locators": [
+            "logs.json:datarows[7]",
+            "logs.json:datarows[15]",
+            "logs.json:datarows[23]",
+            "logs.json:datarows[31]",
+            "logs.json:datarows[39]"
+          ],
+          "reason": "Retains the payment Transaction complete pattern with its baseline/incident counts for contrast."
+        },
+        {
+          "observation_id": "36083e98046a8178dfd9ea78",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "7cdcaa110052ec26ff5d0f63",
+          "source_path": "/trace/18",
+          "locators": [
+            "traces.json:data[6].spans[53]",
+            "traces.json:data[7].spans[58]",
+            "traces.json:data[8].spans[60]",
+            "traces.json:data[9].spans[22]",
+            "traces.json:data[10].spans[74]",
+            "traces.json:data[0].spans[20]",
+            "traces.json:data[1].spans[14]",
+            "traces.json:data[2].spans[80]",
+            "traces.json:data[3].spans[32]",
+            "traces.json:data[4].spans[28]",
+            "traces.json:data[5].spans[31]"
+          ],
+          "reason": "Observed checkout-owned PlaceOrder trace-operation aggregate and error-rate change."
+        },
+        {
+          "observation_id": "c97c2fdf4966378255ff3149",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "fa5f786408dd62ab853cae05",
+          "source_path": "/trace/17",
+          "locators": [
+            "traces.json:data[6].spans[51]",
+            "traces.json:data[7].spans[56]",
+            "traces.json:data[8].spans[58]",
+            "traces.json:data[9].spans[20]",
+            "traces.json:data[10].spans[72]",
+            "traces.json:data[0].spans[19]",
+            "traces.json:data[1].spans[13]",
+            "traces.json:data[2].spans[79]",
+            "traces.json:data[3].spans[31]",
+            "traces.json:data[4].spans[27]",
+            "traces.json:data[5].spans[30]"
+          ],
+          "reason": "Observed checkout-owned client operation named PaymentService/Charge; this is not a payment-owned span."
+        },
+        {
+          "observation_id": "9822a853864c6fdc5668f258",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "payment"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "0950a738222398c8930a6aa5",
+          "source_path": "/trace/40",
+          "locators": [
+            "traces.json:data[6].spans[60]",
+            "traces.json:data[7].spans[93]",
+            "traces.json:data[8].spans[67]",
+            "traces.json:data[9].spans[60]",
+            "traces.json:data[10].spans[85]",
+            "traces.json:data[0].spans[42]",
+            "traces.json:data[1].spans[42]",
+            "traces.json:data[2].spans[52]",
+            "traces.json:data[3].spans[42]",
+            "traces.json:data[4].spans[81]",
+            "traces.json:data[5].spans[62]"
+          ],
+          "reason": "Observed payment-owned PaymentService/Charge trace-operation aggregate."
+        },
+        {
+          "observation_id": "46338b5aba119b96f991baf2",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.edge",
+          "source_ref": "f45f454ad4da6ab6ef5db1e7",
+          "source_path": "/trace/41",
+          "locators": [
+            "traces.json:data[6].spans[60]",
+            "traces.json:data[7].spans[93]",
+            "traces.json:data[8].spans[67]",
+            "traces.json:data[9].spans[60]",
+            "traces.json:data[10].spans[85]",
+            "traces.json:data[0].spans[42]",
+            "traces.json:data[1].spans[42]",
+            "traces.json:data[2].spans[52]",
+            "traces.json:data[3].spans[42]",
+            "traces.json:data[4].spans[81]",
+            "traces.json:data[5].spans[62]"
+          ],
+          "reason": "Preserves the observed checkout-to-payment edge and its aggregate error statistics."
+        },
+        {
+          "observation_id": "56e247d425ffc6e08af28940",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "frontend"
+          },
+          "field": "trace.structural.edge",
+          "source_ref": "4c3870c3bb22cfd8569763fe",
+          "source_path": "/trace/19",
+          "locators": [
+            "traces.json:data[6].spans[53]",
+            "traces.json:data[7].spans[58]",
+            "traces.json:data[8].spans[60]",
+            "traces.json:data[9].spans[22]",
+            "traces.json:data[10].spans[74]",
+            "traces.json:data[0].spans[20]",
+            "traces.json:data[1].spans[14]",
+            "traces.json:data[2].spans[80]",
+            "traces.json:data[3].spans[32]",
+            "traces.json:data[4].spans[28]",
+            "traces.json:data[5].spans[31]"
+          ],
+          "reason": "Preserves the observed frontend-to-checkout edge as upstream propagation context."
+        },
+        {
+          "observation_id": "c6b85560f2da70de2b939109",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "checkout"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "1a93263c80312633419e87a0",
+          "source_path": "/kubernetes/4",
+          "locators": [
+            "k8s_pods.json:items[4]",
+            "k8s_pods.json:items[4]/status/containerStatuses/0"
+          ],
+          "reason": "Retains the observed checkout pod state; it reports Running/ready, not a Kubernetes failure."
+        },
+        {
+          "observation_id": "32b6e915a0decab70131849f",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "payment"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "052bf2e5b4472598f5e88cbd",
+          "source_path": "/kubernetes/23",
+          "locators": [
+            "k8s_pods.json:items[19]",
+            "k8s_pods.json:items[19]/status/containerStatuses/0"
+          ],
+          "reason": "Retains the observed payment pod state; it reports Running/ready, not a Kubernetes failure."
+        }
+      ],
+      "known_evidence_gaps": [
+        "This input uses only the later structural canonical capture. It is not merged with the older 52-Fact capture, whose source records differ and which had no Kubernetes observations.",
+        "The Invalid token log exists in the later capture but not the older 52-Fact artifact; the input preserves the later capture?s payment-owned log and source locators.",
+        "Trace operations/edges are aggregate observations. No selected trace/log join key proves that a particular Invalid token log occurrence caused a particular trace error.",
+        "Selected Kubernetes states report checkout/payment pods Running and ready; they do not show a corresponding pod failure."
+      ]
+    },
+    "ad-high-cpu-01": {
+      "input_file": "ad-high-cpu-01.json",
+      "source_artifact": "artifacts/experiments/structural_e2e_offline_20261006T055954Z/ad-high-cpu-01/canonical_evidence.json",
+      "source_sha256": "3d9a7cf69c0caca009c8ad5837baddf234ab8758829f03828429fe0db363939f",
+      "comparison_artifacts": [
+        "tests/fixtures/facts/expected/fact_views/ad-high-cpu-01.json",
+        "artifacts/release_regression_20261005T072148Z/ad-high-cpu-01/fact_view.json"
+      ],
+      "included_observations": [
+        {
+          "observation_id": "310cbe59d2d0675e021d9ef1",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "ad-544b5478f8-xfbnn"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "5e162e32e1f01784e3d2b159",
+          "source_path": "/metric/0",
+          "locators": [
+            "metrics.json:data.result[0]"
+          ],
+          "reason": "Preserves the ad pod CPU metric with its original before/incident values."
+        },
+        {
+          "observation_id": "01e7c383b2b39f81e656cfb1",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "5bf4693c04726718c5d9bdcb",
+          "source_path": "/log/0",
+          "locators": [
+            "logs.json:datarows[0]",
+            "logs.json:datarows[1]",
+            "logs.json:datarows[2]",
+            "logs.json:datarows[3]",
+            "logs.json:datarows[4]",
+            "logs.json:datarows[5]",
+            "logs.json:datarows[7]",
+            "logs.json:datarows[15]",
+            "logs.json:datarows[19]",
+            "logs.json:datarows[27]",
+            "logs.json:datarows[31]"
+          ],
+          "reason": "Retains the observed binoculars request log pattern and counts."
+        },
+        {
+          "observation_id": "9b3c5c99346cb872996f7cac",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "15b54028c220cdd868eb023f",
+          "source_path": "/log/1",
+          "locators": [
+            "logs.json:datarows[6]",
+            "logs.json:datarows[8]",
+            "logs.json:datarows[10]",
+            "logs.json:datarows[12]",
+            "logs.json:datarows[14]",
+            "logs.json:datarows[16]",
+            "logs.json:datarows[18]",
+            "logs.json:datarows[20]",
+            "logs.json:datarows[22]",
+            "logs.json:datarows[24]",
+            "logs.json:datarows[26]",
+            "logs.json:datarows[28]",
+            "logs.json:datarows[30]"
+          ],
+          "reason": "Preserves the high CPU-Load problem-pattern log exactly as observed, without treating it as a diagnosis."
+        },
+        {
+          "observation_id": "943a5b1f34098d90311fef9c",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "ce0ad093a9d3ecd2c1b2f094",
+          "source_path": "/log/2",
+          "locators": [
+            "logs.json:datarows[9]"
+          ],
+          "reason": "Retains the travel request log pattern and counts."
+        },
+        {
+          "observation_id": "a30e64a985d5341883f37d0a",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "e1f80ccda24d5b12394a8713",
+          "source_path": "/log/3",
+          "locators": [
+            "logs.json:datarows[11]",
+            "logs.json:datarows[21]",
+            "logs.json:datarows[29]"
+          ],
+          "reason": "Retains the assembly request log pattern and counts."
+        },
+        {
+          "observation_id": "7f197b3c57879b28454b4f77",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "4f3f236b1696a0071a6a65cc",
+          "source_path": "/log/4",
+          "locators": [
+            "logs.json:datarows[13]"
+          ],
+          "reason": "Retains the non-targeted request log pattern as contextual evidence."
+        },
+        {
+          "observation_id": "ce38baec07c1523cdba122e1",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "fc66e198892853d9bfc35684",
+          "source_path": "/log/5",
+          "locators": [
+            "logs.json:datarows[17]",
+            "logs.json:datarows[25]"
+          ],
+          "reason": "Retains the accessories request log pattern and counts."
+        },
+        {
+          "observation_id": "33deef82c9b2b1bbee9cf036",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "e95de4c1903b37ef335f4af1",
+          "source_path": "/log/6",
+          "locators": [
+            "logs.json:datarows[23]"
+          ],
+          "reason": "Retains the telescopes request log pattern and counts."
+        },
+        {
+          "observation_id": "45f1883bda97de59f166727d",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "frontend"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "10c7a109dffa64a980a9c748",
+          "source_path": "/trace/2",
+          "locators": [
+            "traces.json:data[25].spans[13]",
+            "traces.json:data[25].spans[15]",
+            "traces.json:data[27].spans[5]",
+            "traces.json:data[27].spans[6]",
+            "traces.json:data[30].spans[5]",
+            "traces.json:data[30].spans[8]",
+            "traces.json:data[31].spans[5]",
+            "traces.json:data[31].spans[8]",
+            "traces.json:data[33].spans[5]",
+            "traces.json:data[33].spans[8]",
+            "traces.json:data[35].spans[3]",
+            "traces.json:data[35].spans[4]",
+            "traces.json:data[38].spans[5]",
+            "traces.json:data[38].spans[6]",
+            "traces.json:data[2].spans[1]",
+            "traces.json:data[2].spans[4]",
+            "traces.json:data[3].spans[7]",
+            "traces.json:data[3].spans[10]",
+            "traces.json:data[5].spans[1]",
+            "traces.json:data[5].spans[3]",
+            "traces.json:data[7].spans[7]",
+            "traces.json:data[7].spans[9]",
+            "traces.json:data[9].spans[5]",
+            "traces.json:data[9].spans[7]",
+            "traces.json:data[10].spans[2]",
+            "traces.json:data[10].spans[4]",
+            "traces.json:data[12].spans[4]",
+            "traces.json:data[12].spans[5]",
+            "traces.json:data[15].spans[7]",
+            "traces.json:data[15].spans[10]",
+            "traces.json:data[17].spans[5]",
+            "traces.json:data[17].spans[8]",
+            "traces.json:data[19].spans[6]",
+            "traces.json:data[19].spans[8]",
+            "traces.json:data[22].spans[8]",
+            "traces.json:data[22].spans[10]",
+            "traces.json:data[23].spans[8]",
+            "traces.json:data[23].spans[10]"
+          ],
+          "reason": "Observed frontend GET /api/data trace-operation aggregate."
+        },
+        {
+          "observation_id": "0cad6ea9e3fa4c21136334c4",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "frontend"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "d56bb17507c71f9db25e5cbb",
+          "source_path": "/trace/4",
+          "locators": [
+            "traces.json:data[25].spans[11]",
+            "traces.json:data[27].spans[3]",
+            "traces.json:data[30].spans[6]",
+            "traces.json:data[31].spans[6]",
+            "traces.json:data[33].spans[6]",
+            "traces.json:data[35].spans[1]",
+            "traces.json:data[38].spans[3]",
+            "traces.json:data[2].spans[2]",
+            "traces.json:data[3].spans[8]",
+            "traces.json:data[5].spans[4]",
+            "traces.json:data[7].spans[10]",
+            "traces.json:data[9].spans[8]",
+            "traces.json:data[10].spans[0]",
+            "traces.json:data[12].spans[2]",
+            "traces.json:data[15].spans[8]",
+            "traces.json:data[17].spans[6]",
+            "traces.json:data[19].spans[4]",
+            "traces.json:data[22].spans[6]",
+            "traces.json:data[23].spans[6]"
+          ],
+          "reason": "Observed frontend-owned AdService/GetAds operation aggregate."
+        },
+        {
+          "observation_id": "a735e18630f0922a24b003f4",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "ad"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "f1b2e8b3308d9bcf73e62e90",
+          "source_path": "/trace/9",
+          "locators": [
+            "traces.json:data[25].spans[8]",
+            "traces.json:data[27].spans[7]",
+            "traces.json:data[30].spans[1]",
+            "traces.json:data[31].spans[3]",
+            "traces.json:data[33].spans[1]",
+            "traces.json:data[35].spans[7]",
+            "traces.json:data[38].spans[7]",
+            "traces.json:data[2].spans[7]",
+            "traces.json:data[3].spans[4]",
+            "traces.json:data[5].spans[9]",
+            "traces.json:data[7].spans[1]",
+            "traces.json:data[9].spans[9]",
+            "traces.json:data[10].spans[9]",
+            "traces.json:data[12].spans[7]",
+            "traces.json:data[15].spans[4]",
+            "traces.json:data[17].spans[3]",
+            "traces.json:data[19].spans[9]",
+            "traces.json:data[22].spans[1]",
+            "traces.json:data[23].spans[4]"
+          ],
+          "reason": "Observed ad-owned AdService/GetAds operation aggregate."
+        },
+        {
+          "observation_id": "b1c4a1e4412d99c257d36966",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "frontend"
+          },
+          "field": "trace.structural.edge",
+          "source_ref": "1ad4b1151bb78b1fc29a04f8",
+          "source_path": "/trace/10",
+          "locators": [
+            "traces.json:data[25].spans[8]",
+            "traces.json:data[27].spans[7]",
+            "traces.json:data[30].spans[1]",
+            "traces.json:data[31].spans[3]",
+            "traces.json:data[33].spans[1]",
+            "traces.json:data[35].spans[7]",
+            "traces.json:data[38].spans[7]",
+            "traces.json:data[2].spans[7]",
+            "traces.json:data[3].spans[4]",
+            "traces.json:data[5].spans[9]",
+            "traces.json:data[7].spans[1]",
+            "traces.json:data[9].spans[9]",
+            "traces.json:data[10].spans[9]",
+            "traces.json:data[12].spans[7]",
+            "traces.json:data[15].spans[4]",
+            "traces.json:data[17].spans[3]",
+            "traces.json:data[19].spans[9]",
+            "traces.json:data[22].spans[1]",
+            "traces.json:data[23].spans[4]"
+          ],
+          "reason": "Preserves the observed frontend-to-ad trace edge; it does not assert causation."
+        },
+        {
+          "observation_id": "2efa55d3c704bee15b10271d",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "ad"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "45fff800be7944761d88adee",
+          "source_path": "/kubernetes/1",
+          "locators": [
+            "k8s_pods.json:items[1]",
+            "k8s_pods.json:items[1]/status/containerStatuses/0"
+          ],
+          "reason": "Retains the observed ad pod state, which reports Running/ready during the captured view."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The selected trace aggregates have no errors; the input does not establish that the CPU observation caused the request/trace behavior.",
+        "No ad-specific Kubernetes failure event is present in the selected observations; the selected ad pod state is Running/ready.",
+        "The high CPU-Load problem-pattern log is preserved as an observed log, not interpreted as proof of a causal mechanism."
+      ]
+    }
+  }
+}

@@ -1,0 +1,177 @@
+"""Run RCA Demo v1 on one or all tracked prepared incident fixtures."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import sys
+from typing import Any
+
+from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
+from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
+from rca_ai.pipeline.prepared_demo_providers import ProviderCallPacer
+from rca_ai.pipeline.request_budget import DEFAULT_MAX_ESTIMATED_TOKENS, request_size
+from rca_ai.providers.groq import GroqProvider
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "prepared_demo"
+SCENARIOS = (
+    "missing-secret-01",
+    "application-failure-01",
+    "ad-high-cpu-01",
+)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Run the prepared RCA demo without Processor or Fact Selector stages."
+    )
+    parser.add_argument(
+        "--scenario",
+        choices=(*SCENARIOS, "all"),
+        default="all",
+        help="prepared incident to run (default: all, sequentially)",
+    )
+    parser.add_argument(
+        "--enable-pacing",
+        action="store_true",
+        help="pace semantic provider calls using response headers and a fallback delay",
+    )
+    parser.add_argument(
+        "--pacing-delay-seconds",
+        type=float,
+        default=75.0,
+        help="fallback inter-call delay when pacing is enabled (default: 75)",
+    )
+    parser.add_argument(
+        "--max-estimated-tokens",
+        type=int,
+        default=DEFAULT_MAX_ESTIMATED_TOKENS,
+        help="complete request guard using ceil(UTF-8 bytes / 4) (default: 7000)",
+    )
+    return parser
+
+
+def load_incident(scenario: str) -> IncidentInput:
+    """Load a version-controlled prepared fixture; never consult experiment artifacts."""
+
+    if scenario not in SCENARIOS:
+        raise ValueError(f"Unsupported scenario: {scenario}")
+    fixture_path = FIXTURE_ROOT / f"{scenario}.json"
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    if payload.get("incident_id") != scenario:
+        raise ValueError(f"Fixture incident_id does not match selected scenario: {scenario}")
+    return IncidentInput(
+        scenario,
+        canonical_evidence_from_dict(payload["evidence"]),
+    )
+
+
+def make_pipeline(
+    *,
+    enable_pacing: bool = False,
+    pacing_delay_seconds: float = 75.0,
+    max_estimated_tokens: int = DEFAULT_MAX_ESTIMATED_TOKENS,
+) -> PreparedDemoPipeline:
+    """Wire the configured provider once; pacing is an explicit opt-in."""
+
+    provider = GroqProvider()
+    pacer = (
+        ProviderCallPacer(fallback_delay_seconds=pacing_delay_seconds)
+        if enable_pacing
+        else None
+    )
+    return PreparedDemoPipeline(
+        generator_provider=provider,
+        validator_provider=provider,
+        max_estimated_tokens=max_estimated_tokens,
+        provider_pacer=pacer,
+    )
+
+
+def _request_metrics(request: dict[str, Any]) -> dict[str, int]:
+    request_bytes, estimated_tokens = request_size(request)
+    return {"bytes": request_bytes, "estimated_tokens": estimated_tokens}
+
+
+def summarize_run(run: Any) -> dict[str, Any]:
+    """Return compact operational metadata and the deterministically assembled result."""
+
+    generation = run.generation
+    generator_provider = generation.provider_result
+    validators = []
+    provider_results = [generator_provider]
+    for execution in run.validations:
+        result = execution.result
+        provider_result = execution.provider_result
+        provider_results.append(provider_result)
+        validators.append({
+            "hypothesis_id": result.hypothesis_id,
+            "decision": result.decision.value,
+            "support_level": result.support_level.value,
+            "qualifications": to_dict(result.qualifications),
+            "unresolved": to_dict(result.unresolved),
+            "model": provider_result.model_returned,
+            "usage": to_dict(provider_result.usage),
+            "request": _request_metrics(execution.request),
+        })
+
+    token_keys = ("prompt_tokens", "completion_tokens", "total_tokens")
+    return {
+        "incident_id": run.incident_id,
+        "fact_integrity": run.fact_integrity,
+        "fact_count": len(run.facts),
+        "history_ids": [item.alias for item in run.history.items],
+        "knowledge_ids": [item.alias for item in run.knowledge.items],
+        "generator": {
+            "model": generator_provider.model_returned,
+            "usage": to_dict(generator_provider.usage),
+            "request": _request_metrics(generation.request),
+            "hypothesis_ids": [hypothesis.id for hypothesis in generation.hypotheses],
+        },
+        "validators": validators,
+        "token_usage_total": {
+            key: sum(int(provider.usage.get(key, 0) or 0) for provider in provider_results)
+            for key in token_keys
+        },
+        "final_result": to_dict(run.rca_result),
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if not os.getenv("GROQ_API_KEY", "").strip():
+        print("GROQ_API_KEY is required; no provider request was made.", file=sys.stderr)
+        return 2
+
+    scenarios = SCENARIOS if args.scenario == "all" else (args.scenario,)
+    pipeline = make_pipeline(
+        enable_pacing=args.enable_pacing,
+        pacing_delay_seconds=args.pacing_delay_seconds,
+        max_estimated_tokens=args.max_estimated_tokens,
+    )
+    output: list[dict[str, Any]] = []
+    for scenario in scenarios:
+        try:
+            output.append(summarize_run(pipeline.run(load_incident(scenario))))
+        except Exception as error:
+            failure = {
+                "status": "FAIL",
+                "scenario": scenario,
+                "error_type": type(error).__name__,
+                "http_status": getattr(error, "status_code", None),
+                "message": str(error),
+                "completed_scenarios": output,
+            }
+            print(json.dumps(failure, ensure_ascii=False, indent=2), file=sys.stderr)
+            return 1
+
+    print(json.dumps({"status": "COMPLETE", "scenarios": output}, ensure_ascii=False, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

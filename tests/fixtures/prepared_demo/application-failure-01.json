@@ -1,0 +1,765 @@
+{
+  "incident_id": "application-failure-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790334483.0,
+      "incident_start": 1790334581.0,
+      "incident_end": 1790334701.0
+    },
+    "observations": [
+      {
+        "observation_id": "e6131312e9ae9202469dceac",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "checkout-5f68fdb986-qwzb6"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "checkout",
+          "metric": "rpc_server_call_duration_seconds_count",
+          "labels": {
+            "error_type": "INTERNAL",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "job": "opentelemetry-demo/checkout",
+            "k8s_deployment_name": "checkout",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "checkout-5f68fdb986-qwzb6",
+            "k8s_replicaset_name": "checkout-5f68fdb986",
+            "rpc_method": "oteldemo.CheckoutService/PlaceOrder",
+            "rpc_response_status_code": "INTERNAL",
+            "rpc_system_name": "grpc",
+            "service_instance_id": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "service_name": "checkout",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "checkout-5f68fdb986-qwzb6",
+          "metric_kind": "histogram_count",
+          "unit": "reported_unit/second",
+          "baseline_value": 0.0,
+          "incident_value": 0.047619047619047616,
+          "signed_change": 0.047619047619047616,
+          "relative_change": null,
+          "baseline_n": 7,
+          "incident_n": 8,
+          "uncertainty": [],
+          "baseline_median": null,
+          "incident_median": null,
+          "baseline_sd": null,
+          "baseline_min": 5.0,
+          "baseline_max": 5.0,
+          "incident_min": 5.0,
+          "incident_max": 10.0,
+          "baseline_delta": 0.0,
+          "incident_delta": 5.0,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "f1f49e354a0bc57fa1487b94",
+          "source_path": "/metric/460",
+          "locators": [
+            "metrics.json:data.result[460]"
+          ]
+        }
+      },
+      {
+        "observation_id": "dd78944f1426bef97da569ef",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "checkout-5f68fdb986-qwzb6"
+        },
+        "field": "metric.structural.histogram_mean",
+        "value": {
+          "lane": "metric.structural.histogram_mean",
+          "service": "checkout",
+          "metric": "rpc_server_call_duration_seconds_mean",
+          "labels": {
+            "error_type": "INTERNAL",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "job": "opentelemetry-demo/checkout",
+            "k8s_deployment_name": "checkout",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "checkout-5f68fdb986-qwzb6",
+            "k8s_replicaset_name": "checkout-5f68fdb986",
+            "rpc_method": "oteldemo.CheckoutService/PlaceOrder",
+            "rpc_response_status_code": "INTERNAL",
+            "rpc_system_name": "grpc",
+            "service_instance_id": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "service_name": "checkout",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "checkout-5f68fdb986-qwzb6",
+          "metric_kind": "histogram_mean",
+          "unit": "seconds",
+          "baseline_value": null,
+          "incident_value": 0.2850237482,
+          "signed_change": null,
+          "relative_change": null,
+          "baseline_n": 7,
+          "incident_n": 8,
+          "uncertainty": [],
+          "baseline_median": null,
+          "incident_median": null,
+          "baseline_sd": null,
+          "baseline_min": null,
+          "baseline_max": null,
+          "incident_min": null,
+          "incident_max": null,
+          "baseline_delta": 0.0,
+          "incident_delta": 1.425118741,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": 0.0,
+          "incident_event_count": 5.0,
+          "change": "appeared"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "64bbd73ea94121ae91dd2140",
+          "source_path": "/metric/1015",
+          "locators": [
+            "metrics.json:data.result[462]",
+            "metrics.json:data.result[460]"
+          ]
+        }
+      },
+      {
+        "observation_id": "a1422bfa698ef2c94a531225",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "checkout-5f68fdb986-qwzb6"
+        },
+        "field": "metric.structural.histogram_mean",
+        "value": {
+          "lane": "metric.structural.histogram_mean",
+          "service": "checkout",
+          "metric": "rpc_client_call_duration_seconds_mean",
+          "labels": {
+            "error_type": "UNKNOWN",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "job": "opentelemetry-demo/checkout",
+            "k8s_deployment_name": "checkout",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "checkout-5f68fdb986-qwzb6",
+            "k8s_replicaset_name": "checkout-5f68fdb986",
+            "rpc_method": "oteldemo.PaymentService/Charge",
+            "rpc_response_status_code": "UNKNOWN",
+            "rpc_system_name": "grpc",
+            "server_address": "10.43.3.158",
+            "server_port": "8080",
+            "service_instance_id": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "service_name": "checkout",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "checkout-5f68fdb986-qwzb6",
+          "metric_kind": "histogram_mean",
+          "unit": "seconds",
+          "baseline_value": null,
+          "incident_value": 0.007391780000000001,
+          "signed_change": null,
+          "relative_change": null,
+          "baseline_n": 0,
+          "incident_n": 7,
+          "uncertainty": [],
+          "baseline_median": null,
+          "incident_median": null,
+          "baseline_sd": null,
+          "baseline_min": null,
+          "baseline_max": null,
+          "incident_min": null,
+          "incident_max": null,
+          "baseline_delta": null,
+          "incident_delta": 0.029567120000000002,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": 4.0,
+          "change": "appeared"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "3c1a6087c86403e658a49426",
+          "source_path": "/metric/1009",
+          "locators": [
+            "metrics.json:data.result[424]",
+            "metrics.json:data.result[417]"
+          ]
+        }
+      },
+      {
+        "observation_id": "1027275d9bd97b32d46d91ae",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "checkout",
+          "severity": "INFO",
+          "pattern": "[PlaceOrder]",
+          "example": "[PlaceOrder]",
+          "baseline_count": 5,
+          "incident_count": 6,
+          "baseline_rate_per_min": 3.061224489795918,
+          "incident_rate_per_min": 3.0,
+          "signed_rate_change": -0.06122448979591821,
+          "uncertainty": [],
+          "scope": "checkout",
+          "baseline_severity_rate": 18.367346938775512,
+          "incident_severity_rate": 3.5,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "1e7c4e24bd7384dac5b0ceab",
+          "source_path": "/log/0",
+          "locators": [
+            "logs.json:datarows[0]",
+            "logs.json:datarows[8]",
+            "logs.json:datarows[16]",
+            "logs.json:datarows[24]",
+            "logs.json:datarows[32]",
+            "logs.json:datarows[40]",
+            "logs.json:datarows[44]",
+            "logs.json:datarows[47]",
+            "logs.json:datarows[50]",
+            "logs.json:datarows[53]",
+            "logs.json:datarows[56]"
+          ]
+        }
+      },
+      {
+        "observation_id": "c161edcf0c550cb5d9334d23",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "payment",
+          "severity": "INFO",
+          "pattern": "Charge request received.",
+          "example": "Charge request received.",
+          "baseline_count": 5,
+          "incident_count": 6,
+          "baseline_rate_per_min": 3.061224489795918,
+          "incident_rate_per_min": 3.0,
+          "signed_rate_change": -0.06122448979591821,
+          "uncertainty": [],
+          "scope": "@opentelemetry/instrumentation-pino",
+          "baseline_severity_rate": 6.122448979591836,
+          "incident_severity_rate": 3.0,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "9e0e8d06fa69195302499aaf",
+          "source_path": "/log/6",
+          "locators": [
+            "logs.json:datarows[6]",
+            "logs.json:datarows[14]",
+            "logs.json:datarows[22]",
+            "logs.json:datarows[30]",
+            "logs.json:datarows[38]",
+            "logs.json:datarows[41]",
+            "logs.json:datarows[45]",
+            "logs.json:datarows[48]",
+            "logs.json:datarows[51]",
+            "logs.json:datarows[54]",
+            "logs.json:datarows[57]"
+          ]
+        }
+      },
+      {
+        "observation_id": "823d2b475830b7bac53f7246",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "payment",
+          "severity": "WARN",
+          "pattern": "Payment request failed. Invalid token. demo.user_context.loyalty_level=gold",
+          "example": "Payment request failed. Invalid token. demo.user_context.loyalty_level=gold",
+          "baseline_count": 0,
+          "incident_count": 6,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 3.0,
+          "signed_rate_change": 3.0,
+          "uncertainty": [],
+          "scope": "@opentelemetry/instrumentation-pino",
+          "baseline_severity_rate": 0.0,
+          "incident_severity_rate": 3.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "f433cb48621ccc111b0eb43f",
+          "source_path": "/log/12",
+          "locators": [
+            "logs.json:datarows[42]",
+            "logs.json:datarows[46]",
+            "logs.json:datarows[49]",
+            "logs.json:datarows[52]",
+            "logs.json:datarows[55]",
+            "logs.json:datarows[58]"
+          ]
+        }
+      },
+      {
+        "observation_id": "ad56ea564a0349050e79585b",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "payment",
+          "severity": "INFO",
+          "pattern": "Transaction complete.",
+          "example": "Transaction complete.",
+          "baseline_count": 5,
+          "incident_count": 0,
+          "baseline_rate_per_min": 3.061224489795918,
+          "incident_rate_per_min": 0.0,
+          "signed_rate_change": -3.061224489795918,
+          "uncertainty": [],
+          "scope": "@opentelemetry/instrumentation-pino",
+          "baseline_severity_rate": 6.122448979591836,
+          "incident_severity_rate": 3.0,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "0fb450241c89b7f64f81e44e",
+          "source_path": "/log/7",
+          "locators": [
+            "logs.json:datarows[7]",
+            "logs.json:datarows[15]",
+            "logs.json:datarows[23]",
+            "logs.json:datarows[31]",
+            "logs.json:datarows[39]"
+          ]
+        }
+      },
+      {
+        "observation_id": "36083e98046a8178dfd9ea78",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "checkout",
+          "operation_or_callee": "oteldemo.CheckoutService/PlaceOrder",
+          "baseline_n": 5,
+          "incident_n": 6,
+          "baseline_mean_ms": 310.7776,
+          "incident_mean_ms": 269.86483333333337,
+          "baseline_median_ms": 298.675,
+          "incident_median_ms": 216.252,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 6,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": -40.91276666666664,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "7cdcaa110052ec26ff5d0f63",
+          "source_path": "/trace/18",
+          "locators": [
+            "traces.json:data[6].spans[53]",
+            "traces.json:data[7].spans[58]",
+            "traces.json:data[8].spans[60]",
+            "traces.json:data[9].spans[22]",
+            "traces.json:data[10].spans[74]",
+            "traces.json:data[0].spans[20]",
+            "traces.json:data[1].spans[14]",
+            "traces.json:data[2].spans[80]",
+            "traces.json:data[3].spans[32]",
+            "traces.json:data[4].spans[28]",
+            "traces.json:data[5].spans[31]"
+          ]
+        }
+      },
+      {
+        "observation_id": "c97c2fdf4966378255ff3149",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "checkout",
+          "operation_or_callee": "oteldemo.PaymentService/Charge",
+          "baseline_n": 5,
+          "incident_n": 6,
+          "baseline_mean_ms": 5.1148,
+          "incident_mean_ms": 17.713666666666665,
+          "baseline_median_ms": 1.986,
+          "incident_median_ms": 6.368,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 6,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": 12.598866666666666,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "fa5f786408dd62ab853cae05",
+          "source_path": "/trace/17",
+          "locators": [
+            "traces.json:data[6].spans[51]",
+            "traces.json:data[7].spans[56]",
+            "traces.json:data[8].spans[58]",
+            "traces.json:data[9].spans[20]",
+            "traces.json:data[10].spans[72]",
+            "traces.json:data[0].spans[19]",
+            "traces.json:data[1].spans[13]",
+            "traces.json:data[2].spans[79]",
+            "traces.json:data[3].spans[31]",
+            "traces.json:data[4].spans[27]",
+            "traces.json:data[5].spans[30]"
+          ]
+        }
+      },
+      {
+        "observation_id": "9822a853864c6fdc5668f258",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "payment",
+          "operation_or_callee": "oteldemo.PaymentService/Charge",
+          "baseline_n": 5,
+          "incident_n": 6,
+          "baseline_mean_ms": 2.1792000000000002,
+          "incident_mean_ms": 14.3305,
+          "baseline_median_ms": 0.705,
+          "incident_median_ms": 3.27,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 6,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": 12.1513,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "0950a738222398c8930a6aa5",
+          "source_path": "/trace/40",
+          "locators": [
+            "traces.json:data[6].spans[60]",
+            "traces.json:data[7].spans[93]",
+            "traces.json:data[8].spans[67]",
+            "traces.json:data[9].spans[60]",
+            "traces.json:data[10].spans[85]",
+            "traces.json:data[0].spans[42]",
+            "traces.json:data[1].spans[42]",
+            "traces.json:data[2].spans[52]",
+            "traces.json:data[3].spans[42]",
+            "traces.json:data[4].spans[81]",
+            "traces.json:data[5].spans[62]"
+          ]
+        }
+      },
+      {
+        "observation_id": "46338b5aba119b96f991baf2",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.edge",
+        "value": {
+          "lane": "trace.structural.edge",
+          "kind": "edge",
+          "service": "checkout",
+          "operation_or_callee": "payment",
+          "baseline_n": 5,
+          "incident_n": 6,
+          "baseline_mean_ms": 2.1792000000000002,
+          "incident_mean_ms": 14.3305,
+          "baseline_median_ms": 0.705,
+          "incident_median_ms": 3.27,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 6,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": 12.1513,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "f45f454ad4da6ab6ef5db1e7",
+          "source_path": "/trace/41",
+          "locators": [
+            "traces.json:data[6].spans[60]",
+            "traces.json:data[7].spans[93]",
+            "traces.json:data[8].spans[67]",
+            "traces.json:data[9].spans[60]",
+            "traces.json:data[10].spans[85]",
+            "traces.json:data[0].spans[42]",
+            "traces.json:data[1].spans[42]",
+            "traces.json:data[2].spans[52]",
+            "traces.json:data[3].spans[42]",
+            "traces.json:data[4].spans[81]",
+            "traces.json:data[5].spans[62]"
+          ]
+        }
+      },
+      {
+        "observation_id": "56e247d425ffc6e08af28940",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "trace.structural.edge",
+        "value": {
+          "lane": "trace.structural.edge",
+          "kind": "edge",
+          "service": "frontend",
+          "operation_or_callee": "checkout",
+          "baseline_n": 5,
+          "incident_n": 6,
+          "baseline_mean_ms": 310.7776,
+          "incident_mean_ms": 269.86483333333337,
+          "baseline_median_ms": 298.675,
+          "incident_median_ms": 216.252,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 6,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": -40.91276666666664,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "4c3870c3bb22cfd8569763fe",
+          "source_path": "/trace/19",
+          "locators": [
+            "traces.json:data[6].spans[53]",
+            "traces.json:data[7].spans[58]",
+            "traces.json:data[8].spans[60]",
+            "traces.json:data[9].spans[22]",
+            "traces.json:data[10].spans[74]",
+            "traces.json:data[0].spans[20]",
+            "traces.json:data[1].spans[14]",
+            "traces.json:data[2].spans[80]",
+            "traces.json:data[3].spans[32]",
+            "traces.json:data[4].spans[28]",
+            "traces.json:data[5].spans[31]"
+          ]
+        }
+      },
+      {
+        "observation_id": "c6b85560f2da70de2b939109",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "checkout"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "checkout",
+          "pod": "checkout-5f68fdb986-qwzb6",
+          "pod_uid": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+          "container": "checkout",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": null,
+          "ready_replicas": null,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": null,
+          "available_replicas": null,
+          "deployment_conditions": []
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "1a93263c80312633419e87a0",
+          "source_path": "/kubernetes/4",
+          "locators": [
+            "k8s_pods.json:items[4]",
+            "k8s_pods.json:items[4]/status/containerStatuses/0"
+          ]
+        }
+      },
+      {
+        "observation_id": "32b6e915a0decab70131849f",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "payment"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "payment",
+          "pod": "payment-f4c8db959-mbx89",
+          "pod_uid": "8109fecf-5289-4d23-acf3-f280c56cfda5",
+          "container": "payment",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": 1,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": 1,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T17:09:10Z",
+              "lastUpdateTime": "2026-09-24T17:09:10Z",
+              "message": "ReplicaSet \"payment-f4c8db959\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T02:25:44Z",
+              "lastUpdateTime": "2026-09-25T02:25:44Z",
+              "message": "Deployment has minimum availability.",
+              "reason": "MinimumReplicasAvailable",
+              "status": "True",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "052bf2e5b4472598f5e88cbd",
+          "source_path": "/kubernetes/23",
+          "locators": [
+            "k8s_pods.json:items[19]",
+            "k8s_pods.json:items[19]/status/containerStatuses/0"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,677 @@
+{
+  "incident_id": "ad-high-cpu-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790320469.0,
+      "incident_start": 1790320549.0,
+      "incident_end": 1790320669.0
+    },
+    "observations": [
+      {
+        "observation_id": "310cbe59d2d0675e021d9ef1",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "ad-544b5478f8-xfbnn"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "ad",
+          "metric": "k8s_pod_cpu_usage",
+          "labels": {
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "otel-demo.ad-544b5478f8-xfbnn.ad",
+            "job": "opentelemetry-demo/ad",
+            "k8s_container_name": "ad",
+            "k8s_deployment_name": "ad",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "ad-544b5478f8-xfbnn",
+            "k8s_replicaset_name": "ad-544b5478f8",
+            "service_instance_id": "otel-demo.ad-544b5478f8-xfbnn.ad",
+            "service_name": "ad",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "ad-544b5478f8-xfbnn",
+          "metric_kind": "gauge",
+          "unit": "reported_unit",
+          "baseline_value": 0.00532728975,
+          "incident_value": 2.4920616999200003,
+          "signed_change": 2.4867344101700004,
+          "relative_change": 466.79165708416747,
+          "baseline_n": 16,
+          "incident_n": 25,
+          "uncertainty": [],
+          "baseline_median": 0.0017224545000000002,
+          "incident_median": 2.996278826,
+          "baseline_sd": 0.006095894249223627,
+          "baseline_min": 0.001662837,
+          "baseline_max": 0.015878849,
+          "incident_min": 0.001728392,
+          "incident_max": 3.243734766,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "5e162e32e1f01784e3d2b159",
+          "source_path": "/metric/0",
+          "locators": [
+            "metrics.json:data.result[0]"
+          ]
+        }
+      },
+      {
+        "observation_id": "01e7c383b2b39f81e656cfb1",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "Targeted ad request received for [binoculars]",
+          "example": "Targeted ad request received for [binoculars]",
+          "baseline_count": 7,
+          "incident_count": 4,
+          "baseline_rate_per_min": 5.25,
+          "incident_rate_per_min": 2.0,
+          "signed_rate_change": -3.25,
+          "uncertainty": [],
+          "scope": "oteldemo.AdService",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "5bf4693c04726718c5d9bdcb",
+          "source_path": "/log/0",
+          "locators": [
+            "logs.json:datarows[0]",
+            "logs.json:datarows[1]",
+            "logs.json:datarows[2]",
+            "logs.json:datarows[3]",
+            "logs.json:datarows[4]",
+            "logs.json:datarows[5]",
+            "logs.json:datarows[7]",
+            "logs.json:datarows[15]",
+            "logs.json:datarows[19]",
+            "logs.json:datarows[27]",
+            "logs.json:datarows[31]"
+          ]
+        }
+      },
+      {
+        "observation_id": "9b3c5c99346cb872996f7cac",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "High CPU-Load problempattern enabled",
+          "example": "High CPU-Load problempattern enabled",
+          "baseline_count": 1,
+          "incident_count": 12,
+          "baseline_rate_per_min": 0.75,
+          "incident_rate_per_min": 6.0,
+          "signed_rate_change": 5.25,
+          "uncertainty": [],
+          "scope": "oteldemo.problempattern.CPULoad",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "15b54028c220cdd868eb023f",
+          "source_path": "/log/1",
+          "locators": [
+            "logs.json:datarows[6]",
+            "logs.json:datarows[8]",
+            "logs.json:datarows[10]",
+            "logs.json:datarows[12]",
+            "logs.json:datarows[14]",
+            "logs.json:datarows[16]",
+            "logs.json:datarows[18]",
+            "logs.json:datarows[20]",
+            "logs.json:datarows[22]",
+            "logs.json:datarows[24]",
+            "logs.json:datarows[26]",
+            "logs.json:datarows[28]",
+            "logs.json:datarows[30]"
+          ]
+        }
+      },
+      {
+        "observation_id": "943a5b1f34098d90311fef9c",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "Targeted ad request received for [travel]",
+          "example": "Targeted ad request received for [travel]",
+          "baseline_count": 0,
+          "incident_count": 1,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 0.5,
+          "signed_rate_change": 0.5,
+          "uncertainty": [],
+          "scope": "oteldemo.AdService",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "ce0ad093a9d3ecd2c1b2f094",
+          "source_path": "/log/2",
+          "locators": [
+            "logs.json:datarows[9]"
+          ]
+        }
+      },
+      {
+        "observation_id": "a30e64a985d5341883f37d0a",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "Targeted ad request received for [assembly]",
+          "example": "Targeted ad request received for [assembly]",
+          "baseline_count": 0,
+          "incident_count": 3,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 1.5,
+          "signed_rate_change": 1.5,
+          "uncertainty": [],
+          "scope": "oteldemo.AdService",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "e1f80ccda24d5b12394a8713",
+          "source_path": "/log/3",
+          "locators": [
+            "logs.json:datarows[11]",
+            "logs.json:datarows[21]",
+            "logs.json:datarows[29]"
+          ]
+        }
+      },
+      {
+        "observation_id": "7f197b3c57879b28454b4f77",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "Non-targeted ad request received, preparing random response.",
+          "example": "Non-targeted ad request received, preparing random response.",
+          "baseline_count": 0,
+          "incident_count": 1,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 0.5,
+          "signed_rate_change": 0.5,
+          "uncertainty": [],
+          "scope": "oteldemo.AdService",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "4f3f236b1696a0071a6a65cc",
+          "source_path": "/log/4",
+          "locators": [
+            "logs.json:datarows[13]"
+          ]
+        }
+      },
+      {
+        "observation_id": "ce38baec07c1523cdba122e1",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "Targeted ad request received for [accessories]",
+          "example": "Targeted ad request received for [accessories]",
+          "baseline_count": 0,
+          "incident_count": 2,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 1.0,
+          "signed_rate_change": 1.0,
+          "uncertainty": [],
+          "scope": "oteldemo.AdService",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "fc66e198892853d9bfc35684",
+          "source_path": "/log/5",
+          "locators": [
+            "logs.json:datarows[17]",
+            "logs.json:datarows[25]"
+          ]
+        }
+      },
+      {
+        "observation_id": "33deef82c9b2b1bbee9cf036",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "ad",
+          "severity": "INFO",
+          "pattern": "Targeted ad request received for [telescopes]",
+          "example": "Targeted ad request received for [telescopes]",
+          "baseline_count": 0,
+          "incident_count": 1,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 0.5,
+          "signed_rate_change": 0.5,
+          "uncertainty": [],
+          "scope": "oteldemo.AdService",
+          "baseline_severity_rate": 6.0,
+          "incident_severity_rate": 12.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "e95de4c1903b37ef335f4af1",
+          "source_path": "/log/6",
+          "locators": [
+            "logs.json:datarows[23]"
+          ]
+        }
+      },
+      {
+        "observation_id": "45f1883bda97de59f166727d",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "frontend",
+          "operation_or_callee": "GET /api/data",
+          "baseline_n": 14,
+          "incident_n": 24,
+          "baseline_mean_ms": 13.496357142857144,
+          "incident_mean_ms": 9.935125000000001,
+          "baseline_median_ms": 7.390499999999999,
+          "incident_median_ms": 6.37,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": 26.65599999999998,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": -3.5612321428571434,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "10c7a109dffa64a980a9c748",
+          "source_path": "/trace/2",
+          "locators": [
+            "traces.json:data[25].spans[13]",
+            "traces.json:data[25].spans[15]",
+            "traces.json:data[27].spans[5]",
+            "traces.json:data[27].spans[6]",
+            "traces.json:data[30].spans[5]",
+            "traces.json:data[30].spans[8]",
+            "traces.json:data[31].spans[5]",
+            "traces.json:data[31].spans[8]",
+            "traces.json:data[33].spans[5]",
+            "traces.json:data[33].spans[8]",
+            "traces.json:data[35].spans[3]",
+            "traces.json:data[35].spans[4]",
+            "traces.json:data[38].spans[5]",
+            "traces.json:data[38].spans[6]",
+            "traces.json:data[2].spans[1]",
+            "traces.json:data[2].spans[4]",
+            "traces.json:data[3].spans[7]",
+            "traces.json:data[3].spans[10]",
+            "traces.json:data[5].spans[1]",
+            "traces.json:data[5].spans[3]",
+            "traces.json:data[7].spans[7]",
+            "traces.json:data[7].spans[9]",
+            "traces.json:data[9].spans[5]",
+            "traces.json:data[9].spans[7]",
+            "traces.json:data[10].spans[2]",
+            "traces.json:data[10].spans[4]",
+            "traces.json:data[12].spans[4]",
+            "traces.json:data[12].spans[5]",
+            "traces.json:data[15].spans[7]",
+            "traces.json:data[15].spans[10]",
+            "traces.json:data[17].spans[5]",
+            "traces.json:data[17].spans[8]",
+            "traces.json:data[19].spans[6]",
+            "traces.json:data[19].spans[8]",
+            "traces.json:data[22].spans[8]",
+            "traces.json:data[22].spans[10]",
+            "traces.json:data[23].spans[8]",
+            "traces.json:data[23].spans[10]"
+          ]
+        }
+      },
+      {
+        "observation_id": "0cad6ea9e3fa4c21136334c4",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "frontend",
+          "operation_or_callee": "oteldemo.AdService/GetAds",
+          "baseline_n": 7,
+          "incident_n": 12,
+          "baseline_mean_ms": 11.67057142857143,
+          "incident_mean_ms": 8.582333333333333,
+          "baseline_median_ms": 5.619,
+          "incident_median_ms": 4.789,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": -3.088238095238097,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "d56bb17507c71f9db25e5cbb",
+          "source_path": "/trace/4",
+          "locators": [
+            "traces.json:data[25].spans[11]",
+            "traces.json:data[27].spans[3]",
+            "traces.json:data[30].spans[6]",
+            "traces.json:data[31].spans[6]",
+            "traces.json:data[33].spans[6]",
+            "traces.json:data[35].spans[1]",
+            "traces.json:data[38].spans[3]",
+            "traces.json:data[2].spans[2]",
+            "traces.json:data[3].spans[8]",
+            "traces.json:data[5].spans[4]",
+            "traces.json:data[7].spans[10]",
+            "traces.json:data[9].spans[8]",
+            "traces.json:data[10].spans[0]",
+            "traces.json:data[12].spans[2]",
+            "traces.json:data[15].spans[8]",
+            "traces.json:data[17].spans[6]",
+            "traces.json:data[19].spans[4]",
+            "traces.json:data[22].spans[6]",
+            "traces.json:data[23].spans[6]"
+          ]
+        }
+      },
+      {
+        "observation_id": "a735e18630f0922a24b003f4",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "ad"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "ad",
+          "operation_or_callee": "oteldemo.AdService/GetAds",
+          "baseline_n": 7,
+          "incident_n": 12,
+          "baseline_mean_ms": 5.175285714285715,
+          "incident_mean_ms": 4.440833333333333,
+          "baseline_median_ms": 1.33,
+          "incident_median_ms": 1.169,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": -0.7344523809523817,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "f1b2e8b3308d9bcf73e62e90",
+          "source_path": "/trace/9",
+          "locators": [
+            "traces.json:data[25].spans[8]",
+            "traces.json:data[27].spans[7]",
+            "traces.json:data[30].spans[1]",
+            "traces.json:data[31].spans[3]",
+            "traces.json:data[33].spans[1]",
+            "traces.json:data[35].spans[7]",
+            "traces.json:data[38].spans[7]",
+            "traces.json:data[2].spans[7]",
+            "traces.json:data[3].spans[4]",
+            "traces.json:data[5].spans[9]",
+            "traces.json:data[7].spans[1]",
+            "traces.json:data[9].spans[9]",
+            "traces.json:data[10].spans[9]",
+            "traces.json:data[12].spans[7]",
+            "traces.json:data[15].spans[4]",
+            "traces.json:data[17].spans[3]",
+            "traces.json:data[19].spans[9]",
+            "traces.json:data[22].spans[1]",
+            "traces.json:data[23].spans[4]"
+          ]
+        }
+      },
+      {
+        "observation_id": "b1c4a1e4412d99c257d36966",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "trace.structural.edge",
+        "value": {
+          "lane": "trace.structural.edge",
+          "kind": "edge",
+          "service": "frontend",
+          "operation_or_callee": "ad",
+          "baseline_n": 7,
+          "incident_n": 12,
+          "baseline_mean_ms": 5.175285714285715,
+          "incident_mean_ms": 4.440833333333333,
+          "baseline_median_ms": 1.33,
+          "incident_median_ms": 1.169,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": -0.7344523809523817,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "1ad4b1151bb78b1fc29a04f8",
+          "source_path": "/trace/10",
+          "locators": [
+            "traces.json:data[25].spans[8]",
+            "traces.json:data[27].spans[7]",
+            "traces.json:data[30].spans[1]",
+            "traces.json:data[31].spans[3]",
+            "traces.json:data[33].spans[1]",
+            "traces.json:data[35].spans[7]",
+            "traces.json:data[38].spans[7]",
+            "traces.json:data[2].spans[7]",
+            "traces.json:data[3].spans[4]",
+            "traces.json:data[5].spans[9]",
+            "traces.json:data[7].spans[1]",
+            "traces.json:data[9].spans[9]",
+            "traces.json:data[10].spans[9]",
+            "traces.json:data[12].spans[7]",
+            "traces.json:data[15].spans[4]",
+            "traces.json:data[17].spans[3]",
+            "traces.json:data[19].spans[9]",
+            "traces.json:data[22].spans[1]",
+            "traces.json:data[23].spans[4]"
+          ]
+        }
+      },
+      {
+        "observation_id": "2efa55d3c704bee15b10271d",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "ad"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "ad",
+          "pod": "ad-544b5478f8-xfbnn",
+          "pod_uid": "40c684e8-dfd5-4ca1-b9f6-7b75109d2e08",
+          "container": "ad",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": 1,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": 1,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T17:08:11Z",
+              "lastUpdateTime": "2026-09-24T17:08:11Z",
+              "message": "ReplicaSet \"ad-544b5478f8\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T02:25:52Z",
+              "lastUpdateTime": "2026-09-25T02:25:52Z",
+              "message": "Deployment has minimum availability.",
+              "reason": "MinimumReplicasAvailable",
+              "status": "True",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "45fff800be7944761d88adee",
+          "source_path": "/kubernetes/1",
+          "locators": [
+            "k8s_pods.json:items[1]",
+            "k8s_pods.json:items[1]/status/containerStatuses/0"
+          ]
+        }
+      }
+    ]
+  }
+}
