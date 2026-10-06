@@ -1,18 +1,23 @@
-# Frozen demo architecture
+# End-to-end architecture
 
-The demo begins with **Normalized Incident Evidence** supplied as an input fixture/store. Raw collection, connectors, and Source Adapters are outside the demo boundary.
+The project has two related but distinct boundaries. Telemetry collection and normalization were researched and prototyped upstream; the clean, frozen RCA runtime begins at **Normalized Incident Evidence** and does not directly query telemetry systems.
 
-| Stage | Execution | Contract |
-|---|---|---|
-| Fact View | Deterministic | Project normalized entity, field, value, source ID, and source path into immutable `F` records. No paraphrase or causal inference. |
-| Fact Selector | Deterministic, optional | Select whole existing Facts only when the provider input budget requires it. |
-| History retrieval | Deterministic | Retrieve `H` precedent from the historical store; preserve ranking and source identity. |
-| Domain Knowledge retrieval | Deterministic | Retrieve `K` general semantics from the sourced knowledge corpus; preserve ranking and provenance. |
-| Hypothesis Generator | LLM | Propose zero or more competing explanations. Speculative relations remain hypotheses, with assumptions and unresolved questions. |
-| Hypothesis Validator | LLM | Decide `KEEP`, `KEEP_QUALIFIED`, or `REJECT`; separately report `STRONG`, `PLAUSIBLE`, `WEAK`, or `CONTRADICTED`. Lack of direct causal proof alone is not rejection. |
-| Result Assembler | Deterministic | Preserve F/H/K references and validator qualifications. Never rewrite a hypothesis or create a Fact. |
-| API/UI result | Deterministic rendering | Dereference original F/H/K records in separate sections. |
+~~~mermaid
+flowchart TD
+    A[Prometheus / OpenSearch / Jaeger / Kubernetes]
+    B[Collection and source processing]
+    C[Normalized Incident Evidence]
+    D[RCA Core]
+    E[RCAResult]
+    F[API / UI]
+    A --> B --> C --> D --> E --> F
+~~~
 
-The Generator and Validator are the only semantic LLM stages. No LLM call occurs after validation. Provider requests use Groq `openai/gpt-oss-120b`, medium reasoning, `include_reasoning=false`, temperature `0`, a `4096` completion-token cap, and strict structured output. Transient retries send the identical request, with at most three attempts.
+- [Telemetry Contract](telemetry_contract.md) owns the researched boundary from raw telemetry to Normalized Incident Evidence.
+- [RCA Contract](rca_contract.md) owns the current frozen boundary from Normalized Incident Evidence to RCAResult.
 
-Phase 0 defines this boundary and the migration map only. No stage implementation is present in `src/rca_ai/` yet. The [migration inventory](migration_inventory.md) identifies the files and exact request artifacts used by the final successful fresh-pipeline smoke, including unresolved consolidation questions.
+The telemetry Processor and clean RCA Core now meet at `CanonicalIncidentEvidence`. The Processor assigns objective modality/entity/provenance semantics; the Core independently projects those observations into Facts and a retrieval query. Retrieval eligibility is an RCA policy and is not emitted by the Processor.
+
+The release runner currently calls Processor v1.1's `process_capture_canonical` entry point, which emits its existing selected modality observations. A separate `process_capture_canonical_structural` experiment preserves a broader observation set, but is not wired into the release runner and has not passed live structural-only E2E regression. That integration remains future validation work.
+
+Earlier normalized-evidence and retrieval-query fixtures remain regression controls for the historical pipeline; their manual curation is not the current public input contract. Canonical retrieval always uses the Core's structured signal-channel projection, per-channel BM25, and RRF fusion for History; the research-stage plain-query History route is not part of the runtime. Telemetry acquisition remains a research/prototype layer, and the Core still does not claim arbitrary telemetry ingestion or production readiness.

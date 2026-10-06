@@ -1,20 +1,22 @@
 # RCA AI demo
 
-RCA AI turns normalized incident evidence into source-backed candidate explanations for investigation. This repository is the clean home for the validated demo architecture. Phase 0 contains only the Python package skeleton and migration documentation; the RCA implementation has **not** been ported.
+RCA AI turns canonical, source-linked incident observations into candidate explanations for investigation. The clean Python project contains the frozen reasoning core and an explicit Processor-to-Core evidence boundary.
 
-The demo input boundary is **Normalized Incident Evidence**. Raw telemetry collection, Prometheus/OpenSearch/Jaeger/Kubernetes connectors, and Source Adapters remain outside this project’s demo scope.
+The Core input is `IncidentInput(incident_id, evidence)`, where `evidence` is `CanonicalIncidentEvidence` produced by the telemetry Processor. Raw telemetry connectors are upstream research/prototype work; the clean Core does not query Prometheus, OpenSearch, Jaeger, or Kubernetes directly.
 
-The frozen in-scope flow is deterministic Fact View construction, optional deterministic Fact selection, History and Domain Knowledge retrieval, an LLM Hypothesis Generator, an LLM Hypothesis Validator, and deterministic result assembly for an API/UI. Current Facts, historical precedent, general knowledge, and generated inference keep separate provenance. See [architecture](docs/architecture.md), [provenance](docs/provenance.md), and the [migration inventory](docs/migration_inventory.md).
+The Processor reports source-faithful observations and provenance. The Core builds one Fact per observation and independently creates retrieval material; it owns search eligibility and Fact selection. History, Domain Knowledge, current Facts, generated Hypotheses, and Validator Qualifications remain distinct. See the [architecture](docs/architecture.md), [telemetry contract](docs/telemetry_contract.md), [RCA contract](docs/rca_contract.md), and [migration inventory](docs/migration_inventory.md).
+
+The release runner currently uses the Processor's canonical entry point with its existing modality selection. The broader structural-only Processor path remains an experiment and has not yet been integrated into live release regression. The deterministic Fact Selector bounds request size but can omit most observations in high-volume cases; selected Facts are not a coverage guarantee.
 
 ## Layout and status
 
-- `src/rca_ai/`: installable package; no RCA implementation modules yet.
-- `tests/`: unit, integration, and fixture locations.
-- `data/`: future demo inputs, History corpus, and Domain Knowledge corpus.
-- `docs/`: frozen decisions, provenance, limitations, and migration sources.
-- `scripts/`: future project utilities.
+- `src/rca_ai/domain/`: canonical evidence and RCA semantic contracts.
+- `src/rca_ai/facts/` and `retrieval/`: deterministic Core projections and unchanged retrieval engines.
+- `src/rca_ai/reasoning/`, `providers/`, and `pipeline/`: frozen Generator, Validator, provider boundary, orchestration, and assembler.
+- `tests/`: unit/integration regressions; `data/`: frozen H/K stores.
+- `docs/`: contracts, decisions, limitations, and migration lineage; `scripts/`: release runner.
 
-The old research workspaces are read-only references. Phase 1 must be reviewed against `docs/migration_inventory.md` before any behavior is ported.
+Historical normalized-evidence and manually prepared retrieval inputs remain test controls only. They are not the new Processor/Core public contract.
 
 ## Local setup
 
@@ -27,8 +29,8 @@ python -m pip install -e ".[test]"  # Only when running tests
 python -m pytest tests
 ```
 
-The Groq credential variable name is shown in `.env.example`; never commit a real key. No provider call is made by the Phase 0 package.
+The Groq credential variable name is shown in `.env.example`; never commit a real key. Unit and integration tests use local fake providers; live release regression requires an explicitly available `GROQ_API_KEY`.
 
 ## Code documentation rule
 
-Comments and docstrings should explain **why** significant behavior exists, particularly architectural invariants. Important future modules should state their responsibility, inputs/outputs, invariants, and why those invariants protect source fidelity. Do not comment obvious syntax or loops. For example, the future Fact builder should explain why it must not summarize or infer causality: semantic inference belongs to the Hypothesis layer.
+Comments and docstrings should explain **why** significant behavior exists, particularly architectural invariants. Important modules state their responsibility, inputs/outputs, and why invariants protect source fidelity. Do not comment obvious syntax or loops. The Fact builder does not summarize or infer causality because semantic inference belongs to the Hypothesis layer.

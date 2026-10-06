@@ -1,6 +1,6 @@
-# Phase 0 migration inventory
+# Migration inventory and canonical evidence boundary
 
-This is a trace of the implementation that produced `R/rca_demo_milestone/artifacts/fresh_pipeline_smoke_20261004/summary.json`, whose three scenarios completed and reassembled exactly. It is **not** a list of files to copy wholesale. No RCA behavior has been ported in Phase 0.
+The entries below preserve provenance for the earlier frozen RCA implementation that produced `R/rca_demo_milestone/artifacts/fresh_pipeline_smoke_20261004/summary.json`. That implementation and its saved normalized/query inputs remain historical regression controls. The current public Processor-to-Core boundary is the canonical evidence contract described in the update note at the end of this document.
 
 Path prefixes below are exact Windows workspace roots:
 
@@ -9,7 +9,7 @@ Path prefixes below are exact Windows workspace roots:
 
 The decisive call graph is `R/rca_demo_milestone/fresh_pipeline_smoke.py:main` → `run_scenario` → fresh `build_fact_view`, `retrieve_context`, `select_exact_facts`, `request_for_facts`, `provider_call`, `compact_validator_request`, `assemble_result`, and `reassemble_from_fresh`. The run manifest records source/code hashes and model configuration. The old `release_smoke.py` alone is **not** the source of truth for the normalized-evidence boundary: it loaded saved Fact Views and context. Its `provider_call` and frozen request-template constants were imported by the final fresh runner.
 
-Statuses: **TRACED** means the final run identifies exact behavior and source; **NEEDS REVIEW** means Phase 1 must resolve an interface or competing source without changing frozen semantics arbitrarily.
+Statuses in the historical entries below describe the original port. The canonical evidence boundary migration at the end supersedes earlier input-shape/query-input descriptions.
 
 ### 1. Normalized input contract
 
@@ -25,7 +25,7 @@ Frozen behavior that MUST NOT change: start after normalization; preserve each f
 
 Dependencies: scenario normalized fixtures and existing normalized retrieval-query representation.
 
-Migration notes: **STATUS: RESOLVED FOR THE DOMAIN CONTRACT.** `IncidentInput` now keeps `normalized_evidence` as an opaque mapping and permits a separate optional `retrieval_input` mapping or query string. This accommodates the frozen shape differences without imposing a new semantic normalized-evidence schema. Fixture packaging and the scenario-specific retrieval paths remain separate later-phase concerns; do not substitute saved Fact Views or retrieved context.
+Migration notes: **STATUS: SUPERSEDED BY CANONICAL EVIDENCE MIGRATION.** `IncidentInput` now contains `incident_id` and `CanonicalIncidentEvidence`. The old normalized mappings and separately prepared retrieval inputs are retained only as historical controls; callers do not supply either public field.
 
 ### 2. Domain models
 
@@ -41,7 +41,7 @@ Frozen behavior that MUST NOT change: distinct F/H/K identities, exact Fact valu
 
 Dependencies: normalized input shapes, generator/validator schemas, assembler output.
 
-Migration notes: **STATUS: RESOLVED FOR PHASE 1.** `src/rca_ai/domain/models.py` now defines frozen dataclasses from the final runner/request contracts: `IncidentInput`, `FactEntity`, `Fact`, `HistoricalContext`, `KnowledgeItem`, `Hypothesis`, validator detail/result models, and final result models. The classes preserve F/H/K as separate namespaces; history and knowledge payload records remain opaque mappings so their sourced fields are not paraphrased or narrowed. Nested JSON payloads are shallowly held and treated as read-only by convention. Retrieval ranking metadata is intentionally not part of the semantic domain model. No obsolete research classes were copied.
+Migration notes: **STATUS: EXTENDED FOR CANONICAL EVIDENCE.** `src/rca_ai/domain/models.py` defines `CanonicalIncidentEvidence`, `CanonicalObservation`, `EvidenceEntity`, `EvidenceSource`, and `IncidentInput(incident_id, evidence)` in addition to the frozen RCA semantic models. The canonical types retain modality/value/source structure without RCA importance or diagnosis metadata.
 
 ### 3. Fact View Builder
 
@@ -57,7 +57,7 @@ Frozen behavior that MUST NOT change: deterministic F1…Fn order; exact normali
 
 Dependencies: normalized input contract; integrity verifiers.
 
-Migration notes: **STATUS: MIGRATED.** `src/rca_ai/facts/builder.py` ports the fresh runner's three structural projections without incident-name routing, plus exact projection verification for ID/order, entity, field, value, source reference, and source path. The narrow Kubernetes field-to-owner mapping is preserved because Pod phase and container diagnostics belong to different entities. Tests build Facts afresh from copied normalized inputs and compare against the saved final Fact Views under `tests/fixtures/facts/expected/fact_views/`; copied Fact Views are expected outputs only.
+Migration notes: **STATUS: REPLACED AT THE INPUT BOUNDARY.** `src/rca_ai/facts/builder.py` now has one generic observation-to-Fact projection and independent deterministic re-projection verification. It copies explicit entity, field, structured value, source reference, and source path; it has no backend or Kubernetes field-name ownership logic. The former container_event/composite/grouped builders and their expected Fact Views describe historical curation, not the current public contract.
 
 ### 4. Deterministic Fact Selector
 
@@ -81,7 +81,7 @@ Purpose: retrieve analogous incidents as precedent, never current proof.
 
 Frozen source: `R/rca_demo_milestone/fresh_pipeline_smoke.py:retrieve_context`; for missing-secret/application-failure it imported `E/app/retrieval/service.py:RetrievalService`, `E/app/corpus.py:CorpusRepository`, `E/app/source_bridge.py:build_query_text,evidence_from_payload`, and the underlying `E/app/retrieval/bm25.py`, `rrf.py`; for ad-high-cpu it called `R/retrieval_experiment/src/bm25_retriever.py:BM25Index` over the frozen query file and corpus.
 
-Evidence that canonical: each final `retrieval_result.json` records a freshly built query, ranking, IDs, and store; missing/app used channel BM25+RRF, ad used plain BM25. The missing-secret third H changed from the prior synthetic saved context to H020 without tuning.
+Evidence that canonical: final fresh artifacts record query, ranking, IDs, and source store. The clean canonical Processor-to-Core runtime now applies the same structured channel BM25 + RRF History path to all three captures; the former ad plain-query run is retained only as historical comparison evidence.
 
 Target: `src/rca_ai/retrieval/history.py`.
 
@@ -89,7 +89,7 @@ Frozen behavior that MUST NOT change: fresh retrieval from corpus, recorded orde
 
 Dependencies: normalized query input, historical corpus, retrieval representation, BM25/channel/RRF code.
 
-Migration notes: **STATUS: MIGRATED.** `src/rca_ai/retrieval/history.py` exposes `retrieve_history(retrieval_input, store=...)` and selects solely by contract shape: an already normalized structured evidence mapping rebuilds the frozen canonical query and uses channel BM25 + RRF; a plain query string uses plain BM25. This intentionally preserves the two validated paths rather than unifying them. `HistoryRetrievalResult` carries the query, strategy, H-domain results, and the frozen ranking diagnostics/scores outside domain records. Channel query projection follows `E/app/source_bridge.py` and `R/retrieval_representation/builder.py`; channel rendering follows `R/channel_retrieval_experiment/src/core.py`; the BM25 and RRF code follows `E/app/retrieval/{bm25.py,rrf.py}`. Ad ranking follows `R/retrieval_experiment/src/bm25_retriever.py`. No scenario-name routing or saved-result injection is used. Exact normalized query inputs and fresh-run result JSON are copied only under `tests/fixtures/retrieval/` as test inputs/expected outputs.
+Migration notes: **STATUS: STRUCTURED-ONLY CANONICAL INPUT; ENGINE UNCHANGED.** `src/rca_ai/retrieval/projection.py` deterministically renders `CanonicalIncidentEvidence` using the existing field allowlists/renderers. `retrieve_history()` and `retrieve_knowledge()` now accept only this structured projection; input representation cannot select an algorithm. History always uses the existing per-channel BM25 + RRF path. Knowledge retains its existing BM25 ranking over `knowledge_key + claim` using the same canonical rendered query. The old string-based plain History retrieval implementation has been removed; its saved query/result remains a historical control only. `HistoryRetrievalResult` diagnostics and retrieval scoring parameters are unchanged.
 
 ### 6. Domain Knowledge Retrieval
 
@@ -105,7 +105,7 @@ Frozen behavior that MUST NOT change: lowercase Unicode word tokenization; `k1=1
 
 Dependencies: normalized retrieval query; sourced knowledge corpus.
 
-Migration notes: **STATUS: MIGRATED.** `src/rca_ai/retrieval/knowledge.py` uses the shared frozen query projection, the standard-library BM25 port (`k1=1.5`, `b=0.75`, lowercase Unicode `\w+` tokens with query-term multiplicity), and indexes exactly `knowledge_key + claim`. It retains the top three ranking (including zero-score rows in metadata) and returns only positive-score `KnowledgeItem`s, preserving K provenance. Application-failure/ad-high-cpu may retrieve weakly relevant K items; this accepted behavior is unchanged.
+Migration notes: **STATUS: UNCHANGED ENGINE, CANONICAL QUERY SOURCE.** `src/rca_ai/retrieval/knowledge.py` consumes the Core-generated query projection; BM25 (`k1=1.5`, `b=0.75`), lowercase Unicode tokenization, `knowledge_key + claim`, top-three ranking and positive-score filtering are unchanged. The external caller no longer supplies retrieval-specific material.
 
 ### 7. History store
 
@@ -299,9 +299,9 @@ Dependencies: all migrated domain, facts, retrieval, reasoning, provider-injecte
 
 Migration notes: **STATUS: MIGRATED.** `RCAPipeline.run()` preserves the final runner's operational order and exposes actual stage outputs in `PipelineRunResult`. Mock-provider integration tests reproduce the frozen `final_result.json` exactly for all three scenarios. This is a wiring proof only; no live provider calls are made.
 
-### Release regression record — 20261005T072148Z
+### Historical release regression record — 20261005T072148Z
 
-Artifact directory: `artifacts/release_regression_20261005T072148Z/`. All three scenarios ran through the clean pipeline with live Groq completions. Pre-LLM counts matched frozen expectations (21/21 with H/K 3/3; 52/25 with H/K 3/1; 14/14 with H/K 3/2). Prompt/schema hashes matched; all scenarios passed strict output validation, provenance resolution, secret-leak audit, and exact deterministic reassembly. Classification: `RCA_CLEAN_REBUILD_RELEASE_PASS`.
+Artifact directory: `artifacts/release_regression_20261005T072148Z/`. This successful live run used the pre-migration normalized/query input contract. It is historical evidence for the frozen semantic core only; it does not verify the new canonical evidence boundary.
 
 ### 18. Demo fixtures
 
@@ -317,7 +317,7 @@ Frozen behavior that MUST NOT change: exact fixture bytes and source hashes when
 
 Dependencies: input contract, History/DK stores, retrieval query representation.
 
-Migration notes: **STATUS: NEEDS REVIEW** for packaging the multiple normalized/query files as one clear per-scenario fixture bundle. The ad input is an already grouped normalized evidence artifact, not a saved Fact View.
+Migration notes: **STATUS: HISTORICAL INPUTS.** The source captures now feed `process_capture_canonical`; normalized Fact Views and retrieval-input artifacts remain comparison controls and are not loaded by the release runner.
 
 ### 19. Regression and freeze tests
 
@@ -333,9 +333,9 @@ Frozen behavior that MUST NOT change: source hashes, Fact IDs/values, selection-
 
 Dependencies: all migrated components and immutable fixtures.
 
-Migration notes: **STATUS: NEEDS REVIEW.** Existing tests cover pieces, while the fresh pipeline proof is an experiment runner plus artifacts rather than a single portable automated integration test. Build proper tests in a later phase; do not use provider calls in unit tests.
+Migration notes: **STATUS: EXTENDED.** `tests/integration/pipeline/test_processor_canonical_e2e.py` runs the three saved captures through Processor v1.1, the canonical parser, Core projections, retrieval, selection, and assembly with fake semantic providers. This is deterministic wiring/provenance coverage, not live model validation.
 
-## Planned target structure — not implemented in Phase 0
+## Original planned target structure (historical)
 
 ```text
 src/rca_ai/
@@ -364,4 +364,19 @@ src/rca_ai/
     └── schemas.py
 ```
 
-Phase 0 created none of these future modules. Resolve every `NEEDS REVIEW` item and review the migration boundary before Phase 1.
+This was the Phase 0 proposal; most listed core modules were later implemented and reviewed in phases. The API subtree remains outside the current runtime.
+
+## Canonical evidence boundary migration
+
+**Current status:** implemented in the Processor v1.1 bridge and clean Core Layer 1.
+
+**Execution distinction:** the clean release runner currently uses `process_capture_canonical`, which emits the Processor's existing modality-selected observations. `process_capture_canonical_structural` is a separate structural-only experiment and is not connected to the release runner. No structural-only live three-scenario E2E pass is claimed; that validation remains pending.
+
+- Processor target: `rca_processor_v1_1/canonical.py` (`to_canonical_evidence`) and `process_capture_canonical`. It converts every selected metric/log/trace/Kubernetes observation to a stable, source-linked canonical observation. Processor log output no longer carries `retrieval_eligible` or `quarantine_reason`.
+- Core targets: `src/rca_ai/domain/models.py`, `src/rca_ai/facts/builder.py`, `src/rca_ai/retrieval/projection.py`, and `src/rca_ai/pipeline/orchestrator.py`.
+- The Fact projection is one canonical observation to one Fact. Entity ownership is resolved in the Processor contract; no Kubernetes field-name logic remains in Core.
+- Retrieval renderers and BM25/RRF engines are unchanged. Core owns the generic control-narration exclusion; an excluded log remains a Fact.
+- Historical normalized Fact Views and retrieval inputs remain controls only. Their scenario-specific curation is not reconstructed as policy.
+- Deterministic fake-provider integration covers all three saved captures in `tests/integration/pipeline/test_processor_canonical_e2e.py`.
+
+The early sections above record the lineage of frozen algorithms and schemas. Where their old input fixture counts or query-source descriptions differ from this update, the canonical boundary migration is current and the old artifacts are historical comparison data.
