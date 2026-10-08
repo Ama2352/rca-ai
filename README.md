@@ -50,7 +50,7 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by Vite. Its development proxy forwards `/api` to the local FastAPI service. Configure `GROQ_API_KEY` in the API process only before invoking analysis. See the [runbook](docs/demo_runbook.md) for behavior and limitations.
+Open the URL printed by Vite. Its development proxy forwards `/api` to the local FastAPI service. Configure both `GROQ_API_KEY` and `CEREBRAS_API_KEY` in the API process only before invoking analysis. See the [runbook](docs/demo_runbook.md) for behavior and limitations.
 
 ## Repository map
 
