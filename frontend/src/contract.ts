@@ -143,6 +143,8 @@ export interface AnalysisJob {
   facts?: Fact[]
   presented_facts?: EvidencePresentation[]
   fact_integrity?: boolean
+  history_ids?: string[]
+  knowledge_ids?: string[]
   resolved_sources_by_candidate?: Record<string, ResolvedSources>
   error?: { code: string; retry_after_seconds?: number }
 }

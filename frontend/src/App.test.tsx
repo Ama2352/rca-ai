@@ -29,12 +29,18 @@ const incidents = [
     affected_services: ["ad"], symptoms: ["Elevated CPU"],
     available_evidence_sources: ["metric", "log", "trace", "kubernetes"],
     analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Compare CPU", "Validate explanations"] },
+  { id: "dependency-unavailable-01", title: "Checkout → Payment · Dependency Unavailable", description: "Checkout records UNAVAILABLE responses on outbound Payment Charge requests.",
+    source: "otel-demo", readiness: "demo-ready", prepared_input: "data/demo/dependency-unavailable-01.json",
+    affected_services: ["checkout", "payment"], symptoms: ["UNAVAILABLE responses"], available_evidence_sources: ["metric", "log", "trace", "kubernetes"],
+    analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Inspect dependency edge"] },
+  { id: "messaging-failure-01", title: "Messaging Failure", description: "A prepared queue-overload simulation and consumer delay are captured.",
+    source: "otel-demo", readiness: "demo-ready", prepared_input: "data/demo/messaging-failure-01.json",
+    affected_services: ["checkout", "fraud-detection", "kafka"], symptoms: ["Consumer delay", "zero measured lag"],
+    available_evidence_sources: ["metric", "log", "trace", "kubernetes"], analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Inspect messaging signals"] },
   ...[
     ["cart-failure-01", "Cart Failure", "otel-demo"],
-    ["dependency-unavailable-01", "Dependency Unavailable", "otel-demo"],
     ["downstream-latency-01", "Downstream Latency", "otel-demo"],
     ["memory-leak-01", "Memory Leak", "otel-demo"],
-    ["messaging-failure-01", "Messaging Failure", "otel-demo"],
     ["crash-loop-backoff-01", "Crash Loop Backoff", "custom-k8s"],
   ].map(([id, title, source]) => ({ id, title, source, readiness: "experimental", prepared_input: null })),
 ]
@@ -122,8 +128,8 @@ test("overview appears before analysis and does not reveal mock RCA results", as
   expect(screen.getByRole("heading", { name: "Scenario Library" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "OpenTelemetry Demo" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "Custom Kubernetes" })).toBeInTheDocument()
-  expect(screen.getAllByRole("button", { name: /Demo v1 analysis available/ })).toHaveLength(3)
-  expect(screen.getAllByRole("button", { name: /Not yet available for Demo v1 analysis/ })).toHaveLength(6)
+  expect(screen.getAllByRole("button", { name: /Demo v1 analysis available/ })).toHaveLength(5)
+  expect(screen.getAllByRole("button", { name: /Not yet available for Demo v1 analysis/ })).toHaveLength(4)
   expect(screen.getByText(/Telemetry is observation, not a confirmed root cause/i)).toBeInTheDocument()
   expect(screen.queryByText("A cautious working explanation.")).not.toBeInTheDocument()
   expect(calls).toEqual(["GET /api/demo/incidents"])
@@ -139,6 +145,22 @@ test("known cause, observed symptoms, and RCA explanation are separate before an
   expect(screen.queryByText(/Telemetry-Docs · Pending · Pending/)).not.toBeInTheDocument()
   expect(screen.getByText(/RCA reviews current evidence/i)).toBeInTheDocument()
   expect(screen.queryByText("A cautious working explanation.")).not.toBeInTheDocument()
+})
+
+test.each([
+  ["Checkout → Payment · Dependency Unavailable", "paymentUnreachable", /outbound Payment Charge metric records incident responses labeled UNAVAILABLE/],
+  ["Messaging Failure", "kafkaQueueProblems", /measured consumer-lag metric stays at 0/],
+])("new scenario overview shows its cause and qualified symptoms before analysis", async (title, flag, symptom) => {
+  const calls = apiFetch()
+  const user = userEvent.setup()
+  render(<App />)
+  await screen.findByRole("heading", { name: "Scenario overview" })
+  await user.click(screen.getByRole("button", { name: new RegExp(`${title}.*Demo v1 analysis available`) }))
+  expect(screen.getByText(new RegExp(flag))).toBeInTheDocument()
+  expect(screen.getByText(symptom)).toBeInTheDocument()
+  expect(screen.getByText("Available telemetry")).toBeInTheDocument()
+  expect(screen.getByRole("button", { name: "Analyze incident" })).toBeEnabled()
+  expect(calls).toEqual(["GET /api/demo/incidents"])
 })
 
 test("semantic Fact rendering shows meaning before collapsed raw JSON", async () => {
@@ -348,6 +370,60 @@ test("candidate Fact, history, knowledge, and qualification references navigate 
   expect(screen.getByRole("heading", { name: "Open questions" })).toBeInTheDocument()
   expect(screen.getByText("Generator + Validator")).toBeInTheDocument()
   expect(screen.getAllByText(/Confirm mechanism/i)).toHaveLength(1)
+})
+
+test("semantically identical historical cards group while retaining each navigable H alias and raw variant", async () => {
+  const payload = structuredClone(completed) as unknown as AnalysisJob
+  payload.history_ids = ["H001", "H003", "H004"]
+  payload.resolved_sources_by_candidate!.HYP1.history = [
+    { alias: "H001", source_id: "hist-1", source_type: "HISTORY", record: {
+      incident_id: "H001", affected_component: "ad", root_cause: "Ad service CPU saturation",
+      resolution_note: "Seeded resolved historical variant for retrieval testing.",
+      recommended_action: "Inspect ad worker CPU and scale if demand persists.", retrieval_text: "metric variant one",
+    } },
+    { alias: "H003", source_id: "hist-3", source_type: "HISTORY", record: {
+      incident_id: "H003", affected_component: "ad", root_cause: "Ad service CPU saturation",
+      resolution_note: "Seeded resolved historical variant for retrieval testing.",
+      recommended_action: "Inspect ad worker CPU and scale if demand persists.", retrieval_text: "trace variant three",
+    } },
+    { alias: "H004", source_id: "hist-4", source_type: "HISTORY", record: {
+      incident_id: "H004", affected_component: "payment", root_cause: "Payment application rejection",
+      recommended_action: "Inspect payment request validation.", retrieval_text: "different root-cause class",
+    } },
+  ]
+  payload.result!.candidate_results[0].history_refs = ["H001", "H003", "H004"]
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL) => {
+    const url = String(input)
+    if (url === "/api/demo/incidents") return Promise.resolve(Response.json({ incidents }))
+    if (url === "/api/demo/analyses") return Promise.resolve(Response.json({ analysis_id: "job-1", incident_id: "missing-secret-01", status: "queued" }, { status: 202 }))
+    if (url === "/api/demo/analyses/job-1") return Promise.resolve(Response.json(payload))
+    throw new Error(`Unexpected request: ${url}`)
+  }))
+  const user = userEvent.setup()
+  Element.prototype.scrollIntoView = vi.fn()
+  render(<App />)
+  await screen.findByRole("heading", { name: "Scenario overview" })
+  await user.click(screen.getByRole("button", { name: "Analyze incident" }))
+  expect(await screen.findAllByText("Ad service CPU saturation")).toHaveLength(1)
+  expect(document.querySelectorAll("article.historical-case")).toHaveLength(2)
+  for (const id of ["H001", "H003", "H004"]) {
+    const chips = screen.getAllByRole("button", { name: id })
+    await user.click(chips[chips.length - 1])
+    expect(vi.mocked(Element.prototype.scrollIntoView)).toHaveBeenCalled()
+  }
+  await user.click(screen.getByRole("button", { name: "View H001 source details" }))
+  expect(await screen.findByText(/metric variant one|trace variant three/)).toBeInTheDocument()
+})
+
+test("open questions keep source attribution separate from readable question text", async () => {
+  apiFetch()
+  const user = userEvent.setup()
+  render(<App />)
+  await screen.findByRole("heading", { name: "Scenario overview" })
+  await user.click(screen.getByRole("button", { name: "Analyze incident" }))
+  const question = await screen.findByText("confirm mechanism")
+  expect(question).toHaveClass("open-question-text")
+  expect(screen.getByText("Generator + Validator")).toHaveClass("open-question-sources")
 })
 
 test("completed analysis displays authoritative measured execution total", async () => {

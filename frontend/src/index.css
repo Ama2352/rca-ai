@@ -375,7 +375,7 @@ a { color: inherit; }
 /* One reasoning-gaps section with three lightly divided columns. */
 .uncertainty-section { display: block; padding: 11px 14px 0; border-radius: 5px; }
 .reasoning-gap-title h2 { margin: 0; color: #dce6e9; font-size: 12px; font-weight: 590; }
-.uncertainty-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 6px; }
+.uncertainty-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px; }
 .uncertainty-column { padding: 8px 12px 10px; }
 .uncertainty-column:first-child { padding-left: 0; }
 .uncertainty-column:last-child { padding-right: 0; }
@@ -423,7 +423,13 @@ a { color: inherit; }
 .reference-chip:hover { background: #2b4651; }
 .unresolved-ref { color: #aeb7ba; font-size: 10px; }
 .is-reference-target { outline: 2px solid #83c3d0; outline-offset: 3px; transition: outline-color 1.8s; }
-.uncertainty-column small { display: inline-block; margin-left: 6px; color: #8faab2; font-size: 9px; }
+.gap-list { gap: 13px; margin-top: 12px; font-size: 14px; line-height: 1.65; }
+.gap-list li { min-width: 0; color: #d0dade; overflow-wrap: anywhere; }
+.gap-text, .open-question-text { display: block; color: #d0dade; font-size: 14px; line-height: 1.65; }
+.open-question-sources { display: block; width: fit-content; margin-top: 5px; color: #91aab2; font-size: 10px; line-height: 1.35; letter-spacing: .02em; }
+.historical-aliases { display: flex; flex-wrap: wrap; gap: 5px; }
+.historical-alias { display: inline-flex; align-items: center; min-height: 21px; padding: 2px 7px; border: 1px solid #41616b; border-radius: 4px; background: #20323a; color: #bde0e7; font: inherit; font-size: 10px; }
+.historical-ranks { margin: -2px 0 0; color: #9aabb1; font-size: 10px; line-height: 1.4; }
 .analysis-progress, .analysis-execution { margin: 18px 0; padding: 15px 18px; border: 1px solid #344851; border-radius: 8px; background: #17232a; color: #c8d7dc; font-size: 11px; }
 .analysis-progress { display: grid; gap: 8px; }
 .analysis-progress strong { color: #e7f1f3; font-size: 13px; }

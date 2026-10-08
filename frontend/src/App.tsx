@@ -273,7 +273,7 @@ function UncertaintyGroup({ title, note, items }: { title: string; note: string;
       {items.length ? (
         <>
           <ul className={open ? "gap-list is-open" : "gap-list gap-preview"}>
-            {(open ? items : preview).map((item, index) => <li key={`${title}-${index}`}>{item}</li>)}
+            {(open ? items : preview).map((item, index) => <li key={`${title}-${index}`}><span className="gap-text">{item}</span></li>)}
           </ul>
           {items.length > 1 && (
             <button className="gap-toggle" type="button" onClick={() => setOpen(!open)}>
@@ -307,7 +307,7 @@ function UncertaintySection({ candidate }: { candidate: CandidateResult }) {
         <div className="uncertainty-column">
           <h3>What to inspect next</h3>
           {[...questions.values()].length ? <ul className="gap-list is-open">{[...questions.values()].map(({ text, sources }) => (
-            <li key={text}>{text} <small>{[...sources].join(" + ")}</small></li>
+            <li key={text}><span className="open-question-text">{text}</span><small className="open-question-sources">{[...sources].join(" + ")}</small></li>
           ))}</ul> : <p className="quiet-empty">None recorded.</p>}
         </div>
       </div>
@@ -325,23 +325,40 @@ function HistorySection({ items, candidateId }: { items: ResolvedSources["histor
     return fields.find(([, value]) => typeof value === "string" && value.length > 0)
   }
 
+  const groups = new Map<string, typeof items>()
+  for (const item of items) {
+    const summary = historicalText(item.record)
+    const key = JSON.stringify([
+      item.record.affected_component ?? null,
+      summary?.[0] ?? null,
+      summary?.[1] ?? null,
+      typeof item.record.resolution === "string" ? item.record.resolution : null,
+      typeof item.record.recommended_action === "string" ? item.record.recommended_action : null,
+    ])
+    groups.set(key, [...(groups.get(key) ?? []), item])
+  }
+
   return (
     <section className="context-section history-context" aria-labelledby="history-title">
       <div className="section-heading compact-heading">
         <div className="section-symbol h-symbol">H</div>
-        <div><h2 id="history-title">Historical precedent</h2><p>Prior incidents retrieved as context, not current evidence</p></div>
+        <div><h2 id="history-title">Historical precedent</h2><p>Seeded historical cases retrieved as context, not current evidence</p></div>
       </div>
-      {items.length ? items.map((item) => {
+      {items.length ? [...groups.values()].map((group) => {
+        const item = group[0]
         const summary = historicalText(item.record)
         return (
-        <article className="context-record" key={item.alias} id={sourceTarget(candidateId, "H", item.alias)}>
+        <article className="context-record historical-case" key={group.map((entry) => entry.alias).join("-")}>
           <div className="context-record-heading">
             <div className="context-identity">
-              <strong>{item.record.incident_id ?? item.source_id}</strong>
+              <strong>Historical case</strong>
               {item.record.affected_component && <span>{item.record.affected_component}</span>}
             </div>
-            {typeof item.retrieval_rank === "number" && <small>Retrieved #{item.retrieval_rank}</small>}
+            <div className="historical-aliases" aria-label="Historical source references">
+              {group.map((entry) => <span key={entry.alias} id={sourceTarget(candidateId, "H", entry.alias)} className="historical-alias" title={`Source ${entry.source_id}${typeof entry.retrieval_rank === "number" ? ` · retrieval rank ${entry.retrieval_rank}` : ""}`}>{entry.alias}</span>)}
+            </div>
           </div>
+          <p className="historical-ranks">{group.map((entry) => typeof entry.retrieval_rank === "number" ? `${entry.alias} retrieved #${entry.retrieval_rank}` : null).filter(Boolean).join(" · ")}</p>
           <div className="context-summary-stack">
             {summary && (
               <div className="context-summary">
@@ -356,12 +373,15 @@ function HistorySection({ items, candidateId }: { items: ResolvedSources["histor
               <div className="context-summary"><span>Past recommended action</span><p>{item.record.recommended_action}</p></div>
             )}
           </div>
-          <Collapsible className="source-details" defaultOpen={false}>
-            <CollapsibleTrigger className="details-trigger">View historical details <ChevronDown aria-hidden="true" /></CollapsibleTrigger>
-            <CollapsibleContent className="details-content">
-              <pre>{JSON.stringify(item.record, null, 2)}</pre>
-            </CollapsibleContent>
-          </Collapsible>
+          {group.map((entry) => (
+            <Collapsible className="source-details" defaultOpen={false} key={`details-${entry.alias}`}>
+              <CollapsibleTrigger className="details-trigger">View {entry.alias} source details <ChevronDown aria-hidden="true" /></CollapsibleTrigger>
+              <CollapsibleContent className="details-content">
+                <dl className="source-metadata"><div><dt>Source ID</dt><dd>{entry.source_id}</dd></div>{typeof entry.retrieval_rank === "number" && <div><dt>Retrieved rank</dt><dd>{entry.retrieval_rank}</dd></div>}{typeof entry.bm25_score === "number" && <div><dt>BM25 score</dt><dd>{entry.bm25_score}</dd></div>}</dl>
+                <pre>{JSON.stringify(entry.record, null, 2)}</pre>
+              </CollapsibleContent>
+            </Collapsible>
+          ))}
         </article>
       )}) : <p className="quiet-empty">No historical records referenced.</p>}
     </section>
@@ -586,6 +606,36 @@ const scenarioOverviewCopy: Record<string, {
       "Assess how the CPU increase relates to Ad request activity and the recorded trace behavior.",
       "Consider the Running/Ready pod state and error-free GetAds traces as counterevidence to service failure.",
       "Separate the documented CPU-load exercise from any unverified secondary cause.",
+    ],
+  },
+  "dependency-unavailable-01": {
+    context: "This OpenTelemetry Demo exercise examines checkout failures associated with requests from Checkout to Payment.",
+    cause: "The pilot capture script asked the operator to enable OpenTelemetry Demo's `paymentUnreachable` feature flag for the incident window. The Demo documents this flag as making Checkout call Payment at an invalid address so Payment appears unavailable; the capture does not preserve the flag state itself.",
+    observations: [
+      "Checkout's outbound Payment Charge metric records incident responses labeled UNAVAILABLE; the parallel OK-labeled series is retained as contrasting context.",
+      "Checkout-owned Charge and PlaceOrder traces record errors in the incident window, while their mean durations decrease rather than increase.",
+      "The Payment-owned Charge trace summary has baseline samples but no incident samples, so Payment's internal handling is not directly observed.",
+      "The captured Checkout pod is Running and Ready; this snapshot does not prove continuous health across the full window.",
+    ],
+    investigation: [
+      "Determine how the outbound UNAVAILABLE status relates to Checkout's Charge and PlaceOrder errors.",
+      "Keep client-side observations distinct from unobserved Payment server behavior.",
+      "Assess the Running/Ready snapshot and decreasing latency without treating them as proof that no dependency failure occurred.",
+    ],
+  },
+  "messaging-failure-01": {
+    context: "This OpenTelemetry Demo exercise examines Checkout publishing and Fraud Detection consuming messages during a prepared queue/consumer stress simulation.",
+    cause: "The pilot capture script asked the operator to enable OpenTelemetry Demo's `kafkaQueueProblems` feature flag. The captured logs record the queue-overload simulation and a Fraud Detection consumer delay; upstream documentation describes the flag as adding consumer-side delay. The capture does not independently establish that consumer lag increased.",
+    observations: [
+      "Checkout logs record the queue-overload simulation and its completion message; Fraud Detection logs record a one-second consumer delay.",
+      "Fraud Detection's reported last-poll age rises from 0 to 18.5; the source does not specify a concrete unit.",
+      "The measured consumer-lag metric stays at 0 in both windows, which limits a lag-spike conclusion.",
+      "Checkout publish-orders trace mean latency rises from 19.414 ms to 88.732 ms, with no errors recorded in that operation summary.",
+    ],
+    investigation: [
+      "Compare the recorded simulation with producer latency and Fraud Detection consumer observations.",
+      "Treat the zero lag measurements as counterevidence and avoid assuming the broker or consumer stopped working.",
+      "Separate the injected exercise from conclusions the captured signals cannot establish.",
     ],
   },
 }

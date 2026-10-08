@@ -2,7 +2,7 @@
 
 ## Scope
 
-The verified live scope is the three tracked prepared inputs only. It does not establish arbitrary telemetry ingestion, production generalization, or that an LLM hypothesis is the true root cause. The Generator proposes explanations; the Validator may retain qualified hypotheses while exposing unsupported assumptions or contradictions.
+The verified live scope is the five tracked prepared inputs only. It does not establish arbitrary telemetry ingestion, production generalization, or that an LLM hypothesis is the true root cause. The Generator proposes explanations; the Validator may retain qualified hypotheses while exposing unsupported assumptions or contradictions.
 
 ## Accepted live E2E outcomes
 
@@ -11,6 +11,8 @@ The verified live scope is the three tracked prepared inputs only. It does not e
 | missing-secret-01 | PASS | Accepted for the prepared input; the result is evidence-linked and limited to the available Kubernetes observations. |
 | application-failure-01 | PASS | Qualified hypotheses accepted. The Validator explicitly surfaced the checkout-latency contradiction and qualification; this is not an established checkout-to-payment causal diagnosis. |
 | ad-high-cpu-01 | PASS | Qualified hypotheses accepted. CPU increase is observed; proposed mechanisms remain hypotheses, not confirmed causes. |
+| dependency-unavailable-01 | PASS | 8 Facts; 9.11 s total. Groq Generator had no 429; three Cerebras Validator calls succeeded. The leading Checkout-to-Payment unavailability hypothesis was KEEP_QUALIFIED; Payment-side reachability/process state was explicitly unverified. |
+| messaging-failure-01 | PASS | 9 Facts; 11.92 s total. Groq Generator received one HTTP 429 and recovered via existing provider transport retry; two Cerebras Validator calls succeeded. Competing hypotheses remained KEEP_QUALIFIED, including caveats that telemetry does not establish a lag increase (measured lag stayed 0). |
 
 The final ad-high-cpu run made one Generator call and three Validator calls using openai/gpt-oss-120b. All 13 Facts remained intact. Each request passed the local 7,000 estimated-token guard. The successful run had no 400 or 429 response and did not trigger Validator recovery. Optional pacing honored the provider's 86.4-second reset header between semantic calls.
 
@@ -30,7 +32,11 @@ The prepared-demo regression covers:
 - Separation from the default RCAPipeline.run().
 - Prepared runner fixture loading, argument selection, pacing wiring, and summaries.
 
-Final cleanup verification ran the full suite: **162 passed**. The focused prepared-demo, provider-wrapper, request-budget, and runner subset passed: **46 passed**.
+At the original three-scenario freeze, the full suite had **162 passed** and the focused prepared-demo/provider/budget/runner subset had **46 passed**. These are historical baseline counts.
+
+## Scenario extension verification — 2026-10-08
+
+The expanded five-scenario tree passed **235 Python tests**, **30 frontend tests**, TypeScript typecheck, ESLint, and the Vite production build. New live runs used the unchanged Groq Generator + Cerebras Validator routing and existing bounded provider transport behavior. Each new fixture stayed under the complete request budget and retained valid Fact/H/K references. Messaging Generator execution had one HTTP 429 followed by a successful provider-level retry; no whole analysis was rerun.
 
 Run the current suite with:
 

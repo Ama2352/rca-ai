@@ -735,6 +735,458 @@
         "No ad-specific Kubernetes failure event is present in the selected observations; the selected ad pod state is Running/ready.",
         "The high CPU-Load problem-pattern log is preserved as an observed log, not interpreted as proof of a causal mechanism."
       ]
+    },
+    "dependency-unavailable-01": {
+      "input_file": "dependency-unavailable-01.json",
+      "source_artifact": "../otel_demo_dataset/otel_demo_dataset/pilot/dependency-unavailable-01",
+      "source_sha256": "b5f71f5d62806525e3cac3e9cf9f3b89fe6165323211f68ed7df9bac71eb6f03",
+      "source_files_sha256": {
+        "baseline_start.txt": "3a81559c78230086885efd381534a62a41397376d5526d15c85dfb9002b43909",
+        "incident_end.txt": "b15ecabf086e542bd3ad91d61505b6eb7031359193cb5fef3fb9e6416449b489",
+        "incident_start.txt": "f0236c16f342f3ef37f31ae682e6a35ae2ae7fd5b1c51496f4057a06452b7557",
+        "k8s_checkout_deployment.json": "45a67755891fa20214bacfd32716bd88fca26ae02894caed4724eff5da58a314",
+        "k8s_events.json": "7a779468a2dde976a9b896541df1e4ef805e813093bd5edb40ef1a6eea588edf",
+        "k8s_pods.json": "f4e04716611609ce3ba7ca7b15c3b64a9efe20544c81ce9407bbf68b07ed7d74",
+        "logs.json": "2822310fde89364f96fd4290b474acbc491f19a04f7b6754fd09f093ac430677",
+        "metrics.json": "44716753c65740271c14da1d6ee8f7413a9b51d07a3a8b296b22c20b64e374d9",
+        "traces.json": "da92e934a16646f812f8cfb891b23288e9c71c336c2ac51d034feadc53091669"
+      },
+      "comparison_artifacts": [],
+      "included_observations": [
+        {
+          "observation_id": "f72ce786bfd65db1a9320c20",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "checkout-5f68fdb986-qwzb6"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "5f24583bd2f66b9bd6c127f0",
+          "source_path": "/metric/366",
+          "locators": [
+            "metrics.json:data.result[366]"
+          ],
+          "reason": "Checkout RPC client rate records Payment Charge responses labeled UNAVAILABLE during the incident window."
+        },
+        {
+          "observation_id": "0968ce5e8ae92d29ff27bd68",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "checkout-5f68fdb986-qwzb6"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "0604e2ee89987dfbc5ceef6a",
+          "source_path": "/metric/370",
+          "locators": [
+            "metrics.json:data.result[370]"
+          ],
+          "reason": "Retains the parallel Payment Charge RPC status OK rate as contrasting context."
+        },
+        {
+          "observation_id": "cdb851d670ef3056e456eac1",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "frontend"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "e0ef4f8dc1e4fbcab8ac7cb9",
+          "source_path": "/trace/6",
+          "locators": [
+            "traces.json:data[4].spans[39]",
+            "traces.json:data[5].spans[44]",
+            "traces.json:data[6].spans[22]",
+            "traces.json:data[7].spans[62]",
+            "traces.json:data[0].spans[12]",
+            "traces.json:data[1].spans[45]",
+            "traces.json:data[2].spans[37]",
+            "traces.json:data[3].spans[70]"
+          ],
+          "reason": "Records frontend PlaceOrder errors and their separate operation identity."
+        },
+        {
+          "observation_id": "6442cdfeaeef74058fee9800",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "b315f6bb68451c14144370f2",
+          "source_path": "/trace/22",
+          "locators": [
+            "traces.json:data[4].spans[51]",
+            "traces.json:data[5].spans[25]",
+            "traces.json:data[6].spans[42]",
+            "traces.json:data[7].spans[68]",
+            "traces.json:data[0].spans[43]",
+            "traces.json:data[1].spans[16]",
+            "traces.json:data[2].spans[21]",
+            "traces.json:data[3].spans[103]"
+          ],
+          "reason": "Records Checkout-owned client Charge traces with errors across the incident samples."
+        },
+        {
+          "observation_id": "014b17ef67481f5602c49177",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "8b1c202474a5634ecb226f16",
+          "source_path": "/trace/23",
+          "locators": [
+            "traces.json:data[4].spans[53]",
+            "traces.json:data[5].spans[27]",
+            "traces.json:data[6].spans[44]",
+            "traces.json:data[7].spans[70]",
+            "traces.json:data[0].spans[44]",
+            "traces.json:data[1].spans[17]",
+            "traces.json:data[2].spans[22]",
+            "traces.json:data[3].spans[104]"
+          ],
+          "reason": "Records Checkout-owned PlaceOrder server errors as an upstream effect."
+        },
+        {
+          "observation_id": "4187b345205a674698d45125",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "payment"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "4ac1402a4033afddd97bb83e",
+          "source_path": "/trace/54",
+          "locators": [
+            "traces.json:data[4].spans[60]",
+            "traces.json:data[5].spans[110]",
+            "traces.json:data[6].spans[51]",
+            "traces.json:data[7].spans[109]"
+          ],
+          "reason": "Retains the Payment-owned Charge trace summary, which has baseline samples but no incident-window samples."
+        },
+        {
+          "observation_id": "fab7386701318ac5ccbf1dc4",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "89ce02e233325cef66e546c9",
+          "source_path": "/log/1",
+          "locators": [
+            "logs.json:datarows[1]",
+            "logs.json:datarows[9]",
+            "logs.json:datarows[19]",
+            "logs.json:datarows[25]"
+          ],
+          "reason": "Captures Checkout payment-success log pattern falling from four to zero occurrences."
+        },
+        {
+          "observation_id": "c6b85560f2da70de2b939109",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "checkout"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "1a93263c80312633419e87a0",
+          "source_path": "/kubernetes/4",
+          "locators": [
+            "k8s_pods.json:items[4]",
+            "k8s_pods.json:items[4]/status/containerStatuses/0"
+          ],
+          "reason": "Preserves Checkout Running/Ready Kubernetes state as counterevidence to a pod outage."
+        }
+      ],
+      "known_evidence_gaps": [
+        "Checkout traces show client-side Charge and PlaceOrder errors; the capture does not contain Payment-owned Charge spans during the incident window, so downstream internal handling is not directly observed.",
+        "Checkout reports Running/Ready in a Kubernetes snapshot without an embedded capture timestamp; it does not establish continuous health throughout the incident window."
+      ]
+    },
+    "messaging-failure-01": {
+      "input_file": "messaging-failure-01.json",
+      "source_artifact": "../otel_demo_dataset/otel_demo_dataset/pilot/messaging-failure-01",
+      "source_sha256": "2a249c3504142d2a78b6140720d2109bda8ef45e54c51e4882af0177f2f0fc36",
+      "source_files_sha256": {
+        "baseline_start.txt": "69b805926bc479d2d78ace71d8b9632846f526f230ea6657381d15bfbca67705",
+        "incident_end.txt": "99760e76b3e90d1888e52de6a4e85ffd7d9d39b2ba05b3ae80e7498fc57216c7",
+        "incident_start.txt": "ad2ea7f07a0f43649f67fe40d0edfd08cd0e18fc1bfa7cd77bc1ba3083cd2adc",
+        "k8s_checkout_deployment.json": "45a67755891fa20214bacfd32716bd88fca26ae02894caed4724eff5da58a314",
+        "k8s_events.json": "7a779468a2dde976a9b896541df1e4ef805e813093bd5edb40ef1a6eea588edf",
+        "k8s_fraud_detection_deployment.json": "c75b7cac8d9a92c88e919b6747997990f89d5cb8d517e7857a07d2a04e13d54e",
+        "k8s_pods.json": "f4e04716611609ce3ba7ca7b15c3b64a9efe20544c81ce9407bbf68b07ed7d74",
+        "logs.json": "773ae9ebfda623988ffd4c6da444f727099d50b9b78eb59d40110f3f69af2e5d",
+        "metrics.json": "53bda350c82a3fcf563fca1ea42d1f96f1084eb752879008d21dc14fe916fa31",
+        "traces.json": "e2bd9be27a0041b17f4250bb4289de8ed9cf32f78415b2c2b785031893f39b5c"
+      },
+      "comparison_artifacts": [],
+      "included_observations": [
+        {
+          "observation_id": "c0049806056ee83f82c1c473",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "fraud-detection-767cc87ff6-b29zn"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "f0d163d0bfe09b1c162230aa",
+          "source_path": "/metric/354",
+          "locators": [
+            "metrics.json:data.result[354]"
+          ],
+          "reason": "Shows Fraud Detection consumer last-poll age increasing from 0 to 18.5 in source-reported units."
+        },
+        {
+          "observation_id": "7de64e416cabc96bfea2f551",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "fraud-detection-767cc87ff6-b29zn"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "686c6d3950fd89dd765937ab",
+          "source_path": "/metric/368",
+          "locators": [
+            "metrics.json:data.result[368]"
+          ],
+          "reason": "Shows the consumer records-consumed rate increasing across windows."
+        },
+        {
+          "observation_id": "0968ce5e8ae92d29ff27bd68",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "fraud-detection-767cc87ff6-b29zn"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "0604e2ee89987dfbc5ceef6a",
+          "source_path": "/metric/370",
+          "locators": [
+            "metrics.json:data.result[370]"
+          ],
+          "reason": "Preserves the consumer lag metric at zero in both windows, limiting any lag-spike conclusion."
+        },
+        {
+          "observation_id": "7b4ce16b86967b8a529bfd8c",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "2d6d0012d2594e199caf5c2c",
+          "source_path": "/log/10",
+          "locators": [
+            "logs.json:datarows[20]",
+            "logs.json:datarows[104]",
+            "logs.json:datarows[136]",
+            "logs.json:datarows[180]",
+            "logs.json:datarows[214]",
+            "logs.json:datarows[240]",
+            "logs.json:datarows[262]"
+          ],
+          "reason": "Contains the captured Checkout message stating kafkaQueueProblems activated and queue overloading simulation started."
+        },
+        {
+          "observation_id": "907656e31aa88ab34614d024",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "43044823682062d5f6ba3a63",
+          "source_path": "/log/11",
+          "locators": [
+            "logs.json:datarows[21]",
+            "logs.json:datarows[105]",
+            "logs.json:datarows[137]",
+            "logs.json:datarows[181]",
+            "logs.json:datarows[215]",
+            "logs.json:datarows[241]",
+            "logs.json:datarows[263]"
+          ],
+          "reason": "Preserves the captured Checkout completion message for the 100-message simulation."
+        },
+        {
+          "observation_id": "5db48f63cc31148449f4ae55",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "fraud-detection"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "173e14b7cb31c23b9ebbdf3c",
+          "source_path": "/log/12",
+          "locators": [
+            "logs.json:datarows[22]",
+            "logs.json:datarows[24]",
+            "logs.json:datarows[26]",
+            "logs.json:datarows[28]",
+            "logs.json:datarows[30]",
+            "logs.json:datarows[32]",
+            "logs.json:datarows[34]",
+            "logs.json:datarows[36]",
+            "logs.json:datarows[38]",
+            "logs.json:datarows[40]",
+            "logs.json:datarows[41]",
+            "logs.json:datarows[43]",
+            "logs.json:datarows[45]",
+            "logs.json:datarows[47]",
+            "logs.json:datarows[49]",
+            "logs.json:datarows[51]",
+            "logs.json:datarows[53]",
+            "logs.json:datarows[55]",
+            "logs.json:datarows[57]",
+            "logs.json:datarows[59]",
+            "logs.json:datarows[61]",
+            "logs.json:datarows[63]",
+            "logs.json:datarows[65]",
+            "logs.json:datarows[67]",
+            "logs.json:datarows[69]",
+            "logs.json:datarows[71]",
+            "logs.json:datarows[73]",
+            "logs.json:datarows[75]",
+            "logs.json:datarows[77]",
+            "logs.json:datarows[79]",
+            "logs.json:datarows[81]",
+            "logs.json:datarows[83]",
+            "logs.json:datarows[85]",
+            "logs.json:datarows[87]",
+            "logs.json:datarows[89]",
+            "logs.json:datarows[91]",
+            "logs.json:datarows[93]",
+            "logs.json:datarows[95]",
+            "logs.json:datarows[99]",
+            "logs.json:datarows[107]",
+            "logs.json:datarows[109]",
+            "logs.json:datarows[111]",
+            "logs.json:datarows[113]",
+            "logs.json:datarows[115]",
+            "logs.json:datarows[117]",
+            "logs.json:datarows[119]",
+            "logs.json:datarows[121]",
+            "logs.json:datarows[123]",
+            "logs.json:datarows[125]",
+            "logs.json:datarows[127]",
+            "logs.json:datarows[130]",
+            "logs.json:datarows[139]",
+            "logs.json:datarows[141]",
+            "logs.json:datarows[143]",
+            "logs.json:datarows[145]",
+            "logs.json:datarows[147]",
+            "logs.json:datarows[149]",
+            "logs.json:datarows[151]",
+            "logs.json:datarows[153]",
+            "logs.json:datarows[155]",
+            "logs.json:datarows[157]",
+            "logs.json:datarows[159]",
+            "logs.json:datarows[161]",
+            "logs.json:datarows[163]",
+            "logs.json:datarows[165]",
+            "logs.json:datarows[167]",
+            "logs.json:datarows[169]",
+            "logs.json:datarows[171]",
+            "logs.json:datarows[174]",
+            "logs.json:datarows[183]",
+            "logs.json:datarows[185]",
+            "logs.json:datarows[187]",
+            "logs.json:datarows[189]",
+            "logs.json:datarows[191]",
+            "logs.json:datarows[193]",
+            "logs.json:datarows[195]",
+            "logs.json:datarows[197]",
+            "logs.json:datarows[199]",
+            "logs.json:datarows[201]",
+            "logs.json:datarows[203]",
+            "logs.json:datarows[205]",
+            "logs.json:datarows[209]",
+            "logs.json:datarows[217]",
+            "logs.json:datarows[219]",
+            "logs.json:datarows[221]",
+            "logs.json:datarows[223]",
+            "logs.json:datarows[225]",
+            "logs.json:datarows[227]",
+            "logs.json:datarows[229]",
+            "logs.json:datarows[232]",
+            "logs.json:datarows[234]",
+            "logs.json:datarows[243]",
+            "logs.json:datarows[245]",
+            "logs.json:datarows[247]",
+            "logs.json:datarows[249]",
+            "logs.json:datarows[251]",
+            "logs.json:datarows[253]",
+            "logs.json:datarows[255]",
+            "logs.json:datarows[265]",
+            "logs.json:datarows[267]",
+            "logs.json:datarows[269]"
+          ],
+          "reason": "Records Fraud Detection enabling kafkaQueueProblems and sleeping one second."
+        },
+        {
+          "observation_id": "027da736a147d8b9c550f1bb",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "2b8ded2e97e9104d3f85596e",
+          "source_path": "/trace/40",
+          "locators": [
+            "traces.json:data[7].spans[130]",
+            "traces.json:data[8].spans[105]",
+            "traces.json:data[0].spans[46]",
+            "traces.json:data[1].spans[61]",
+            "traces.json:data[2].spans[60]",
+            "traces.json:data[3].spans[32]",
+            "traces.json:data[4].spans[15]",
+            "traces.json:data[5].spans[55]",
+            "traces.json:data[6].spans[88]"
+          ],
+          "reason": "Shows Checkout publish-orders trace latency increasing, with no observed errors."
+        },
+        {
+          "observation_id": "0ab116696729eba636058530",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "fraud-detection"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "57611039416e73176f7dbd2e",
+          "source_path": "/kubernetes/9",
+          "locators": [
+            "k8s_pods.json:items[8]",
+            "k8s_pods.json:items[8]/status/containerStatuses/0"
+          ],
+          "reason": "Preserves Fraud Detection Running/Ready state as context against a pod crash."
+        },
+        {
+          "observation_id": "fc473ab2e44e096117841dc2",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "kafka"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "ce92bde80b923635c3415350",
+          "source_path": "/kubernetes/18",
+          "locators": [
+            "k8s_pods.json:items[14]",
+            "k8s_pods.json:items[14]/status/containerStatuses/0"
+          ],
+          "reason": "Preserves Kafka broker Running/Ready state as context against broker pod failure."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The measured consumer lag is zero in both windows; the capture does not establish a lag increase despite the recorded queue-overload and consumer-delay simulation.",
+        "Kafka and Fraud Detection are Running/Ready in Kubernetes snapshots without embedded capture timestamps; this does not rule out transient broker or consumer behavior."
+      ]
     }
   }
 }

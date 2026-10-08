@@ -1,0 +1,453 @@
+{
+  "incident_id": "dependency-unavailable-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790330727.0,
+      "incident_start": 1790330812.0,
+      "incident_end": 1790330932.0
+    },
+    "observations": [
+      {
+        "observation_id": "f72ce786bfd65db1a9320c20",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "checkout-5f68fdb986-qwzb6"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "checkout",
+          "metric": "rpc_client_call_duration_seconds_count",
+          "labels": {
+            "error_type": "UNAVAILABLE",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "job": "opentelemetry-demo/checkout",
+            "k8s_deployment_name": "checkout",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "checkout-5f68fdb986-qwzb6",
+            "k8s_replicaset_name": "checkout-5f68fdb986",
+            "rpc_method": "oteldemo.PaymentService/Charge",
+            "rpc_response_status_code": "UNAVAILABLE",
+            "rpc_system_name": "grpc",
+            "service_instance_id": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "service_name": "checkout",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "checkout-5f68fdb986-qwzb6",
+          "metric_kind": "histogram_count",
+          "unit": "reported_unit/second",
+          "baseline_value": null,
+          "incident_value": 0.0,
+          "signed_change": null,
+          "relative_change": null,
+          "baseline_n": 0,
+          "incident_n": 4,
+          "uncertainty": [],
+          "baseline_median": null,
+          "incident_median": null,
+          "baseline_sd": null,
+          "baseline_min": null,
+          "baseline_max": null,
+          "incident_min": 2.0,
+          "incident_max": 2.0,
+          "baseline_delta": null,
+          "incident_delta": 0.0,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "appeared"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "5f24583bd2f66b9bd6c127f0",
+          "source_path": "/metric/366",
+          "locators": [
+            "metrics.json:data.result[366]"
+          ]
+        }
+      },
+      {
+        "observation_id": "0968ce5e8ae92d29ff27bd68",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "checkout-5f68fdb986-qwzb6"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "checkout",
+          "metric": "rpc_client_call_duration_seconds_count",
+          "labels": {
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "job": "opentelemetry-demo/checkout",
+            "k8s_deployment_name": "checkout",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "checkout-5f68fdb986-qwzb6",
+            "k8s_replicaset_name": "checkout-5f68fdb986",
+            "rpc_method": "oteldemo.PaymentService/Charge",
+            "rpc_response_status_code": "OK",
+            "rpc_system_name": "grpc",
+            "server_address": "10.43.3.158",
+            "server_port": "8080",
+            "service_instance_id": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+            "service_name": "checkout",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "checkout-5f68fdb986-qwzb6",
+          "metric_kind": "histogram_count",
+          "unit": "reported_unit/second",
+          "baseline_value": 0.05333333333333334,
+          "incident_value": 0.0,
+          "signed_change": -0.05333333333333334,
+          "relative_change": -1.0,
+          "baseline_n": 6,
+          "incident_n": 8,
+          "uncertainty": [],
+          "baseline_median": null,
+          "incident_median": null,
+          "baseline_sd": null,
+          "baseline_min": 1172.0,
+          "baseline_max": 1176.0,
+          "incident_min": 1179.0,
+          "incident_max": 1179.0,
+          "baseline_delta": 4.0,
+          "incident_delta": 0.0,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "0604e2ee89987dfbc5ceef6a",
+          "source_path": "/metric/370",
+          "locators": [
+            "metrics.json:data.result[370]"
+          ]
+        }
+      },
+      {
+        "observation_id": "cdb851d670ef3056e456eac1",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "frontend"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "frontend",
+          "operation_or_callee": "oteldemo.CheckoutService/PlaceOrder",
+          "baseline_n": 4,
+          "incident_n": 4,
+          "baseline_mean_ms": 1686.946,
+          "incident_mean_ms": 788.452,
+          "baseline_median_ms": 1622.3325,
+          "incident_median_ms": 654.7825,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 4,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": -898.4939999999999,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "e0ef4f8dc1e4fbcab8ac7cb9",
+          "source_path": "/trace/6",
+          "locators": [
+            "traces.json:data[4].spans[39]",
+            "traces.json:data[5].spans[44]",
+            "traces.json:data[6].spans[22]",
+            "traces.json:data[7].spans[62]",
+            "traces.json:data[0].spans[12]",
+            "traces.json:data[1].spans[45]",
+            "traces.json:data[2].spans[37]",
+            "traces.json:data[3].spans[70]"
+          ]
+        }
+      },
+      {
+        "observation_id": "6442cdfeaeef74058fee9800",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "checkout",
+          "operation_or_callee": "oteldemo.PaymentService/Charge",
+          "baseline_n": 4,
+          "incident_n": 4,
+          "baseline_mean_ms": 13.70975,
+          "incident_mean_ms": 12.08175,
+          "baseline_median_ms": 11.917,
+          "incident_median_ms": 6.205500000000001,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 4,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": -1.6280000000000001,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "b315f6bb68451c14144370f2",
+          "source_path": "/trace/22",
+          "locators": [
+            "traces.json:data[4].spans[51]",
+            "traces.json:data[5].spans[25]",
+            "traces.json:data[6].spans[42]",
+            "traces.json:data[7].spans[68]",
+            "traces.json:data[0].spans[43]",
+            "traces.json:data[1].spans[16]",
+            "traces.json:data[2].spans[21]",
+            "traces.json:data[3].spans[103]"
+          ]
+        }
+      },
+      {
+        "observation_id": "014b17ef67481f5602c49177",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "checkout",
+          "operation_or_callee": "oteldemo.CheckoutService/PlaceOrder",
+          "baseline_n": 4,
+          "incident_n": 4,
+          "baseline_mean_ms": 1563.33575,
+          "incident_mean_ms": 735.07375,
+          "baseline_median_ms": 1556.1315,
+          "incident_median_ms": 626.892,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 4,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 1.0,
+          "error_rate_delta": 1.0,
+          "signed_latency_change_ms": -828.262,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "8b1c202474a5634ecb226f16",
+          "source_path": "/trace/23",
+          "locators": [
+            "traces.json:data[4].spans[53]",
+            "traces.json:data[5].spans[27]",
+            "traces.json:data[6].spans[44]",
+            "traces.json:data[7].spans[70]",
+            "traces.json:data[0].spans[44]",
+            "traces.json:data[1].spans[17]",
+            "traces.json:data[2].spans[22]",
+            "traces.json:data[3].spans[104]"
+          ]
+        }
+      },
+      {
+        "observation_id": "4187b345205a674698d45125",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "payment"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "payment",
+          "operation_or_callee": "oteldemo.PaymentService/Charge",
+          "baseline_n": 4,
+          "incident_n": 0,
+          "baseline_mean_ms": 2.5175,
+          "incident_mean_ms": null,
+          "baseline_median_ms": 2.4015,
+          "incident_median_ms": null,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": null,
+          "error_rate_delta": null,
+          "signed_latency_change_ms": null,
+          "uncertainty": [
+            "p95_insufficient_support",
+            "one_window_missing"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": null
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "4ac1402a4033afddd97bb83e",
+          "source_path": "/trace/54",
+          "locators": [
+            "traces.json:data[4].spans[60]",
+            "traces.json:data[5].spans[110]",
+            "traces.json:data[6].spans[51]",
+            "traces.json:data[7].spans[109]"
+          ]
+        }
+      },
+      {
+        "observation_id": "fab7386701318ac5ccbf1dc4",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "checkout",
+          "severity": "INFO",
+          "pattern": "payment went through",
+          "example": "payment went through",
+          "baseline_count": 4,
+          "incident_count": 0,
+          "baseline_rate_per_min": 2.823529411764706,
+          "incident_rate_per_min": 0.0,
+          "signed_rate_change": -2.823529411764706,
+          "uncertainty": [],
+          "scope": "checkout",
+          "baseline_severity_rate": 16.941176470588236,
+          "incident_severity_rate": 2.0,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "89ce02e233325cef66e546c9",
+          "source_path": "/log/1",
+          "locators": [
+            "logs.json:datarows[1]",
+            "logs.json:datarows[9]",
+            "logs.json:datarows[19]",
+            "logs.json:datarows[25]"
+          ]
+        }
+      },
+      {
+        "observation_id": "c6b85560f2da70de2b939109",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "checkout"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "checkout",
+          "pod": "checkout-5f68fdb986-qwzb6",
+          "pod_uid": "52456bd7-56c0-424c-b561-a11218f2d5c2",
+          "container": "checkout",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": 1,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": 1,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T17:10:33Z",
+              "lastUpdateTime": "2026-09-24T17:10:33Z",
+              "message": "ReplicaSet \"checkout-5f68fdb986\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T02:29:49Z",
+              "lastUpdateTime": "2026-09-25T02:29:49Z",
+              "message": "Deployment has minimum availability.",
+              "reason": "MinimumReplicasAvailable",
+              "status": "True",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "1a93263c80312633419e87a0",
+          "source_path": "/kubernetes/4",
+          "locators": [
+            "k8s_pods.json:items[4]",
+            "k8s_pods.json:items[4]/status/containerStatuses/0"
+          ]
+        }
+      }
+    ]
+  }
+}

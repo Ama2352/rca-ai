@@ -33,9 +33,11 @@ Run one scenario:
 python scripts/run_prepared_demo.py --scenario missing-secret-01
 python scripts/run_prepared_demo.py --scenario application-failure-01
 python scripts/run_prepared_demo.py --scenario ad-high-cpu-01
+python scripts/run_prepared_demo.py --scenario dependency-unavailable-01
+python scripts/run_prepared_demo.py --scenario messaging-failure-01
 ~~~
 
-Run all three sequentially (the default):
+Run all five sequentially (the default):
 
 ~~~powershell
 python scripts/run_prepared_demo.py --scenario all

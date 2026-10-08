@@ -1,0 +1,578 @@
+{
+  "incident_id": "messaging-failure-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790336150.0,
+      "incident_start": 1790336220.0,
+      "incident_end": 1790336340.0
+    },
+    "observations": [
+      {
+        "observation_id": "c0049806056ee83f82c1c473",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "fraud-detection-767cc87ff6-b29zn"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "fraud-detection",
+          "metric": "kafka_consumer_last_poll_seconds_ago",
+          "labels": {
+            "client_id": "consumer-fraud-detection-1",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "31d7be0f-4fed-44d9-82e2-d0dfc9501756",
+            "job": "opentelemetry-demo/fraud-detection",
+            "k8s_deployment_name": "fraud-detection",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "fraud-detection-767cc87ff6-b29zn",
+            "k8s_replicaset_name": "fraud-detection-767cc87ff6",
+            "service_instance_id": "31d7be0f-4fed-44d9-82e2-d0dfc9501756",
+            "service_name": "fraud-detection",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "fraud-detection-767cc87ff6-b29zn",
+          "metric_kind": "gauge",
+          "unit": "reported_unit",
+          "baseline_value": 0.0,
+          "incident_value": 18.5,
+          "signed_change": 18.5,
+          "relative_change": null,
+          "baseline_n": 5,
+          "incident_n": 8,
+          "uncertainty": [
+            "near_zero_baseline"
+          ],
+          "baseline_median": 0.0,
+          "incident_median": 18.5,
+          "baseline_sd": 0.0,
+          "baseline_min": 0.0,
+          "baseline_max": 0.0,
+          "incident_min": 0.0,
+          "incident_max": 37.0,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "f0d163d0bfe09b1c162230aa",
+          "source_path": "/metric/354",
+          "locators": [
+            "metrics.json:data.result[354]"
+          ]
+        }
+      },
+      {
+        "observation_id": "7de64e416cabc96bfea2f551",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "fraud-detection-767cc87ff6-b29zn"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "fraud-detection",
+          "metric": "kafka_consumer_records_consumed_rate",
+          "labels": {
+            "client_id": "consumer-fraud-detection-1",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "31d7be0f-4fed-44d9-82e2-d0dfc9501756",
+            "job": "opentelemetry-demo/fraud-detection",
+            "k8s_deployment_name": "fraud-detection",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "fraud-detection-767cc87ff6-b29zn",
+            "k8s_replicaset_name": "fraud-detection-767cc87ff6",
+            "service_instance_id": "31d7be0f-4fed-44d9-82e2-d0dfc9501756",
+            "service_name": "fraud-detection",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0",
+            "topic": "orders"
+          },
+          "resource": "fraud-detection-767cc87ff6-b29zn",
+          "metric_kind": "gauge",
+          "unit": "reported_unit",
+          "baseline_value": 0.05491861020242929,
+          "incident_value": 0.8606783769610061,
+          "signed_change": 0.8057597667585769,
+          "relative_change": 14.671889251904897,
+          "baseline_n": 5,
+          "incident_n": 8,
+          "uncertainty": [],
+          "baseline_median": 0.04634707781674365,
+          "incident_median": 0.8606783769610061,
+          "baseline_sd": 0.01714306477137126,
+          "baseline_min": 0.04634707781674365,
+          "baseline_max": 0.0892047397451718,
+          "incident_min": 0.03799536456552301,
+          "incident_max": 1.6833613893564892,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "686c6d3950fd89dd765937ab",
+          "source_path": "/metric/368",
+          "locators": [
+            "metrics.json:data.result[368]"
+          ]
+        }
+      },
+      {
+        "observation_id": "0968ce5e8ae92d29ff27bd68",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "fraud-detection-767cc87ff6-b29zn"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "fraud-detection",
+          "metric": "kafka_consumer_records_lag",
+          "labels": {
+            "client_id": "consumer-fraud-detection-1",
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "31d7be0f-4fed-44d9-82e2-d0dfc9501756",
+            "job": "opentelemetry-demo/fraud-detection",
+            "k8s_deployment_name": "fraud-detection",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "fraud-detection-767cc87ff6-b29zn",
+            "k8s_replicaset_name": "fraud-detection-767cc87ff6",
+            "partition": "0",
+            "service_instance_id": "31d7be0f-4fed-44d9-82e2-d0dfc9501756",
+            "service_name": "fraud-detection",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0",
+            "topic": "orders"
+          },
+          "resource": "fraud-detection-767cc87ff6-b29zn",
+          "metric_kind": "gauge",
+          "unit": "reported_unit",
+          "baseline_value": 0.0,
+          "incident_value": 0.0,
+          "signed_change": 0.0,
+          "relative_change": null,
+          "baseline_n": 5,
+          "incident_n": 8,
+          "uncertainty": [
+            "near_zero_baseline"
+          ],
+          "baseline_median": 0.0,
+          "incident_median": 0.0,
+          "baseline_sd": 0.0,
+          "baseline_min": 0.0,
+          "baseline_max": 0.0,
+          "incident_min": 0.0,
+          "incident_max": 0.0,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "0604e2ee89987dfbc5ceef6a",
+          "source_path": "/metric/370",
+          "locators": [
+            "metrics.json:data.result[370]"
+          ]
+        }
+      },
+      {
+        "observation_id": "7b4ce16b86967b8a529bfd8c",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "checkout",
+          "severity": "INFO",
+          "pattern": "Warning: FeatureFlag 'kafkaQueueProblems' is activated, overloading queue now.",
+          "example": "Warning: FeatureFlag 'kafkaQueueProblems' is activated, overloading queue now.",
+          "baseline_count": 0,
+          "incident_count": 7,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 3.5,
+          "signed_rate_change": 3.5,
+          "uncertainty": [],
+          "scope": "checkout",
+          "baseline_severity_rate": 10.285714285714286,
+          "incident_severity_rate": 28.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "2d6d0012d2594e199caf5c2c",
+          "source_path": "/log/10",
+          "locators": [
+            "logs.json:datarows[20]",
+            "logs.json:datarows[104]",
+            "logs.json:datarows[136]",
+            "logs.json:datarows[180]",
+            "logs.json:datarows[214]",
+            "logs.json:datarows[240]",
+            "logs.json:datarows[262]"
+          ]
+        }
+      },
+      {
+        "observation_id": "907656e31aa88ab34614d024",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "checkout",
+          "severity": "INFO",
+          "pattern": "Done with #100 messages for overload simulation.",
+          "example": "Done with #100 messages for overload simulation.",
+          "baseline_count": 0,
+          "incident_count": 7,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 3.5,
+          "signed_rate_change": 3.5,
+          "uncertainty": [],
+          "scope": "checkout",
+          "baseline_severity_rate": 10.285714285714286,
+          "incident_severity_rate": 28.0,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "43044823682062d5f6ba3a63",
+          "source_path": "/log/11",
+          "locators": [
+            "logs.json:datarows[21]",
+            "logs.json:datarows[105]",
+            "logs.json:datarows[137]",
+            "logs.json:datarows[181]",
+            "logs.json:datarows[215]",
+            "logs.json:datarows[241]",
+            "logs.json:datarows[263]"
+          ]
+        }
+      },
+      {
+        "observation_id": "5db48f63cc31148449f4ae55",
+        "signal": "log",
+        "entity": {
+          "type": "service",
+          "id": "fraud-detection"
+        },
+        "field": "log.structural.pattern",
+        "value": {
+          "lane": "log.structural.pattern",
+          "service": "fraud-detection",
+          "severity": "INFO",
+          "pattern": "FeatureFlag 'kafkaQueueProblems' is enabled, sleeping 1 second",
+          "example": "FeatureFlag 'kafkaQueueProblems' is enabled, sleeping 1 second",
+          "baseline_count": 0,
+          "incident_count": 101,
+          "baseline_rate_per_min": 0.0,
+          "incident_rate_per_min": 50.5,
+          "signed_rate_change": 50.5,
+          "uncertainty": [],
+          "scope": "fraud-detection",
+          "baseline_severity_rate": 1.7142857142857142,
+          "incident_severity_rate": 100.5,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "173e14b7cb31c23b9ebbdf3c",
+          "source_path": "/log/12",
+          "locators": [
+            "logs.json:datarows[22]",
+            "logs.json:datarows[24]",
+            "logs.json:datarows[26]",
+            "logs.json:datarows[28]",
+            "logs.json:datarows[30]",
+            "logs.json:datarows[32]",
+            "logs.json:datarows[34]",
+            "logs.json:datarows[36]",
+            "logs.json:datarows[38]",
+            "logs.json:datarows[40]",
+            "logs.json:datarows[41]",
+            "logs.json:datarows[43]",
+            "logs.json:datarows[45]",
+            "logs.json:datarows[47]",
+            "logs.json:datarows[49]",
+            "logs.json:datarows[51]",
+            "logs.json:datarows[53]",
+            "logs.json:datarows[55]",
+            "logs.json:datarows[57]",
+            "logs.json:datarows[59]",
+            "logs.json:datarows[61]",
+            "logs.json:datarows[63]",
+            "logs.json:datarows[65]",
+            "logs.json:datarows[67]",
+            "logs.json:datarows[69]",
+            "logs.json:datarows[71]",
+            "logs.json:datarows[73]",
+            "logs.json:datarows[75]",
+            "logs.json:datarows[77]",
+            "logs.json:datarows[79]",
+            "logs.json:datarows[81]",
+            "logs.json:datarows[83]",
+            "logs.json:datarows[85]",
+            "logs.json:datarows[87]",
+            "logs.json:datarows[89]",
+            "logs.json:datarows[91]",
+            "logs.json:datarows[93]",
+            "logs.json:datarows[95]",
+            "logs.json:datarows[99]",
+            "logs.json:datarows[107]",
+            "logs.json:datarows[109]",
+            "logs.json:datarows[111]",
+            "logs.json:datarows[113]",
+            "logs.json:datarows[115]",
+            "logs.json:datarows[117]",
+            "logs.json:datarows[119]",
+            "logs.json:datarows[121]",
+            "logs.json:datarows[123]",
+            "logs.json:datarows[125]",
+            "logs.json:datarows[127]",
+            "logs.json:datarows[130]",
+            "logs.json:datarows[139]",
+            "logs.json:datarows[141]",
+            "logs.json:datarows[143]",
+            "logs.json:datarows[145]",
+            "logs.json:datarows[147]",
+            "logs.json:datarows[149]",
+            "logs.json:datarows[151]",
+            "logs.json:datarows[153]",
+            "logs.json:datarows[155]",
+            "logs.json:datarows[157]",
+            "logs.json:datarows[159]",
+            "logs.json:datarows[161]",
+            "logs.json:datarows[163]",
+            "logs.json:datarows[165]",
+            "logs.json:datarows[167]",
+            "logs.json:datarows[169]",
+            "logs.json:datarows[171]",
+            "logs.json:datarows[174]",
+            "logs.json:datarows[183]",
+            "logs.json:datarows[185]",
+            "logs.json:datarows[187]",
+            "logs.json:datarows[189]",
+            "logs.json:datarows[191]",
+            "logs.json:datarows[193]",
+            "logs.json:datarows[195]",
+            "logs.json:datarows[197]",
+            "logs.json:datarows[199]",
+            "logs.json:datarows[201]",
+            "logs.json:datarows[203]",
+            "logs.json:datarows[205]",
+            "logs.json:datarows[209]",
+            "logs.json:datarows[217]",
+            "logs.json:datarows[219]",
+            "logs.json:datarows[221]",
+            "logs.json:datarows[223]",
+            "logs.json:datarows[225]",
+            "logs.json:datarows[227]",
+            "logs.json:datarows[229]",
+            "logs.json:datarows[232]",
+            "logs.json:datarows[234]",
+            "logs.json:datarows[243]",
+            "logs.json:datarows[245]",
+            "logs.json:datarows[247]",
+            "logs.json:datarows[249]",
+            "logs.json:datarows[251]",
+            "logs.json:datarows[253]",
+            "logs.json:datarows[255]",
+            "logs.json:datarows[265]",
+            "logs.json:datarows[267]",
+            "logs.json:datarows[269]"
+          ]
+        }
+      },
+      {
+        "observation_id": "027da736a147d8b9c550f1bb",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "checkout",
+          "operation_or_callee": "publish orders",
+          "baseline_n": 2,
+          "incident_n": 7,
+          "baseline_mean_ms": 19.414,
+          "incident_mean_ms": 88.73242857142857,
+          "baseline_median_ms": 19.414,
+          "incident_median_ms": 39.294,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": 69.31842857142857,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "2b8ded2e97e9104d3f85596e",
+          "source_path": "/trace/40",
+          "locators": [
+            "traces.json:data[7].spans[130]",
+            "traces.json:data[8].spans[105]",
+            "traces.json:data[0].spans[46]",
+            "traces.json:data[1].spans[61]",
+            "traces.json:data[2].spans[60]",
+            "traces.json:data[3].spans[32]",
+            "traces.json:data[4].spans[15]",
+            "traces.json:data[5].spans[55]",
+            "traces.json:data[6].spans[88]"
+          ]
+        }
+      },
+      {
+        "observation_id": "0ab116696729eba636058530",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "fraud-detection"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "fraud-detection",
+          "pod": "fraud-detection-767cc87ff6-b29zn",
+          "pod_uid": "ce6ffc8a-f710-4a4c-ae6f-d7eb0a9b9e24",
+          "container": "fraud-detection",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": 1,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": 1,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T17:10:36Z",
+              "lastUpdateTime": "2026-09-24T17:10:36Z",
+              "message": "ReplicaSet \"fraud-detection-767cc87ff6\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T02:29:49Z",
+              "lastUpdateTime": "2026-09-25T02:29:49Z",
+              "message": "Deployment has minimum availability.",
+              "reason": "MinimumReplicasAvailable",
+              "status": "True",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "57611039416e73176f7dbd2e",
+          "source_path": "/kubernetes/9",
+          "locators": [
+            "k8s_pods.json:items[8]",
+            "k8s_pods.json:items[8]/status/containerStatuses/0"
+          ]
+        }
+      },
+      {
+        "observation_id": "fc473ab2e44e096117841dc2",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "kafka"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "kafka",
+          "pod": "kafka-65ccd57b4f-bspp4",
+          "pod_uid": "48f068be-1404-47b6-8a0c-3a75ef7436cb",
+          "container": "kafka",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": null,
+          "ready_replicas": null,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": null,
+          "available_replicas": null,
+          "deployment_conditions": []
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "ce92bde80b923635c3415350",
+          "source_path": "/kubernetes/18",
+          "locators": [
+            "k8s_pods.json:items[14]",
+            "k8s_pods.json:items[14]/status/containerStatuses/0"
+          ]
+        }
+      }
+    ]
+  }
+}

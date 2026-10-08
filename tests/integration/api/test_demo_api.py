@@ -16,7 +16,10 @@ from rca_ai.demo_catalog import load_scenario_catalog
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
+SCENARIOS = (
+    "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
+    "dependency-unavailable-01", "messaging-failure-01",
+)
 
 
 def _response(content):

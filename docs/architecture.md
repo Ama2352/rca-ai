@@ -18,7 +18,7 @@ flowchart TD
     D --> E --> F --> G
 ~~~
 
-The canonical prepared inputs live in `data/demo/`. The supported command is `scripts/run_prepared_demo.py`; it loads one scenario or all three, then delegates stage behavior to `PreparedDemoPipeline`.
+The canonical prepared inputs live in `data/demo/`. The supported command is `scripts/run_prepared_demo.py`; it loads one scenario or all five demo-ready inputs, then delegates stage behavior to `PreparedDemoPipeline`.
 
 ## Full-stack demo boundary
 

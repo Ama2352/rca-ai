@@ -17,7 +17,12 @@ from rca_ai.providers.groq import ProviderError, ProviderResult
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_ROOT = PROJECT_ROOT / "data" / "demo"
-SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
+SCENARIOS = (
+    "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
+    "dependency-unavailable-01", "messaging-failure-01",
+)
+FROZEN_RETRIEVAL_SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
+NEW_SCENARIOS = ("dependency-unavailable-01", "messaging-failure-01")
 EXPECTED_HISTORY = {
     "missing-secret-01": ("H020", "H021", "H019"),
     "application-failure-01": ("H006", "H010", "H001"),
@@ -243,7 +248,7 @@ def test_prepared_demo_passes_every_unchanged_fact_to_generator_and_validators(s
     assert result.rca_result.incident_id == scenario
 
 
-@pytest.mark.parametrize("scenario", SCENARIOS)
+@pytest.mark.parametrize("scenario", FROZEN_RETRIEVAL_SCENARIOS)
 def test_prepared_demo_replays_frozen_retrieval_and_full_requests_fit(scenario):
     generator = GeneratorProvider()
     validator = ValidatorProvider()
@@ -260,6 +265,24 @@ def test_prepared_demo_replays_frozen_retrieval_and_full_requests_fit(scenario):
     assert len(requests) == 3
     assert all(request_size(request)[1] <= 7000 for request in requests)
     assert all(execution.provider_result.http_status == 200 for execution in result.validations)
+
+
+@pytest.mark.parametrize("scenario", NEW_SCENARIOS)
+def test_new_prepared_scenarios_keep_fact_and_hk_references_resolved_within_budget(scenario):
+    generator = GeneratorProvider()
+    validator = ValidatorProvider()
+    result = PreparedDemoPipeline(generator_provider=generator, validator_provider=validator).run(_load_incident(scenario))
+    fact_ids = {fact.fact_id for fact in result.facts}
+    history_ids = {item.alias for item in result.history.items}
+    knowledge_ids = {item.alias for item in result.knowledge.items}
+    assert result.fact_integrity
+    assert len(result.facts) == len(result.evidence.observations)
+    for candidate in result.rca_result.candidate_results:
+        assert set(candidate.evidence_refs) <= fact_ids
+        assert set(candidate.history_refs) <= history_ids
+        assert set(candidate.knowledge_refs) <= knowledge_ids
+    requests = [result.generation.request, *(execution.request for execution in result.validations)]
+    assert all(request_size(request)[1] <= 7000 for request in requests)
 
 
 def test_optional_observer_reports_actual_stages_without_changing_output():
