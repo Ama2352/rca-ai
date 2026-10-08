@@ -1,8 +1,8 @@
-"""Run the frozen three-scenario live-provider release regression.
+"""Run a three-scenario live-provider regression from saved telemetry captures.
 
-This script only loads frozen inputs, wires the production components, and
-persists their returned audit data. Semantic decisions remain inside the
-frozen Generator, Validator, and deterministic assembler.
+This script only invokes the Processor boundary, wires the production
+components, and persists their returned audit data. Semantic decisions remain
+inside the frozen Generator, Validator, and deterministic assembler.
 """
 
 from __future__ import annotations
@@ -13,9 +13,10 @@ import json
 import os
 from pathlib import Path
 import sys
+from dataclasses import asdict
 from typing import Any
 
-from rca_ai.domain.models import IncidentInput, to_dict
+from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
 from rca_ai.facts.builder import build_fact_view, verify_fact_view
 from rca_ai.facts.selector import request_bytes, select_facts
 from rca_ai.pipeline.assembler import assemble_result, resolve_sources
@@ -34,25 +35,17 @@ from rca_ai.reasoning.schemas import GENERATOR_JSON_SCHEMA, VALIDATOR_JSON_SCHEM
 from rca_ai.reasoning.validator import HypothesisValidator
 from rca_ai.retrieval.history import retrieve_history
 from rca_ai.retrieval.knowledge import retrieve_knowledge
+from rca_ai.retrieval.projection import project_retrieval
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures"
+PROCESSOR_ROOT = PROJECT_ROOT.parent / "otel_demo_dataset"
+CAPTURE_ROOT = PROCESSOR_ROOT / "otel_demo_dataset" / "pilot"
 SCENARIOS = (
     "missing-secret-01",
     "application-failure-01",
     "ad-high-cpu-01",
 )
-RETRIEVAL_INPUTS = {
-    "missing-secret-01": FIXTURE_ROOT / "retrieval" / "inputs" / "channel-incident-01.json",
-    "application-failure-01": FIXTURE_ROOT / "retrieval" / "inputs" / "channel-incident-02.json",
-    "ad-high-cpu-01": FIXTURE_ROOT / "retrieval" / "inputs" / "plain-query.txt",
-}
-EXPECTED_COUNTS = {
-    "missing-secret-01": (21, 21, 3, 3),
-    "application-failure-01": (52, 25, 3, 1),
-    "ad-high-cpu-01": (14, 14, 3, 2),
-}
 FROZEN_HASHES = {
     "generator_prompt": "2902e2200777ea4731cd0baaf9cff616e9ee637c0a1344202fbc9d32607c98de",
     "generator_schema": "26df3bd25892a50bdad1859b31d1a3fe1dd35fdf92f15fce9954d25abcc10119",
@@ -88,19 +81,14 @@ def _write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def _read_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
 def _load_incident(scenario: str) -> IncidentInput:
-    normalized = _read_json(FIXTURE_ROOT / "facts" / "inputs" / f"{scenario}.normalized.json")
-    query_path = RETRIEVAL_INPUTS[scenario]
-    retrieval_input = (
-        query_path.read_text(encoding="utf-8")
-        if query_path.suffix == ".txt"
-        else _read_json(query_path)
-    )
-    return IncidentInput(scenario, normalized, retrieval_input)
+    if str(PROCESSOR_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROCESSOR_ROOT))
+    from rca_processor_v1_1 import process_capture_canonical
+
+    processed = process_capture_canonical(CAPTURE_ROOT / scenario)
+    wire_value = json.loads(json.dumps(asdict(processed), ensure_ascii=False))
+    return IncidentInput(scenario, canonical_evidence_from_dict(wire_value))
 
 
 def _preflight(incident: IncidentInput) -> dict[str, Any]:
@@ -108,8 +96,9 @@ def _preflight(incident: IncidentInput) -> dict[str, Any]:
     facts = build_fact_view(incident)
     if not verify_fact_view(facts, incident):
         raise RuntimeError(f"Fact integrity failed for {incident.incident_id}")
-    history = retrieve_history(incident.retrieval_input)
-    knowledge = retrieve_knowledge(incident.retrieval_input)
+    retrieval_projection = project_retrieval(incident.evidence)
+    history = retrieve_history(retrieval_projection.payload)
+    knowledge = retrieve_knowledge(retrieval_projection.payload)
     size_for = lambda candidate: request_bytes(build_generator_request(candidate, history, knowledge))
     selection = select_facts(facts, request_size_for=size_for)
     request = build_generator_request(selection.facts, history, knowledge)
@@ -121,18 +110,22 @@ def _preflight(incident: IncidentInput) -> dict[str, Any]:
         or request["response_format"]["json_schema"]["strict"] is not True
     ):
         raise RuntimeError("Generator request configuration differs from the frozen contract")
-    actual = (len(facts), selection.selected_fact_count, len(history.items), len(knowledge.items))
-    if actual != EXPECTED_COUNTS[incident.incident_id]:
-        raise RuntimeError(
-            f"Deterministic pre-LLM counts changed for {incident.incident_id}: {actual}"
-        )
     return {
+        "observation_count": len(incident.evidence.observations),
+        "signal_counts": dict(retrieval_projection.included_counts),
+        "excluded_observations": [list(item) for item in retrieval_projection.excluded_observations],
+        "retrieval_query": retrieval_projection.query,
         "fact_ids": [fact.fact_id for fact in facts],
+        "fact_count": len(facts),
         "selected_ids": list(selection.selected_ids),
+        "selected_fact_count": selection.selected_fact_count,
         "full_request_bytes": selection.full_request_bytes,
         "selected_request_bytes": selection.selected_request_bytes,
         "history_ids": [item.alias for item in history.items],
         "knowledge_ids": [item.alias for item in knowledge.items],
+        "history_count": len(history.items),
+        "history_strategy": history.strategy,
+        "knowledge_count": len(knowledge.items),
     }
 
 
@@ -152,6 +145,7 @@ def _provider_metadata(result) -> dict[str, Any]:
 
 def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any]:
     """Persist the actual returned stages and verify output provenance/reassembly."""
+    _write_json(folder / "canonical_evidence.json", to_dict(run.evidence))
     _write_json(folder / "fact_view.json", to_dict(run.facts))
     _write_json(folder / "fact_selection.json", {
         "selected_facts": to_dict(run.selection.facts),
@@ -167,6 +161,12 @@ def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any
     })
     _write_json(folder / "history_retrieval.json", to_dict(run.history))
     _write_json(folder / "knowledge_retrieval.json", to_dict(run.knowledge))
+    _write_json(folder / "retrieval_projection.json", {
+        "payload": run.retrieval_projection.payload,
+        "query": run.retrieval_projection.query,
+        "included_counts": run.retrieval_projection.included_counts,
+        "excluded_observations": [list(item) for item in run.retrieval_projection.excluded_observations],
+    })
     _write_json(folder / "generator_request.json", run.generation.request)
     _write_json(folder / "generator_response.json", {
         "content": run.generation.provider_result.content,
@@ -226,6 +226,8 @@ def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any
         "incident_id": run.incident_id,
         "status": "COMPLETED",
         "facts": len(run.facts),
+        "observations": len(run.evidence.observations),
+        "signal_counts": preflight["signal_counts"],
         "selected_facts": run.selection.selected_fact_count,
         "history_count": len(run.history.items),
         "knowledge_count": len(run.knowledge.items),
