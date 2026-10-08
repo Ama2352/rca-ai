@@ -38,6 +38,31 @@ export interface Fact {
   source_path: string
 }
 
+export interface EvidencePresentation {
+  id: string
+  signal_type: EvidenceSignal
+  title: string
+  statistic_kind: string | null
+  baseline: number | null
+  incident: number | null
+  unit: string | null
+  change: string | null
+  source_service: string | null
+  destination_service: string | null
+  operation: string | null
+  severity: string | null
+  state: string | null
+  preview: string | null
+  technical: Record<string, unknown>
+  raw: Fact
+}
+
+export interface IncidentSnapshotItem {
+  observation_id: string
+  source_ref: string
+  presentation: EvidencePresentation
+}
+
 export interface HistoricalSource {
   alias: string
   source_id: string
@@ -76,4 +101,48 @@ export interface ResolvedSources {
   evidence: Fact[]
   history: HistoricalSource[]
   domain_knowledge: KnowledgeSource[]
+}
+
+export type EvidenceSignal = "metric" | "log" | "trace" | "kubernetes"
+
+export interface DemoIncident {
+  id: string
+  title: string
+  source: "otel-demo" | "custom-k8s"
+  readiness: "demo-ready" | "experimental" | "unverified"
+  prepared_input: string | null
+  description?: string
+  affected_services?: string[]
+  symptoms?: string[]
+  available_evidence_sources?: EvidenceSignal[]
+  analysis_mode?: string
+  investigation_focus?: string[]
+  incident_snapshot?: IncidentSnapshotItem[]
+}
+
+export interface AnalysisJob {
+  analysis_id: string
+  incident_id: string
+  status: "queued" | "running" | "completed" | "failed"
+  stage?: string
+  stage_label?: string
+  candidate_id?: string | null
+  started_at?: string
+  stage_started_at?: string
+  elapsed_seconds?: number
+  completed_stages?: { stage: string; candidate_id?: string | null; seconds: number }[]
+  execution_audit?: {
+    total_seconds: number | null
+    routing?: {
+      generator: { provider: string; model: string }
+      validator: { provider: string; model: string }
+    } | null
+    rows: { name: string; seconds: number; relationship: "exclusive" | "nested"; candidate_id?: string | null; status?: string }[]
+  }
+  result?: RCAResult
+  facts?: Fact[]
+  presented_facts?: EvidencePresentation[]
+  fact_integrity?: boolean
+  resolved_sources_by_candidate?: Record<string, ResolvedSources>
+  error?: { code: string; retry_after_seconds?: number }
 }
