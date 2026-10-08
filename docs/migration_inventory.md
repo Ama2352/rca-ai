@@ -4,7 +4,7 @@ The entries below preserve provenance for the earlier frozen RCA implementation 
 
 ## Current prepared-demo status
 
-RCA Demo v1 is a separate prepared-input execution path. The version-controlled inputs are in `tests/fixtures/prepared_demo/`; `scripts/run_prepared_demo.py` invokes `PreparedDemoPipeline`, which builds and verifies all Facts, retrieves H/K, and bypasses the Fact Selector. It is verified for the three prepared scenarios only. The normal `RCAPipeline.run()` remains Selector-backed.
+RCA Demo v1 is a separate prepared-input execution path. The version-controlled inputs are in `data/demo/`; `scripts/run_prepared_demo.py` invokes `PreparedDemoPipeline`, which builds and verifies all Facts, retrieves H/K, and bypasses the Fact Selector. It is verified for the three prepared scenarios only. The normal `RCAPipeline.run()` remains Selector-backed.
 
 The complete Generator and Validator requests are guarded by the configurable prepared-demo budget (default 7,000 estimated tokens using ceil(UTF-8 bytes / 4)). The estimate is not a provider tokenizer or quota guarantee. The prepared-demo Validator may make one identical-request retry for the exact structured Groq `json_validate_failed` error. Optional shared pacing is disabled by default. Recovery passed offline tests but was not exercised in the successful live runs.
 

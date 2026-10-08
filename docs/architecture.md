@@ -18,7 +18,15 @@ flowchart TD
     D --> E --> F --> G
 ~~~
 
-The canonical prepared fixtures live in `tests/fixtures/prepared_demo/`. The supported command is `scripts/run_prepared_demo.py`; it loads one scenario or all three, then delegates stage behavior to `PreparedDemoPipeline`.
+The canonical prepared inputs live in `data/demo/`. The supported command is `scripts/run_prepared_demo.py`; it loads one scenario or all three, then delegates stage behavior to `PreparedDemoPipeline`.
+
+## Full-stack demo boundary
+
+The React frontend calls `GET /api/demo/incidents` for presentation-only scenario metadata. The API derives the available signal names from each prepared fixture, and its curated title, symptoms, and investigation focus do not enter the RCA input. Catalog loading never creates a provider request.
+
+`POST /api/demo/analyses` accepts only a prepared scenario ID and returns a job ID. One in-process worker invokes the unchanged `PreparedDemoPipeline`; `GET /api/demo/analyses/{analysis_id}` exposes queued/running/completed/failed state. On completion it returns the assembled `RCAResult`, original Facts, and candidate-specific F/H/K source resolution keyed by hypothesis ID. Backend errors are distinct from an empty-candidate RCA abstention. The UI polls, retains the Scenario Overview, and discards stale responses after incident switches.
+
+Jobs exist only in memory; restarting the API loses them. Concurrent submissions receive HTTP 409. The Vite development proxy handles same-origin `/api` calls locally; a deployment must route `/api` to the Python service. This layer does not change the default Selector-backed `RCAPipeline.run()`.
 
 ## Evidence and retrieval
 
@@ -33,6 +41,8 @@ History and Domain Knowledge are retrieved from the Core's deterministic retriev
 The prepared-demo Validator wrapper retries at most once, with the identical request, only for HTTP 400 where the structured provider error has `type=invalid_request_error` and `code=json_validate_failed`. All other failures propagate. The default `RCAPipeline.run()` does not use this recovery wrapper.
 
 The existing Groq provider retains its bounded 429/5xx and transport retry behavior. Optional `ProviderCallPacer` wraps the shared provider boundary; it is disabled by default and, when enabled, uses response retry/reset headers where available or the configured fallback delay. Pacing does not guarantee quota availability.
+
+The prepared Demo v1 default routes Generator to Groq `openai/gpt-oss-120b` and Validator to Cerebras `gpt-oss-120b`. Cerebras uses its existing one-attempt transport adapter; it does not add automatic fallback or retries. Exhausted HTTP 429 errors from either provider are returned as `RATE_LIMITED` for a manual user retry. The execution audit reports the configured provider/model pair separately from measured stage durations.
 
 ## Pipeline separation
 

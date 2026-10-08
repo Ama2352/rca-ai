@@ -48,4 +48,4 @@ The local request estimate is ceil(UTF-8 serialized request bytes / 4); it is no
 
 ## Reproducibility boundary
 
-The version-controlled prepared JSON files and selection manifest are under tests/fixtures/prepared_demo/. Runtime loading does not read ignored experiment directories or historical telemetry captures. The frozen History and Knowledge corpora are version-controlled under data/.
+The version-controlled prepared JSON files and selection manifest are under data/demo/. Runtime loading does not read ignored experiment directories or historical telemetry captures. The frozen History and Knowledge corpora are version-controlled under data/.
