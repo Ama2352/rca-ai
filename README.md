@@ -1,8 +1,8 @@
 # RCA AI — Prepared RCA Demo v1
 
-RCA Demo v1 runs a frozen, evidence-grounded reasoning pipeline against five reviewed prepared incident inputs: `missing-secret-01`, `application-failure-01`, `ad-high-cpu-01`, `dependency-unavailable-01`, and `messaging-failure-01`. It produces candidate explanations for investigation; it does not guarantee a confirmed root-cause diagnosis.
+RCA Demo v1 runs a frozen, evidence-grounded reasoning pipeline against nine prepared incident inputs. Seven scenarios are verified; `crash-loop-backoff-01` and `downstream-latency-01` are runnable but remain experimental. It produces candidate explanations for investigation; it does not guarantee a confirmed root-cause diagnosis.
 
-The existing React interface loads a nine-scenario catalog from a lightweight FastAPI service. Five scenarios are runnable; four remain research-only. Each runnable scenario has a pre-analysis overview; analysis runs in one in-process worker and the interface polls for the real assembled result. Merely opening the overview makes no provider call.
+The existing React interface loads a nine-scenario catalog from a lightweight FastAPI service. All nine fixture- and manifest-validated scenarios are available to analyze. Readiness remains separate: seven are verified, while the two experimental scenarios retain visible limitations and may fail validation. Each runnable scenario has a pre-analysis overview; analysis runs in one in-process worker and the interface polls for the assembled result. Merely opening the overview makes no provider call.
 
 ## Architecture
 
@@ -29,7 +29,7 @@ python -m pip install -e .
 python scripts/run_prepared_demo.py --scenario missing-secret-01
 ```
 
-Configure `GROQ_API_KEY` and `CEREBRAS_API_KEY` in the backend environment before running the live demo; do not place credentials in tracked files. To run all five scenarios sequentially:
+Configure `GROQ_API_KEY` and `CEREBRAS_API_KEY` in the backend environment before running the live demo; do not place credentials in tracked files. To run all nine scenarios sequentially:
 
 ```powershell
 python scripts/run_prepared_demo.py --scenario all
@@ -55,11 +55,11 @@ Open the URL printed by Vite. Its development proxy forwards `/api` to the local
 ## Repository map
 
 - `src/rca_ai/`: frozen domain, Fact construction, retrieval, reasoning, provider, and pipeline components.
-- `data/demo/`: the five version-controlled prepared evidence inputs and their curation manifest.
+- `data/demo/`: version-controlled prepared evidence inputs and their curation manifest, including the two experimental inputs available for analysis.
 - `data/history/` and `data/knowledge/`: frozen H/K stores.
 - `scripts/run_prepared_demo.py`: standalone prepared-demo entry point.
 - `src/rca_ai/api/`: three-route FastAPI boundary with volatile analysis jobs.
 - `frontend/`: React scenario overview and live RCA result viewer.
 - `tests/`: deterministic regression suite using offline providers.
 
-The demo is verified for these five prepared inputs only. It does not claim arbitrary telemetry ingestion, production readiness, or that retrieved H/K context proves a current incident fact.
+Seven prepared inputs are verified; the two experimental inputs are runnable but may fail validation or produce limited hypotheses. The demo does not claim arbitrary telemetry ingestion, production readiness, or that retrieved H/K context proves a current incident fact.

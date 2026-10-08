@@ -18,7 +18,7 @@ flowchart TD
     D --> E --> F --> G
 ~~~
 
-The canonical prepared inputs live in `data/demo/`. The supported command is `scripts/run_prepared_demo.py`; it loads one scenario or all five demo-ready inputs, then delegates stage behavior to `PreparedDemoPipeline`.
+The canonical prepared inputs live in `data/demo/`. The supported command is `scripts/run_prepared_demo.py`; it loads one scenario or all nine fixture- and manifest-validated inputs, then delegates stage behavior to `PreparedDemoPipeline`. Readiness is a separate quality label: seven inputs are demo-ready and Crash Loop Backoff / Downstream Latency remain experimental. Their analyses use the same schema and evidence-reference validation and may return a visible execution failure.
 
 ## Full-stack demo boundary
 

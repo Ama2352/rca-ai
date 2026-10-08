@@ -19,10 +19,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_ROOT = PROJECT_ROOT / "data" / "demo"
 SCENARIOS = (
     "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
-    "dependency-unavailable-01", "messaging-failure-01",
+    "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+    "memory-leak-01", "crash-loop-backoff-01", "downstream-latency-01",
 )
 FROZEN_RETRIEVAL_SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
-NEW_SCENARIOS = ("dependency-unavailable-01", "messaging-failure-01")
+NEW_SCENARIOS = (
+    "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+    "memory-leak-01", "crash-loop-backoff-01", "downstream-latency-01",
+)
 EXPECTED_HISTORY = {
     "missing-secret-01": ("H020", "H021", "H019"),
     "application-failure-01": ("H006", "H010", "H001"),

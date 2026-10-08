@@ -51,8 +51,17 @@
     "id": "cart-failure-01",
     "title": "Cart Failure",
     "source": "otel-demo",
-    "readiness": "experimental",
-    "prepared_input": null
+    "readiness": "demo-ready",
+    "prepared_input": "data/demo/cart-failure-01.json",
+    "snapshot_observation_ids": ["4408b0f7e2e62ad0e719e1d4", "e1732a19ec990fb481af4520", "ae13cb4cb54422fef0b04461", "63e6303982fde506d4ed0673", "d4a998a4885083afca56cf58"],
+    "description": "Cart EmptyCart calls failed to reach their storage path while the Cart workload remained Running/Ready; other sampled Valkey activity was also observed.",
+    "affected_services": ["checkout", "cart"],
+    "symptoms": ["Redis connection error on Cart EmptyCart", "A failed Checkout-to-Cart EmptyCart trace", "Other successful Cart-to-Valkey spans"],
+    "investigation_focus": [
+      "Distinguish the failing EmptyCart path from other observed Cart storage activity",
+      "Relate Cart-side failure evidence to the Checkout client trace without assuming all Cart calls failed",
+      "Treat the untimed Running/Ready pod snapshot as context rather than a timeline"
+    ]
   },
   {
     "id": "dependency-unavailable-01",
@@ -75,14 +84,32 @@
     "title": "Downstream Latency",
     "source": "otel-demo",
     "readiness": "experimental",
-    "prepared_input": null
+    "prepared_input": "data/demo/downstream-latency-01.json",
+    "snapshot_observation_ids": ["f7182f3b9b1e689770d30c83", "6b8d40add3516e60450d8828", "611b0d58e2add4341daca248", "9e960391a10072755e12e297"],
+    "description": "Checkout-to-Shipping and Shipping /ship-order traces show longer durations during the incident window, while /get-quote remains near baseline. Experimental: a prior live analysis failed Validator reference-integrity checks; failures remain visible and analyses are not automatically retried.",
+    "affected_services": ["checkout", "shipping"],
+    "symptoms": ["Shipping /ship-order latency increased", "Checkout-to-Shipping edge latency increased", "Shipping /get-quote latency stayed near baseline"],
+    "investigation_focus": [
+      "Compare Shipping operation latency with the caller-side Checkout-to-Shipping edge",
+      "Keep the near-baseline /get-quote operation as counterevidence to a broad Shipping slowdown",
+      "Separate an observed latency increase from a proven downstream causal bottleneck"
+    ]
   },
   {
     "id": "memory-leak-01",
     "title": "Memory Leak",
     "source": "otel-demo",
-    "readiness": "experimental",
-    "prepared_input": null
+    "readiness": "demo-ready",
+    "prepared_input": "data/demo/memory-leak-01.json",
+    "snapshot_observation_ids": ["ff12bca38ca471504045495e", "a26efa11c7f9c807d77c0217", "1619d48d044d0ec8579d122b", "c1d15a703a6582a14ee81f90", "030e7840ec1cedb3cd761863"],
+    "description": "Email memory measurements rise and available memory falls over the three-minute incident capture; send_email traces also take longer without reported operation errors.",
+    "affected_services": ["email"],
+    "symptoms": ["Resident and usage memory measurements increased", "Available memory decreased", "send_email mean latency increased without recorded operation errors"],
+    "investigation_focus": [
+      "Assess whether memory growth during the short capture supports resource-pressure concerns",
+      "Compare memory movement with the send_email latency increase and zero reported trace errors",
+      "Avoid treating a three-minute simulation as proof of a persistent memory leak"
+    ]
   },
   {
     "id": "messaging-failure-01",
@@ -105,6 +132,15 @@
     "title": "Crash Loop Backoff",
     "source": "custom-k8s",
     "readiness": "experimental",
-    "prepared_input": null
+    "prepared_input": "data/demo/crash-loop-backoff-01.json",
+    "snapshot_observation_ids": ["a85a7eff00aa98136235be9e", "35d8fd27bfcaa31f175ed000", "e989ada43d98489434186637"],
+    "description": "The telemetry-docs container terminated with exit code 42 and Kubernetes reported BackOff restarts; the pod phase still reads Running while readiness is false. Experimental: a prior live run produced speculative qualified hypotheses that did not usefully explain the injected exit-42 fault.",
+    "affected_services": ["telemetry-docs"],
+    "symptoms": ["Container terminated with exit code 42", "Kubernetes BackOff restart event", "Container readiness false after repeated restarts"],
+    "investigation_focus": [
+      "Relate the container termination and restart metric to the Kubernetes BackOff event",
+      "Distinguish the pod-level Running phase from the terminated, not-ready container state",
+      "State the limits of a Kubernetes-only capture without logs or traces"
+    ]
   }
 ]

@@ -19,7 +19,7 @@ def _validate_snapshot_references(row: dict[str, Any], fixture: dict[str, Any], 
     scenario_id = row["id"]
     ids = row.get("snapshot_observation_ids")
     if not isinstance(ids, list) or not ids or any(not isinstance(item, str) for item in ids):
-        raise ValueError(f"demo-ready scenario requires snapshot observation IDs: {scenario_id}")
+        raise ValueError(f"prepared scenario requires snapshot observation IDs: {scenario_id}")
     if len(ids) != len(set(ids)):
         raise ValueError(f"duplicate snapshot observation ID: {scenario_id}")
     manifest_path = root / "data" / "demo" / "selection_manifest.json"
@@ -76,9 +76,11 @@ def load_scenario_catalog(
             raise ValueError(f"scenario title must be a non-empty string: {scenario_id}")
 
         prepared_input = row.get("prepared_input")
-        if readiness == "demo-ready":
+        if readiness == "demo-ready" and not isinstance(prepared_input, str):
+            raise ValueError(f"demo-ready scenario requires prepared_input: {scenario_id}")
+        if prepared_input is not None:
             if not isinstance(prepared_input, str) or not prepared_input.strip():
-                raise ValueError(f"demo-ready scenario requires prepared_input: {scenario_id}")
+                raise ValueError(f"prepared_input must be a non-empty path or null: {scenario_id}")
             path = Path(prepared_input)
             if path.is_absolute():
                 raise ValueError(f"prepared input must be repository-relative: {scenario_id}")
@@ -95,14 +97,12 @@ def load_scenario_catalog(
                 raise ValueError(f"prepared input incident ID mismatch: {scenario_id}")
             _validate_snapshot_references(row, fixture, root)
             if not isinstance(row.get("description"), str) or not row["description"].strip():
-                raise ValueError(f"demo-ready scenario requires description: {scenario_id}")
+                raise ValueError(f"runnable scenario requires description: {scenario_id}")
             for field in ("affected_services", "symptoms", "investigation_focus"):
                 if not isinstance(row.get(field), list) or not row[field]:
-                    raise ValueError(f"demo-ready scenario requires {field}: {scenario_id}")
-        elif prepared_input is not None:
-            raise ValueError(f"non-runnable scenario must not reference prepared_input: {scenario_id}")
+                    raise ValueError(f"runnable scenario requires {field}: {scenario_id}")
         elif "snapshot_observation_ids" in row:
-            raise ValueError(f"non-runnable scenario must not define snapshot: {scenario_id}")
+            raise ValueError(f"scenario without prepared input must not define snapshot: {scenario_id}")
 
     return rows
 
@@ -112,9 +112,15 @@ SCENARIOS_BY_ID = {row["id"]: row for row in SCENARIO_CATALOG}
 
 
 def demo_ready_scenario_ids() -> tuple[str, ...]:
-    """Return runnable IDs from the validated catalog, preserving catalog order."""
+    """Return quality-verified IDs from the validated catalog, preserving order."""
 
     return tuple(
         row["id"] for row in SCENARIO_CATALOG
         if row["readiness"] == "demo-ready"
     )
+
+
+def runnable_scenario_ids() -> tuple[str, ...]:
+    """Return scenarios whose fixture passed catalog and manifest validation."""
+
+    return tuple(row["id"] for row in SCENARIO_CATALOG if row["prepared_input"] is not None)

@@ -1187,6 +1187,596 @@
         "The measured consumer lag is zero in both windows; the capture does not establish a lag increase despite the recorded queue-overload and consumer-delay simulation.",
         "Kafka and Fraud Detection are Running/Ready in Kubernetes snapshots without embedded capture timestamps; this does not rule out transient broker or consumer behavior."
       ]
+    },
+    "crash-loop-backoff-01": {
+      "input_file": "crash-loop-backoff-01.json",
+      "source_artifact": "../otel_demo_dataset/otel_demo_dataset/pilot/crash-loop-backoff-01",
+      "source_sha256": "ca3529552c0aa2158418fb591c70d9a9f70a2fbd8c796a62852b20a6f449d0d9",
+      "source_hash_method": "SHA-256 of newline-joined filename:per-file-SHA-256 records sorted by filename",
+      "source_files_sha256": {
+        "baseline_start.txt": "9f8bb39089ce835c9cfacb286ea767ece5cb26b789e13417afa74f7a97efc5f6",
+        "deployment_original.json": "8a216fd60c3e5dbe7fe52691e4aacbba2acae3ddef258c0c7e262f966e3f3c12",
+        "deployment_original.yaml": "b84b38278ffe0a166717e53bc881e4c873ad9e9c1317759b22746a7852f50f0f",
+        "deployment_restore_patch.json": "69de448f0e764c544562c82ef535cdafcf478d6af66b4192347699a56d7c901d",
+        "incident_end.txt": "adcb257008621f85da620c675454f11b7035b88295dd531a662ba8d2e1c58702",
+        "incident_start.txt": "b984f1979427e8d2ac75303aedb8862c7cee24e67c6fd567a29ba6ad1e5704e4",
+        "k8s_events.json": "11dc3014d121a34ad1100bfcf0288efd79d5e0fa3ec7f1e2b4baaeeaae70157d",
+        "k8s_pods.json": "7a9442538bdc06a3cd2d8494fdf3f001008ef9fe657591e2f26e0295e9a1bb98",
+        "k8s_telemetry-docs_deployment.json": "f590d0bcea5fdf3694b5da6cbb315934889a3bb10a00e1599b828acce0db736f",
+        "kubectl_describe_pod.txt": "911b6a148455954ebab6007beefea1bd23a1fc672f5a08d5479aa839ed0af07d",
+        "logs.json": "0fda51a14784213061bdc8ea1deb620b810a6e1d9486c6136019c24174c02561",
+        "metrics.json": "dd00e7ea85eeff3a27459bcf3762dae3d2a0ce1d0206964604d819354aa5c2de",
+        "traces.json": "14109e31c59ef042cb4c29c6c5b7fa2bf590daeb118de2702ddae67451f637a3"
+      },
+      "canonical_processor_output_sha256": "0bfcf496d01437c584efcf0e37e00e0aa11eb130d21cab8ad2243ea5999a714d",
+      "comparison_artifacts": [],
+      "included_observations": [
+        {
+          "observation_id": "a85a7eff00aa98136235be9e",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "telemetry-docs"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "29bd0340654202a62b33899f",
+          "source_path": "/kubernetes/29",
+          "locators": [
+            "k8s_pods.json:items[25]",
+            "k8s_pods.json:items[25]/status/containerStatuses/0"
+          ],
+          "reason": "Captures the target telemetry-docs container terminated with exit code 42, three restarts, and readiness false; pod phase Running is retained as distinct from container readiness."
+        },
+        {
+          "observation_id": "35d8fd27bfcaa31f175ed000",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "event_record",
+            "id": "65172a6a1eb138ad61f17308"
+          },
+          "field": "kubernetes.structural.event",
+          "source_ref": "65172a6a1eb138ad61f17308",
+          "source_path": "/kubernetes/40",
+          "locators": [
+            "k8s_events.json:items[9]",
+            "k8s_pods.json:items[25]"
+          ],
+          "reason": "Preserves the Kubernetes BackOff restart event for the telemetry-docs container."
+        },
+        {
+          "observation_id": "e989ada43d98489434186637",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "telemetry-docs-555c44f876-fn5mb"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "fbcea4e9152855efc5099851",
+          "source_path": "/metric/17",
+          "locators": [
+            "metrics.json:data.result[17]"
+          ],
+          "reason": "Records two restarts for the replacement telemetry-docs container during the incident window; baseline is absent because this pod was newly created."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The selected capture contains no log or trace evidence for the failing workload; the direct container termination and BackOff event carry the main diagnosis signal.",
+        "The Kubernetes snapshots have no embedded capture timestamp. The pod-level Running phase coexists with a terminated, not-ready container and is not evidence of application health."
+      ]
+    },
+    "cart-failure-01": {
+      "input_file": "cart-failure-01.json",
+      "source_artifact": "../otel_demo_dataset/otel_demo_dataset/pilot/cart-failure-01",
+      "source_sha256": "0058d52b4a3776f4a762f024c86da8e4d113b359b97c41c7e852dd6fbb879af4",
+      "source_hash_method": "SHA-256 of newline-joined filename:per-file-SHA-256 records sorted by filename",
+      "source_files_sha256": {
+        "baseline_start.txt": "9686f410ddde015caa5ea8be4e5ebd477fcf75a5772cc315812ecdb0fda25139",
+        "incident_end.txt": "c2a536cef191fc6109daa7dd0606c3ba8f62d98fc5541a0fbffc66bf8baa4e40",
+        "incident_start.txt": "7c468ccf286ec22aee573efde3b855abbef3006ff0fba32fd6d9e27c6702dbd9",
+        "k8s_cart_deployment.json": "025c193093e24efece6d0da4cef2cd20b2b56aea2a1fdf5cb9270b5dd0bd7c96",
+        "k8s_events.json": "7a779468a2dde976a9b896541df1e4ef805e813093bd5edb40ef1a6eea588edf",
+        "k8s_pods.json": "f4e04716611609ce3ba7ca7b15c3b64a9efe20544c81ce9407bbf68b07ed7d74",
+        "logs.json": "69a5b0d2647acc33cc76d53fb31234c3b9e5a370cf00023fd103d81fa08e5074",
+        "metrics.json": "a107f1ae7d02ca23c8e4aa5ddabe3cc0fa1815bee6b05510f898e403d12a5728",
+        "traces.json": "47452120e74ef9e9a8cb16470e84ae534158bb6044245908f4ec9066681e7416"
+      },
+      "canonical_processor_output_sha256": "3beefbddea613ec8ba016abb1d451dc8157026469c1931b0f4c85f69cde967e4",
+      "comparison_artifacts": [],
+      "included_observations": [
+        {
+          "observation_id": "4408b0f7e2e62ad0e719e1d4",
+          "signal": "log",
+          "entity": {
+            "type": "service",
+            "id": "cart"
+          },
+          "field": "log.structural.pattern",
+          "source_ref": "5bd2427daba2ef5b36ca5e1e",
+          "source_path": "/log/11",
+          "locators": [
+            "logs.json:datarows[117]"
+          ],
+          "reason": "Preserves the Cart-owned error log stating it was unable to connect to Redis."
+        },
+        {
+          "observation_id": "e1732a19ec990fb481af4520",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.boundary",
+          "source_ref": "6beaf3c4c8e040259c020d29",
+          "source_path": "/trace/68",
+          "locators": [
+            "traces.json:data[62].spans[51]"
+          ],
+          "reason": "Records the Checkout client EmptyCart boundary span with an error; its source trace begins just before the timestamped incident window, so timing is qualified."
+        },
+        {
+          "observation_id": "ae13cb4cb54422fef0b04461",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "cart"
+          },
+          "field": "trace.structural.boundary",
+          "source_ref": "65e799046c86cf488bac4382",
+          "source_path": "/trace/71",
+          "locators": [
+            "traces.json:data[62].spans[57]"
+          ],
+          "reason": "Records the Cart server EmptyCart boundary span with an error and original source locator; the span is a boundary, not a window aggregate."
+        },
+        {
+          "observation_id": "63e6303982fde506d4ed0673",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "cart"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "4b1d79e92c37c0eeb86f4be5",
+          "source_path": "/trace/26",
+          "locators": [
+            "traces.json:data[62].spans[43]",
+            "traces.json:data[62].spans[44]",
+            "traces.json:data[62].spans[45]",
+            "traces.json:data[62].spans[46]",
+            "traces.json:data[62].spans[47]",
+            "traces.json:data[63].spans[17]",
+            "traces.json:data[63].spans[18]",
+            "traces.json:data[63].spans[19]",
+            "traces.json:data[63].spans[20]",
+            "traces.json:data[64].spans[7]",
+            "traces.json:data[65].spans[10]",
+            "traces.json:data[65].spans[11]",
+            "traces.json:data[65].spans[12]",
+            "traces.json:data[65].spans[13]",
+            "traces.json:data[66].spans[9]",
+            "traces.json:data[67].spans[78]",
+            "traces.json:data[67].spans[79]",
+            "traces.json:data[67].spans[80]",
+            "traces.json:data[67].spans[81]",
+            "traces.json:data[67].spans[82]",
+            "traces.json:data[67].spans[83]",
+            "traces.json:data[67].spans[84]",
+            "traces.json:data[67].spans[85]",
+            "traces.json:data[67].spans[86]",
+            "traces.json:data[67].spans[87]",
+            "traces.json:data[67].spans[88]",
+            "traces.json:data[68].spans[8]",
+            "traces.json:data[69].spans[8]",
+            "traces.json:data[71].spans[17]",
+            "traces.json:data[71].spans[18]",
+            "traces.json:data[71].spans[19]",
+            "traces.json:data[71].spans[20]",
+            "traces.json:data[72].spans[7]",
+            "traces.json:data[73].spans[11]",
+            "traces.json:data[74].spans[10]",
+            "traces.json:data[74].spans[11]",
+            "traces.json:data[74].spans[12]",
+            "traces.json:data[74].spans[13]",
+            "traces.json:data[75].spans[8]",
+            "traces.json:data[76].spans[8]",
+            "traces.json:data[77].spans[3]",
+            "traces.json:data[78].spans[8]",
+            "traces.json:data[79].spans[8]",
+            "traces.json:data[80].spans[8]",
+            "traces.json:data[81].spans[7]",
+            "traces.json:data[83].spans[8]",
+            "traces.json:data[84].spans[8]",
+            "traces.json:data[85].spans[7]",
+            "traces.json:data[86].spans[8]",
+            "traces.json:data[87].spans[8]",
+            "traces.json:data[88].spans[8]",
+            "traces.json:data[89].spans[17]",
+            "traces.json:data[89].spans[18]",
+            "traces.json:data[89].spans[19]",
+            "traces.json:data[89].spans[20]",
+            "traces.json:data[90].spans[7]",
+            "traces.json:data[91].spans[8]",
+            "traces.json:data[92].spans[8]",
+            "traces.json:data[93].spans[17]",
+            "traces.json:data[93].spans[18]",
+            "traces.json:data[93].spans[19]",
+            "traces.json:data[93].spans[20]",
+            "traces.json:data[94].spans[17]",
+            "traces.json:data[94].spans[18]",
+            "traces.json:data[94].spans[19]",
+            "traces.json:data[94].spans[20]",
+            "traces.json:data[95].spans[7]",
+            "traces.json:data[6].spans[17]",
+            "traces.json:data[6].spans[18]",
+            "traces.json:data[6].spans[19]",
+            "traces.json:data[6].spans[20]",
+            "traces.json:data[7].spans[10]",
+            "traces.json:data[8].spans[10]",
+            "traces.json:data[8].spans[11]",
+            "traces.json:data[8].spans[12]",
+            "traces.json:data[8].spans[13]",
+            "traces.json:data[9].spans[7]",
+            "traces.json:data[10].spans[17]",
+            "traces.json:data[10].spans[18]",
+            "traces.json:data[10].spans[19]",
+            "traces.json:data[10].spans[20]",
+            "traces.json:data[11].spans[8]",
+            "traces.json:data[12].spans[8]",
+            "traces.json:data[13].spans[74]",
+            "traces.json:data[13].spans[75]",
+            "traces.json:data[13].spans[76]",
+            "traces.json:data[13].spans[77]",
+            "traces.json:data[13].spans[78]",
+            "traces.json:data[13].spans[79]",
+            "traces.json:data[13].spans[80]",
+            "traces.json:data[13].spans[81]",
+            "traces.json:data[13].spans[82]",
+            "traces.json:data[13].spans[83]",
+            "traces.json:data[13].spans[84]",
+            "traces.json:data[13].spans[85]",
+            "traces.json:data[13].spans[86]",
+            "traces.json:data[13].spans[87]",
+            "traces.json:data[13].spans[88]",
+            "traces.json:data[13].spans[89]",
+            "traces.json:data[13].spans[90]",
+            "traces.json:data[14].spans[7]",
+            "traces.json:data[15].spans[7]",
+            "traces.json:data[16].spans[11]",
+            "traces.json:data[17].spans[10]",
+            "traces.json:data[17].spans[11]",
+            "traces.json:data[17].spans[12]",
+            "traces.json:data[17].spans[13]",
+            "traces.json:data[18].spans[8]",
+            "traces.json:data[19].spans[8]",
+            "traces.json:data[20].spans[17]",
+            "traces.json:data[20].spans[18]",
+            "traces.json:data[20].spans[19]",
+            "traces.json:data[20].spans[20]",
+            "traces.json:data[21].spans[10]",
+            "traces.json:data[21].spans[11]",
+            "traces.json:data[21].spans[12]",
+            "traces.json:data[21].spans[13]",
+            "traces.json:data[22].spans[11]",
+            "traces.json:data[23].spans[7]",
+            "traces.json:data[24].spans[8]",
+            "traces.json:data[26].spans[43]",
+            "traces.json:data[26].spans[44]",
+            "traces.json:data[26].spans[45]",
+            "traces.json:data[26].spans[46]",
+            "traces.json:data[26].spans[47]",
+            "traces.json:data[27].spans[8]",
+            "traces.json:data[28].spans[8]",
+            "traces.json:data[29].spans[8]",
+            "traces.json:data[30].spans[17]",
+            "traces.json:data[30].spans[18]",
+            "traces.json:data[30].spans[19]",
+            "traces.json:data[30].spans[20]",
+            "traces.json:data[31].spans[7]",
+            "traces.json:data[32].spans[8]",
+            "traces.json:data[33].spans[8]",
+            "traces.json:data[34].spans[8]",
+            "traces.json:data[35].spans[17]",
+            "traces.json:data[35].spans[18]",
+            "traces.json:data[35].spans[19]",
+            "traces.json:data[35].spans[20]",
+            "traces.json:data[36].spans[15]",
+            "traces.json:data[36].spans[16]",
+            "traces.json:data[36].spans[17]",
+            "traces.json:data[36].spans[18]",
+            "traces.json:data[38].spans[10]",
+            "traces.json:data[38].spans[11]",
+            "traces.json:data[38].spans[12]",
+            "traces.json:data[38].spans[13]",
+            "traces.json:data[39].spans[11]",
+            "traces.json:data[40].spans[8]",
+            "traces.json:data[41].spans[8]",
+            "traces.json:data[42].spans[17]",
+            "traces.json:data[42].spans[18]",
+            "traces.json:data[42].spans[19]",
+            "traces.json:data[42].spans[20]",
+            "traces.json:data[43].spans[7]",
+            "traces.json:data[44].spans[8]",
+            "traces.json:data[45].spans[8]",
+            "traces.json:data[46].spans[7]",
+            "traces.json:data[47].spans[15]",
+            "traces.json:data[47].spans[16]",
+            "traces.json:data[47].spans[17]",
+            "traces.json:data[47].spans[18]",
+            "traces.json:data[48].spans[7]",
+            "traces.json:data[49].spans[8]",
+            "traces.json:data[50].spans[8]",
+            "traces.json:data[51].spans[8]",
+            "traces.json:data[52].spans[7]",
+            "traces.json:data[53].spans[17]",
+            "traces.json:data[53].spans[18]",
+            "traces.json:data[53].spans[19]",
+            "traces.json:data[53].spans[20]",
+            "traces.json:data[55].spans[8]",
+            "traces.json:data[56].spans[8]",
+            "traces.json:data[57].spans[8]",
+            "traces.json:data[58].spans[4]",
+            "traces.json:data[59].spans[5]",
+            "traces.json:data[59].spans[6]",
+            "traces.json:data[59].spans[7]",
+            "traces.json:data[59].spans[8]",
+            "traces.json:data[60].spans[4]",
+            "traces.json:data[61].spans[3]"
+          ],
+          "reason": "Retains sampled Cart-to-Valkey trace activity with zero reported errors as counterevidence to a blanket Cart storage outage."
+        },
+        {
+          "observation_id": "d4a998a4885083afca56cf58",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "cart"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "ea37f4ea4dc6163c072d5f90",
+          "source_path": "/kubernetes/3",
+          "locators": [
+            "k8s_pods.json:items[3]",
+            "k8s_pods.json:items[3]/status/containerStatuses/0"
+          ],
+          "reason": "Preserves the Cart Running/Ready state in an untimed Kubernetes snapshot."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The pilot script records the intended cartFailure setup instructions but not the selected flag state or percentage.",
+        "The EmptyCart boundary trace begins just before the timestamped incident window and is excluded from window aggregates; it is contextual, not a clean baseline/incident comparison.",
+        "The Cart pod Running/Ready snapshot is untimed, and successful Valkey spans do not prove the failing store path was healthy."
+      ]
+    },
+    "downstream-latency-01": {
+      "input_file": "downstream-latency-01.json",
+      "source_artifact": "../otel_demo_dataset/otel_demo_dataset/pilot/downstream-latency-01",
+      "source_sha256": "6b93bcb54ffae7381a92772929944d21276eb0420a18e69803351876b0a1d176",
+      "source_hash_method": "SHA-256 of newline-joined filename:per-file-SHA-256 records sorted by filename",
+      "source_files_sha256": {
+        "baseline_start.txt": "f039703d347e3563ac02de8bbb00c806b23a08a9303f9a4aa5b94b2d784c50d9",
+        "incident_end.txt": "e62ffcb3c1568fea2da998458bc043e3dbf352e90276e1f7fc753ebb38aeefff",
+        "incident_start.txt": "eb91e903aba139e270f4d930aaff301399dce2adbff91198a852030db184b96a",
+        "k8s_events.json": "7a779468a2dde976a9b896541df1e4ef805e813093bd5edb40ef1a6eea588edf",
+        "k8s_pods.json": "f4e04716611609ce3ba7ca7b15c3b64a9efe20544c81ce9407bbf68b07ed7d74",
+        "k8s_shipping_deployment.json": "674cc2a7056a0ead837ea7c83c815cdac557f75d75434d018eddaf6ac300c5af",
+        "logs.json": "6f4c1a696a2ba492728369598e87ad52bd9ecfc2c508afcb28350adbe80e9060",
+        "metrics.json": "fb2a61869c6c28f9704b522a4e33b1e076eaa5ad9905c79de48dd38d5b25bf5a",
+        "traces.json": "241b5429288fbf1c1c1068927d61886e6b6362541e81a9825405ee3aaf04415f"
+      },
+      "canonical_processor_output_sha256": "c440dca633bf81762b8a860a70094161ad900289eda8e75a02917fb20b32c78e",
+      "comparison_artifacts": [],
+      "included_observations": [
+        {
+          "observation_id": "f7182f3b9b1e689770d30c83",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "shipping"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "cb1e2e5241921f89d701bcf8",
+          "source_path": "/trace/50",
+          "locators": [
+            "traces.json:data[8].spans[27]",
+            "traces.json:data[10].spans[37]",
+            "traces.json:data[1].spans[53]",
+            "traces.json:data[2].spans[72]",
+            "traces.json:data[3].spans[78]",
+            "traces.json:data[4].spans[17]",
+            "traces.json:data[6].spans[61]",
+            "traces.json:data[7].spans[45]"
+          ],
+          "reason": "Captures Shipping POST /ship-order mean latency rising across baseline and incident samples, with no errors in the operation summary."
+        },
+        {
+          "observation_id": "6b8d40add3516e60450d8828",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "checkout"
+          },
+          "field": "trace.structural.edge",
+          "source_ref": "7b6d891443315e77470d6d0f",
+          "source_path": "/trace/49",
+          "locators": [
+            "traces.json:data[8].spans[26]",
+            "traces.json:data[8].spans[27]",
+            "traces.json:data[10].spans[36]",
+            "traces.json:data[10].spans[37]",
+            "traces.json:data[1].spans[52]",
+            "traces.json:data[1].spans[53]",
+            "traces.json:data[2].spans[71]",
+            "traces.json:data[2].spans[72]",
+            "traces.json:data[3].spans[77]",
+            "traces.json:data[3].spans[78]",
+            "traces.json:data[4].spans[16]",
+            "traces.json:data[4].spans[17]",
+            "traces.json:data[6].spans[8]",
+            "traces.json:data[6].spans[61]",
+            "traces.json:data[7].spans[44]",
+            "traces.json:data[7].spans[45]"
+          ],
+          "reason": "Captures the Checkout-to-Shipping edge latency increase, preserving caller direction."
+        },
+        {
+          "observation_id": "611b0d58e2add4341daca248",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "shipping"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "6965a49b94400bde3e79bbf0",
+          "source_path": "/trace/6",
+          "locators": [
+            "traces.json:data[8].spans[26]",
+            "traces.json:data[9].spans[15]",
+            "traces.json:data[10].spans[36]",
+            "traces.json:data[11].spans[4]",
+            "traces.json:data[12].spans[3]",
+            "traces.json:data[13].spans[8]",
+            "traces.json:data[14].spans[15]",
+            "traces.json:data[15].spans[3]",
+            "traces.json:data[0].spans[5]",
+            "traces.json:data[1].spans[52]",
+            "traces.json:data[2].spans[71]",
+            "traces.json:data[3].spans[77]",
+            "traces.json:data[4].spans[16]",
+            "traces.json:data[5].spans[15]",
+            "traces.json:data[6].spans[8]",
+            "traces.json:data[7].spans[44]"
+          ],
+          "reason": "Retains Shipping POST /get-quote latency near baseline as counterevidence that not every Shipping operation slowed similarly."
+        },
+        {
+          "observation_id": "9e960391a10072755e12e297",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "shipping"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "ca450088fce0dd84c6ce3be2",
+          "source_path": "/kubernetes/28",
+          "locators": [
+            "k8s_pods.json:items[24]",
+            "k8s_pods.json:items[24]/status/containerStatuses/0"
+          ],
+          "reason": "Preserves Shipping Running/Ready state in an untimed Kubernetes snapshot."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The selected intlShippingSlowdown value was not recorded, and the aggregate trace summaries do not identify which requests had non-US addresses.",
+        "The operation sample sizes are small and show correlation, not proof that Shipping caused all upstream latency.",
+        "The Shipping Kubernetes snapshot is untimed."
+      ]
+    },
+    "memory-leak-01": {
+      "input_file": "memory-leak-01.json",
+      "source_artifact": "../otel_demo_dataset/otel_demo_dataset/pilot/memory-leak-01",
+      "source_sha256": "c7022267d168af3641599fd16cfc92c62f5a227428fd53221a2cb4908add3002",
+      "source_hash_method": "SHA-256 of newline-joined filename:per-file-SHA-256 records sorted by filename",
+      "source_files_sha256": {
+        "baseline_start.txt": "ddd9aa9d606e781aac4d40e490939cb96d1798c5902f9474782ee7382cd8b9f6",
+        "incident_end.txt": "843e28aa44ed286bb1e3ff72a35bca31c3482513b2c75de41f17470b7526586a",
+        "incident_start.txt": "3f68d6e238cbd65c19cd9599154883b889c7a62f7c958bf04ac6eee7cb91f9de",
+        "k8s_email_deployment.json": "16ae31671b990dce5f413823a1516cbdbcabdee3c0b94dcb2966902751925d82",
+        "k8s_events.json": "7a779468a2dde976a9b896541df1e4ef805e813093bd5edb40ef1a6eea588edf",
+        "k8s_pods.json": "f4e04716611609ce3ba7ca7b15c3b64a9efe20544c81ce9407bbf68b07ed7d74",
+        "logs.json": "4d2c5a301cda5cdfb9a0a0b7bc9de46d96566177727f2a768c993386d7600154",
+        "metrics.json": "ec5dd44a38bc1ac52b53b18193dd0b8c528e851843d32517770649f9bdc534d9",
+        "traces.json": "c03b49420554ff11faee1f697ea6828786fcda80ed39b4020dddd2fe213d60aa"
+      },
+      "canonical_processor_output_sha256": "47c017674df4429831072b77adc829eba7ef4baa40260aa8c59c003fde12fe7d",
+      "comparison_artifacts": [],
+      "included_observations": [
+        {
+          "observation_id": "ff12bca38ca471504045495e",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "email-bbdb755d8-6927j"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "343c82e331b11eb13a460931",
+          "source_path": "/metric/8",
+          "locators": [
+            "metrics.json:data.result[8]"
+          ],
+          "reason": "Records Email container resident-memory bytes increasing between baseline and incident windows."
+        },
+        {
+          "observation_id": "a26efa11c7f9c807d77c0217",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "email-bbdb755d8-6927j"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "75e062694f01dc48fbbce3d5",
+          "source_path": "/metric/9",
+          "locators": [
+            "metrics.json:data.result[9]"
+          ],
+          "reason": "Records Email container memory-usage bytes increasing between baseline and incident windows."
+        },
+        {
+          "observation_id": "1619d48d044d0ec8579d122b",
+          "signal": "metric",
+          "entity": {
+            "type": "resource",
+            "id": "email-bbdb755d8-6927j"
+          },
+          "field": "metric.structural.series",
+          "source_ref": "b5328d8c94c3d98b2b950291",
+          "source_path": "/metric/5",
+          "locators": [
+            "metrics.json:data.result[5]"
+          ],
+          "reason": "Records available container memory decreasing during the incident window."
+        },
+        {
+          "observation_id": "c1d15a703a6582a14ee81f90",
+          "signal": "trace",
+          "entity": {
+            "type": "service",
+            "id": "email"
+          },
+          "field": "trace.structural.operation",
+          "source_ref": "705a38c8a633d003f6bf4e7d",
+          "source_path": "/trace/15",
+          "locators": [
+            "traces.json:data[3].spans[68]",
+            "traces.json:data[4].spans[10]",
+            "traces.json:data[5].spans[13]",
+            "traces.json:data[0].spans[49]",
+            "traces.json:data[1].spans[21]",
+            "traces.json:data[2].spans[89]"
+          ],
+          "reason": "Retains Email send_email latency increasing, with zero operation errors in both windows."
+        },
+        {
+          "observation_id": "030e7840ec1cedb3cd761863",
+          "signal": "kubernetes",
+          "entity": {
+            "type": "container",
+            "id": "email"
+          },
+          "field": "kubernetes.structural.state",
+          "source_ref": "7b0a516040415a0cf9d0b976",
+          "source_path": "/kubernetes/6",
+          "locators": [
+            "k8s_pods.json:items[6]",
+            "k8s_pods.json:items[6]/status/containerStatuses/0"
+          ],
+          "reason": "Preserves Email Running/Ready Kubernetes state in an untimed snapshot; this does not rule out resource pressure during the capture."
+        }
+      ],
+      "known_evidence_gaps": [
+        "The emailMemoryLeak variant is not recorded; the 180-second incident window shows increasing memory, not a persistent leak over a longer observation period.",
+        "Email is Running/Ready in an untimed Kubernetes snapshot; this does not rule out transient resource pressure.",
+        "Email request traces are slower but report no errors, so operational impact beyond latency is not established."
+      ]
     }
   }
 }

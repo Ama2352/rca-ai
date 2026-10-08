@@ -11,7 +11,7 @@ from rca_ai.demo_catalog import load_scenario_catalog
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_catalog_describes_nine_captures_and_only_three_runnable_inputs():
+def test_catalog_describes_nine_captures_and_runnable_prepared_inputs():
     rows = load_scenario_catalog()
 
     assert len(rows) == 9
@@ -24,18 +24,25 @@ def test_catalog_describes_nine_captures_and_only_three_runnable_inputs():
     assert sum(row["source"] == "custom-k8s" for row in rows) == 2
     ready = [row for row in rows if row["readiness"] == "demo-ready"]
     assert {row["id"] for row in ready} == {
-        "ad-high-cpu-01", "application-failure-01", "dependency-unavailable-01",
-        "messaging-failure-01", "missing-secret-01",
+        "ad-high-cpu-01", "application-failure-01", "cart-failure-01",
+        "dependency-unavailable-01", "memory-leak-01", "messaging-failure-01",
+        "missing-secret-01",
     }
-    assert all((ROOT / row["prepared_input"]).is_file() for row in ready)
-    assert all(row["prepared_input"] is None for row in rows if row["readiness"] != "demo-ready")
+    assert len(ready) == 7
+    assert {row["id"] for row in rows if row["readiness"] == "experimental"} == {
+        "crash-loop-backoff-01", "downstream-latency-01",
+    }
+    runnable = [row for row in rows if row["prepared_input"] is not None]
+    assert len(runnable) == 9
+    assert all((ROOT / row["prepared_input"]).is_file() for row in runnable)
+    assert all(row["prepared_input"] is None for row in rows if row["readiness"] == "unverified")
 
 
 def test_all_demo_observations_match_selection_manifest_provenance():
     rows = load_scenario_catalog()
     manifest = json.loads((ROOT / "data/demo/selection_manifest.json").read_text(encoding="utf-8"))
     for row in rows:
-        if row["readiness"] != "demo-ready":
+        if row["prepared_input"] is None:
             continue
         fixture = json.loads((ROOT / row["prepared_input"]).read_text(encoding="utf-8"))
         listed = manifest["scenarios"][row["id"]]["included_observations"]
@@ -84,8 +91,25 @@ def test_snapshot_reference_must_exist_in_fixture_and_manifest(tmp_path):
 def test_snapshot_metadata_cannot_duplicate_telemetry_values():
     rows = load_scenario_catalog()
     for row in rows:
-        if row["readiness"] == "demo-ready":
+        if row["prepared_input"] is not None:
             assert set(row["snapshot_observation_ids"])
             assert not any("value" in key or "unit" in key for key in row)
         else:
             assert "snapshot_observation_ids" not in row
+
+
+def test_experimental_scenario_with_prepared_fixture_passes_manifest_validation(tmp_path):
+    rows = json.loads((ROOT / "data/scenarios/catalog.json").read_text(encoding="utf-8"))
+    downstream = next(row for row in rows if row["id"] == "downstream-latency-01")
+    downstream["prepared_input"] = "data/demo/downstream-latency-01.json"
+    downstream["snapshot_observation_ids"] = [
+        "f7182f3b9b1e689770d30c83", "6b8d40add3516e60450d8828",
+        "611b0d58e2add4341daca248", "9e960391a10072755e12e297",
+    ]
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps(rows), encoding="utf-8")
+
+    loaded = load_scenario_catalog(path, project_root=ROOT)
+    scenario = next(row for row in loaded if row["id"] == "downstream-latency-01")
+    assert scenario["readiness"] == "experimental"
+    assert scenario["prepared_input"] == "data/demo/downstream-latency-01.json"

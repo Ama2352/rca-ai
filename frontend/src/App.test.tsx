@@ -37,12 +37,22 @@ const incidents = [
     source: "otel-demo", readiness: "demo-ready", prepared_input: "data/demo/messaging-failure-01.json",
     affected_services: ["checkout", "fraud-detection", "kafka"], symptoms: ["Consumer delay", "zero measured lag"],
     available_evidence_sources: ["metric", "log", "trace", "kubernetes"], analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Inspect messaging signals"] },
-  ...[
-    ["cart-failure-01", "Cart Failure", "otel-demo"],
-    ["downstream-latency-01", "Downstream Latency", "otel-demo"],
-    ["memory-leak-01", "Memory Leak", "otel-demo"],
-    ["crash-loop-backoff-01", "Crash Loop Backoff", "custom-k8s"],
-  ].map(([id, title, source]) => ({ id, title, source, readiness: "experimental", prepared_input: null })),
+  { id: "cart-failure-01", title: "Cart Failure", source: "otel-demo", readiness: "demo-ready", prepared_input: "data/demo/cart-failure-01.json",
+    description: "Cart EmptyCart calls failed to reach their storage path.", affected_services: ["checkout", "cart"], symptoms: ["Redis connection error"],
+    available_evidence_sources: ["log", "trace", "kubernetes"], analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Inspect Cart errors"],
+    incident_snapshot: [] },
+  { id: "downstream-latency-01", title: "Downstream Latency", source: "otel-demo", readiness: "experimental", prepared_input: "data/demo/downstream-latency-01.json",
+    description: "Checkout-to-Shipping and Shipping /ship-order traces show longer durations.", affected_services: ["checkout", "shipping"], symptoms: ["Shipping latency increase"],
+    available_evidence_sources: ["trace", "kubernetes"], analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Compare edge and operation latency"],
+    incident_snapshot: [] },
+  { id: "memory-leak-01", title: "Memory Leak", source: "otel-demo", readiness: "demo-ready", prepared_input: "data/demo/memory-leak-01.json",
+    description: "Email memory measurements rose during the incident window.", affected_services: ["email"], symptoms: ["Memory growth"],
+    available_evidence_sources: ["metric", "trace", "kubernetes"], analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Assess short-window memory growth"],
+    incident_snapshot: [] },
+  { id: "crash-loop-backoff-01", title: "Crash Loop Backoff", source: "custom-k8s", readiness: "experimental", prepared_input: "data/demo/crash-loop-backoff-01.json",
+    description: "The telemetry-docs container terminated with exit code 42 and BackOff restarts.", affected_services: ["telemetry-docs"], symptoms: ["Container restart backoff"],
+    available_evidence_sources: ["kubernetes", "metric"], analysis_mode: "Evidence-grounded RCA", investigation_focus: ["Inspect termination and BackOff event"],
+    incident_snapshot: [] },
 ]
 
 const completed = {
@@ -96,12 +106,13 @@ function apiFetch(
   status: "completed" | "failed" = "completed",
   decision: "KEEP" | "KEEP_QUALIFIED" | "REJECT" = "KEEP_QUALIFIED",
   missingPresentation = false,
+  incidentRows: typeof incidents = incidents,
 ) {
   const calls: string[] = []
   const fetcher = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input)
     calls.push(`${init?.method ?? "GET"} ${url}`)
-    if (url === "/api/demo/incidents") return Response.json({ incidents })
+    if (url === "/api/demo/incidents") return Response.json({ incidents: incidentRows })
     if (url === "/api/demo/analyses") return Response.json({ analysis_id: "job-1", incident_id: "missing-secret-01", status: "queued" }, { status: 202 })
     if (url === "/api/demo/analyses/job-1") {
       if (status === "failed") return Response.json({
@@ -128,8 +139,8 @@ test("overview appears before analysis and does not reveal mock RCA results", as
   expect(screen.getByRole("heading", { name: "Scenario Library" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "OpenTelemetry Demo" })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: "Custom Kubernetes" })).toBeInTheDocument()
-  expect(screen.getAllByRole("button", { name: /Demo v1 analysis available/ })).toHaveLength(5)
-  expect(screen.getAllByRole("button", { name: /Not yet available for Demo v1 analysis/ })).toHaveLength(4)
+  expect(screen.getAllByRole("button", { name: /Verified · analysis available/ })).toHaveLength(7)
+  expect(screen.getAllByRole("button", { name: /Experimental · analysis available/ })).toHaveLength(2)
   expect(screen.getByText(/Telemetry is observation, not a confirmed root cause/i)).toBeInTheDocument()
   expect(screen.queryByText("A cautious working explanation.")).not.toBeInTheDocument()
   expect(calls).toEqual(["GET /api/demo/incidents"])
@@ -150,12 +161,14 @@ test("known cause, observed symptoms, and RCA explanation are separate before an
 test.each([
   ["Checkout → Payment · Dependency Unavailable", "paymentUnreachable", /outbound Payment Charge metric records incident responses labeled UNAVAILABLE/],
   ["Messaging Failure", "kafkaQueueProblems", /measured consumer-lag metric stays at 0/],
+  ["Cart Failure", "cartFailure", /capture does not show a blanket storage outage/],
+  ["Memory Leak", "emailMemoryLeak", /short simulation as proof of a persistent memory leak/],
 ])("new scenario overview shows its cause and qualified symptoms before analysis", async (title, flag, symptom) => {
   const calls = apiFetch()
   const user = userEvent.setup()
   render(<App />)
   await screen.findByRole("heading", { name: "Scenario overview" })
-  await user.click(screen.getByRole("button", { name: new RegExp(`${title}.*Demo v1 analysis available`) }))
+  await user.click(screen.getByRole("button", { name: new RegExp(`${title}.*Verified · analysis available`) }))
   expect(screen.getByText(new RegExp(flag))).toBeInTheDocument()
   expect(screen.getByText(symptom)).toBeInTheDocument()
   expect(screen.getByText("Available telemetry")).toBeInTheDocument()
@@ -186,7 +199,7 @@ test.each([
   await screen.findByRole("heading", { name: "Scenario overview" })
   if (id !== "missing-secret-01") {
     const title = id === "application-failure-01" ? /Checkout and Payment/ : /Ad Service — High CPU/
-    await user.click(screen.getByRole("button", { name: new RegExp(String(title.source) + ".*Demo v1 analysis available") }))
+    await user.click(screen.getByRole("button", { name: new RegExp(String(title.source) + ".*Verified · analysis available") }))
   }
   const causeHeading = screen.getByRole("heading", { name: "Known scenario cause" })
   const causeSection = causeHeading.closest("section")!
@@ -300,7 +313,7 @@ test("analysis progress labels completed, current, pending, and failed stages tr
     if (url === "/api/demo/analyses") return Promise.resolve(Response.json({ analysis_id: "job-1", incident_id: "missing-secret-01", status: "queued" }, { status: 202 }))
     if (url === "/api/demo/analyses/job-1" && ++polls > 1) return Promise.resolve(Response.json({
       analysis_id: "job-1", incident_id: "missing-secret-01", status: "failed", stage: "validation",
-      stage_label: "Validating hypotheses", error: { code: "PROVIDER_FAILED" },
+      stage_label: "Validating hypotheses", error: { code: "VALIDATION_FAILED", message: "Validator referenced a non-current fact" },
       completed_stages: [{ stage: "preparation" }, { stage: "evidence" }, { stage: "retrieval" }, { stage: "generation" }],
     }))
     return Promise.resolve(Response.json({ analysis_id: "job-1", incident_id: "missing-secret-01", status: "running", stage: "validation", stage_label: "Validating hypotheses", completed_stages: [{ stage: "preparation" }, { stage: "evidence" }, { stage: "retrieval" }, { stage: "generation" }] }))
@@ -312,7 +325,7 @@ test("analysis progress labels completed, current, pending, and failed stages tr
   expect(await screen.findByRole("status", { name: "Analysis progress" })).toHaveTextContent("Completed")
   expect(screen.getByText("Running")).toBeInTheDocument()
   expect(screen.getByText("Pending")).toBeInTheDocument()
-  expect(await screen.findByRole("alert", {}, { timeout: 3500 })).toHaveTextContent("PROVIDER_FAILED")
+  expect(await screen.findByRole("alert", {}, { timeout: 3500 })).toHaveTextContent("Validator referenced a non-current fact")
   expect(screen.getByText("Failed", { selector: ".stage-failed .stage-state" })).toBeInTheDocument()
 }, 10000)
 
@@ -541,7 +554,7 @@ test("switching incidents updates overview and clears the prior analysis", async
   await screen.findByText(/A replacement telemetry-docs pod was Pending/i)
   await user.click(screen.getByRole("button", { name: "Analyze incident" }))
   await screen.findByText("A cautious working explanation.")
-  await user.click(screen.getByRole("button", { name: /Ad Service — High CPU.*Demo v1 analysis available/ }))
+  await user.click(screen.getByRole("button", { name: /Ad Service — High CPU.*Verified · analysis available/ }))
   expect(await screen.findByText(/Ad pod's CPU-usage metric rose sharply/i)).toBeInTheDocument()
   await waitFor(() => expect(screen.queryByText("A cautious working explanation.")).not.toBeInTheDocument())
 })
@@ -564,7 +577,7 @@ test("an old job response cannot appear under a newly selected incident", async 
   await screen.findByText(/A replacement telemetry-docs pod was Pending/i)
   await user.click(screen.getByRole("button", { name: "Analyze incident" }))
   expect(await screen.findByRole("status")).toHaveTextContent("Analysis")
-  await user.click(screen.getByRole("button", { name: /Ad Service — High CPU.*Demo v1 analysis available/ }))
+  await user.click(screen.getByRole("button", { name: /Ad Service — High CPU.*Verified · analysis available/ }))
   finishOldJob(Response.json(completed))
   expect(await screen.findByText(/Ad pod's CPU-usage metric rose sharply/i)).toBeInTheDocument()
   await waitFor(() => expect(screen.queryByText("A cautious working explanation.")).not.toBeInTheDocument())
@@ -600,7 +613,7 @@ test("analyze submits the incident currently shown in the overview", async () =>
   const user = userEvent.setup()
   render(<App />)
   await screen.findByText(/A replacement telemetry-docs pod was Pending/i)
-  await user.click(screen.getByRole("button", { name: /Ad Service — High CPU.*Demo v1 analysis available/ }))
+  await user.click(screen.getByRole("button", { name: /Ad Service — High CPU.*Verified · analysis available/ }))
   await screen.findByText(/Ad pod's CPU-usage metric rose sharply/i)
   await user.click(screen.getByRole("button", { name: "Analyze incident" }))
   expect(vi.mocked(fetch)).toHaveBeenCalledWith("/api/demo/analyses", expect.objectContaining({
@@ -608,15 +621,20 @@ test("analyze submits the incident currently shown in the overview", async () =>
   }))
 })
 
-test("experimental scenarios can be selected but never submitted for analysis", async () => {
-  const calls = apiFetch("failed")
+test("experimental scenarios remain labeled while their prepared fixtures can be analyzed", async () => {
   const user = userEvent.setup()
+  const nonReadyRows = structuredClone(incidents)
+  const downstream = nonReadyRows.find((row) => row.id === "downstream-latency-01")!
+  downstream.readiness = "experimental"
+  const calls = apiFetch("failed", "KEEP_QUALIFIED", false, nonReadyRows)
   render(<App />)
   await screen.findByText(/A replacement telemetry-docs pod was Pending/i)
 
-  await user.click(screen.getByRole("button", { name: /Cart Failure.*Not yet available for Demo v1 analysis/ }))
+  await user.click(screen.getByRole("button", { name: /Downstream Latency.*Experimental · analysis available/ }))
 
-  expect(screen.getAllByText("Captured for research; not yet validated for Demo v1.")).toHaveLength(1)
-  expect(screen.getByRole("button", { name: "Analyze incident" })).toBeDisabled()
-  expect(calls).toEqual(["GET /api/demo/incidents"])
+  expect(screen.getByText(/Checkout-to-Shipping and Shipping \/ship-order traces show longer durations/i)).toBeInTheDocument()
+  expect(screen.getByRole("button", { name: "Analyze incident" })).toBeEnabled()
+  await user.click(screen.getByRole("button", { name: "Analyze incident" }))
+  await waitFor(() => expect(calls).toContain("POST /api/demo/analyses"))
+  expect(calls).toContain("GET /api/demo/analyses/job-1")
 })

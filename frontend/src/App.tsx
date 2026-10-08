@@ -638,6 +638,35 @@ const scenarioOverviewCopy: Record<string, {
       "Separate the injected exercise from conclusions the captured signals cannot establish.",
     ],
   },
+  "cart-failure-01": {
+    context: "This OpenTelemetry Demo exercise investigates failed Cart EmptyCart requests and their observed effect at Checkout.",
+    cause: "The pilot procedure instructed the operator to enable `cartFailure` with a high non-zero percentage, but the selected value and resulting flag state were not captured. OpenTelemetry Demo documents the flag as routing a selected share of EmptyCart calls to a failing Cart store. The observed Redis connection error is consistent with that setup, but the telemetry alone does not prove the flag state or that all Cart storage calls failed.",
+    observations: [
+      "A Cart error log says it was unable to connect to Redis; the pattern was absent at baseline and appeared once in the incident window.",
+      "The Checkout client and Cart server EmptyCart spans are marked as errors and last about 90.8 seconds; the trace begins just before the timestamped incident marker.",
+      "Other sampled Cart-to-Valkey spans report zero errors across baseline and incident samples, so the capture does not show a blanket storage outage.",
+      "The Cart pod is Running and Ready in an untimed Kubernetes snapshot.",
+    ],
+    investigation: [
+      "Distinguish the failing EmptyCart path from other observed Cart storage activity.",
+      "Relate Cart-side evidence to the Checkout client trace without assuming every Cart request failed.",
+      "Treat the trace boundary and untimed pod snapshot as qualified context, not a complete incident timeline.",
+    ],
+  },
+  "memory-leak-01": {
+    context: "This OpenTelemetry Demo Email exercise investigates memory growth and slower confirmation-email handling over a three-minute capture.",
+    cause: "The pilot script instructed the operator to enable a high non-zero `emailMemoryLeak` variant, but the chosen variant was not recorded. OpenTelemetry Demo describes this flag as simulating a memory leak by padding each confirmation email body. The capture shows short-window memory growth; it cannot establish persistence beyond the three-minute observation window.",
+    observations: [
+      "Email resident memory mean rose from about 48.8 MiB to 63.9 MiB, while available memory fell from about 39.1 MiB to 23.9 MiB.",
+      "Email send_email mean latency rose from about 5.9 ms to 64.8 ms; the operation summary reports zero errors in both windows.",
+      "The Email pod was Running and Ready in an untimed Kubernetes snapshot.",
+    ],
+    investigation: [
+      "Assess whether memory growth during this short capture supports a resource-pressure concern.",
+      "Compare memory movement with send_email latency while accounting for the zero recorded trace errors.",
+      "Avoid treating a short simulation as proof of a persistent memory leak.",
+    ],
+  },
 }
 
 function ScenarioOverview({ incident, onAnalyze, busy }: {
@@ -646,15 +675,17 @@ function ScenarioOverview({ incident, onAnalyze, busy }: {
   busy: boolean
 }) {
   const demoReady = incident.readiness === "demo-ready"
+  const runnable = incident.prepared_input !== null
   const overviewCopy = scenarioOverviewCopy[incident.id]
+  const badgeLabel = demoReady ? "Verified demo scenario" : runnable ? "Experimental · analysis available" : "Research scenario"
   return (
     <section className="scenario-overview" aria-labelledby="overview-title">
       <div className="overview-heading">
         <div>
           <p className="breadcrumb">RCA <span>/</span> Prepared incident</p>
           <h1 id="overview-title">Scenario overview</h1>
-          <div className="overview-title"><h2>{incident.title}</h2><Badge variant="secondary">{demoReady ? "Demo incident" : "Research scenario"}</Badge></div>
-          <p className="overview-description">{demoReady ? overviewCopy?.context : "Captured for research; not yet validated for Demo v1."}</p>
+          <div className="overview-title"><h2>{incident.title}</h2><Badge variant="secondary">{badgeLabel}</Badge></div>
+          <p className="overview-description">{demoReady ? overviewCopy?.context : incident.description ?? "Captured for research; no prepared input is available."}</p>
         </div>
         <code className="overview-id">{incident.id}</code>
       </div>
@@ -664,13 +695,13 @@ function ScenarioOverview({ incident, onAnalyze, busy }: {
           <p>{overviewCopy.cause}</p>
         </section>
       ) : null}
-      {demoReady && overviewCopy ? (
+      {runnable && (demoReady ? overviewCopy?.observations : incident.symptoms) ? (
         <section className="incident-snapshot" aria-labelledby="observed-symptoms-title">
           <h3 id="observed-symptoms-title">Observed symptoms</h3>
-          <ul>{overviewCopy.observations.map((observation) => <li key={observation}>{observation}</li>)}</ul>
+          <ul>{(demoReady ? overviewCopy!.observations : incident.symptoms ?? []).map((observation) => <li key={observation}>{observation}</li>)}</ul>
         </section>
       ) : null}
-      {demoReady ? <div className="overview-grid">
+      {runnable ? <div className="overview-grid">
         <div className="overview-config">
           <h3>Incident configuration</h3>
           <dl>
@@ -681,13 +712,17 @@ function ScenarioOverview({ incident, onAnalyze, busy }: {
         </div>
         <div className="overview-focus">
           <h3>What RCA will investigate</h3>
-          <ul>{overviewCopy?.investigation.map((item) => <li key={item}>{item}</li>)}</ul>
+          <ul>{(overviewCopy?.investigation ?? incident.investigation_focus ?? []).map((item) => <li key={item}>{item}</li>)}</ul>
         </div>
       </div> : null}
-      {demoReady && <p className="rca-flow-note">RCA reviews current evidence, retrieves historical and domain context, proposes explanations, then checks claims against the observations. Unsupported parts may be qualified or rejected.</p>}
+      {runnable && <p className="rca-flow-note">RCA reviews current evidence, retrieves historical and domain context, proposes explanations, then checks claims against the observations. Unsupported parts may be qualified or rejected.</p>}
       <div className="overview-footer">
-        <p>{demoReady ? "Telemetry is observation, not a confirmed root cause. RCA may return qualified hypotheses." : "This scenario is available to inspect, but cannot be analyzed in Demo v1."}</p>
-        <Button className="analyze-button" onClick={onAnalyze} disabled={busy || !demoReady}>Analyze incident</Button>
+        <p>{runnable
+          ? demoReady
+            ? "Telemetry is observation, not a confirmed root cause. RCA may return qualified hypotheses."
+            : "Experimental scenario: analysis is available, but results may be limited or fail validation."
+          : "This scenario is available to inspect, but no validated prepared input is available for analysis."}</p>
+        <Button className="analyze-button" onClick={onAnalyze} disabled={busy || !runnable}>Analyze incident</Button>
       </div>
     </section>
   )
@@ -704,12 +739,13 @@ function ScenarioLibrary({ incidents, selectedId, onSelect }: {
   onSelect: (id: string) => void
 }) {
   const readyCount = incidents.filter((item) => item.readiness === "demo-ready").length
+  const runnableCount = incidents.filter((item) => item.prepared_input !== null).length
   return (
     <section className="scenario-library" aria-labelledby="scenario-library-title">
       <div className="library-heading">
         <div>
           <h1 id="scenario-library-title">Scenario Library</h1>
-          <p>{incidents.length} collected incidents. {readyCount} are verified and runnable in RCA Demo v1.</p>
+          <p>{incidents.length} collected incidents. {readyCount} are verified; {runnableCount} prepared scenarios are available to analyze.</p>
         </div>
       </div>
       <div className="library-groups">
@@ -719,7 +755,12 @@ function ScenarioLibrary({ incidents, selectedId, onSelect }: {
             <div className="scenario-rows">
               {incidents.filter((item) => item.source === group.id).map((item) => {
                 const ready = item.readiness === "demo-ready"
-                const status = ready ? "Demo v1 analysis available" : "Not yet available for Demo v1 analysis"
+                const runnable = item.prepared_input !== null
+                const status = ready
+                  ? "Verified · analysis available"
+                  : runnable
+                    ? "Experimental · analysis available"
+                    : "Not available for analysis"
                 return (
                   <button
                     className={`scenario-row${selectedId === item.id ? " is-selected" : ""}`}
@@ -867,7 +908,7 @@ export default function App() {
   }
 
   async function analyzeSelectedIncident() {
-    if (!incident || incident.readiness !== "demo-ready" || busy) return
+    if (!incident || incident.prepared_input === null || busy) return
     const version = ++requestVersion.current
     startedAt.current = Date.now()
     setElapsed(0)
@@ -911,7 +952,7 @@ export default function App() {
         </a>
         <div className="demo-controls">
           <span className="demo-tag">Prepared demo</span>
-          <span className="demo-tag">{incidents.length} scenarios · {incidents.filter((row) => row.readiness === "demo-ready").length} ready</span>
+          <span className="demo-tag">{incidents.length} scenarios · {incidents.filter((row) => row.prepared_input !== null).length} runnable</span>
         </div>
       </header>
       <main className="page-main">
@@ -924,17 +965,17 @@ export default function App() {
           <div className="analysis-message error" role="alert">
             {job?.error?.code === "RATE_LIMITED"
               ? `The provider rate-limited this analysis. ${retryDelayRemaining > 0 ? `Wait ${formatDuration(retryDelayRemaining)} before retrying.` : "You can retry the analysis."} No RCA result was produced.`
-              : `Analysis failed: ${error}. This is an execution failure, not an RCA abstention.`}
+              : `Analysis failed: ${job?.error?.message ?? error}. This is an execution failure, not an RCA abstention.`}
           </div>
           {job?.error?.code === "RATE_LIMITED" && <Button className="retry-analysis-button" onClick={analyzeSelectedIncident} disabled={busy || retryDelayRemaining > 0}>
             {retryDelayRemaining > 0 ? `Retry in ${formatDuration(retryDelayRemaining)}` : "Retry analysis"}
           </Button>}
           {job && <AnalysisExecution job={job} />}
         </>}
-        {phase === "completed" && incident?.readiness === "demo-ready" && job?.result && (
+        {phase === "completed" && incident?.prepared_input !== null && incident && job?.result && (
           <Investigation incident={incident} job={job} selectedId={currentCandidate} onCandidateChange={setCandidateOverride} />
         )}
-        {phase === "idle" && incident?.readiness === "demo-ready" && <p className="analysis-message">Review the incident above, then start an evidence-grounded analysis.</p>}
+        {phase === "idle" && incident?.prepared_input !== null && incident && <p className="analysis-message">Review the incident above, then start an evidence-grounded analysis.</p>}
       </main>
       <footer className="page-footer">
         <span>RCA prepared demo</span><span>F current facts · H historical precedent · K domain context</span>

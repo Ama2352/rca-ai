@@ -1,0 +1,309 @@
+{
+  "incident_id": "memory-leak-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790336708.0,
+      "incident_start": 1790336785.0,
+      "incident_end": 1790336965.0
+    },
+    "observations": [
+      {
+        "observation_id": "ff12bca38ca471504045495e",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "email-bbdb755d8-6927j"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "email",
+          "metric": "container_memory_rss_bytes",
+          "labels": {
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "otel-demo.email-bbdb755d8-6927j.email",
+            "job": "opentelemetry-demo/email",
+            "k8s_container_name": "email",
+            "k8s_deployment_name": "email",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "email-bbdb755d8-6927j",
+            "k8s_replicaset_name": "email-bbdb755d8",
+            "service_instance_id": "otel-demo.email-bbdb755d8-6927j.email",
+            "service_name": "email",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "email-bbdb755d8-6927j",
+          "metric_kind": "gauge",
+          "unit": "bytes",
+          "baseline_value": 51151530.666666664,
+          "incident_value": 67024554.666666664,
+          "signed_change": 15873024.0,
+          "relative_change": 0.3103137636962992,
+          "baseline_n": 6,
+          "incident_n": 12,
+          "uncertainty": [],
+          "baseline_median": 51118080.0,
+          "incident_median": 69341184.0,
+          "baseline_sd": 73058.09234361988,
+          "baseline_min": 51093504.0,
+          "baseline_max": 51310592.0,
+          "incident_min": 51163136.0,
+          "incident_max": 78143488.0,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "343c82e331b11eb13a460931",
+          "source_path": "/metric/8",
+          "locators": [
+            "metrics.json:data.result[8]"
+          ]
+        }
+      },
+      {
+        "observation_id": "a26efa11c7f9c807d77c0217",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "email-bbdb755d8-6927j"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "email",
+          "metric": "container_memory_usage_bytes",
+          "labels": {
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "otel-demo.email-bbdb755d8-6927j.email",
+            "job": "opentelemetry-demo/email",
+            "k8s_container_name": "email",
+            "k8s_deployment_name": "email",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "email-bbdb755d8-6927j",
+            "k8s_replicaset_name": "email-bbdb755d8",
+            "service_instance_id": "otel-demo.email-bbdb755d8-6927j.email",
+            "service_name": "email",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "email-bbdb755d8-6927j",
+          "metric_kind": "gauge",
+          "unit": "bytes",
+          "baseline_value": 68657152.0,
+          "incident_value": 84512426.66666667,
+          "signed_change": 15855274.666666672,
+          "relative_change": 0.23093405719285692,
+          "baseline_n": 6,
+          "incident_n": 12,
+          "uncertainty": [],
+          "baseline_median": 68628480.0,
+          "incident_median": 86857728.0,
+          "baseline_sd": 81851.70486516047,
+          "baseline_min": 68567040.0,
+          "baseline_max": 68829184.0,
+          "incident_min": 68636672.0,
+          "incident_max": 95592448.0,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "increased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "75e062694f01dc48fbbce3d5",
+          "source_path": "/metric/9",
+          "locators": [
+            "metrics.json:data.result[9]"
+          ]
+        }
+      },
+      {
+        "observation_id": "1619d48d044d0ec8579d122b",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "email-bbdb755d8-6927j"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "email",
+          "metric": "container_memory_available_bytes",
+          "labels": {
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "otel-demo.email-bbdb755d8-6927j.email",
+            "job": "opentelemetry-demo/email",
+            "k8s_container_name": "email",
+            "k8s_deployment_name": "email",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "email-bbdb755d8-6927j",
+            "k8s_replicaset_name": "email-bbdb755d8",
+            "service_instance_id": "otel-demo.email-bbdb755d8-6927j.email",
+            "service_name": "email",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "email-bbdb755d8-6927j",
+          "metric_kind": "gauge",
+          "unit": "bytes",
+          "baseline_value": 41007104.0,
+          "incident_value": 25107456.0,
+          "signed_change": -15899648.0,
+          "relative_change": -0.38772911152175,
+          "baseline_n": 6,
+          "incident_n": 12,
+          "uncertainty": [],
+          "baseline_median": 41037824.0,
+          "incident_median": 22779904.0,
+          "baseline_sd": 79696.76503681522,
+          "baseline_min": 40837120.0,
+          "baseline_max": 41086976.0,
+          "incident_min": 13963264.0,
+          "incident_max": 41017344.0,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "decreased"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "b5328d8c94c3d98b2b950291",
+          "source_path": "/metric/5",
+          "locators": [
+            "metrics.json:data.result[5]"
+          ]
+        }
+      },
+      {
+        "observation_id": "c1d15a703a6582a14ee81f90",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "email"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "email",
+          "operation_or_callee": "send_email",
+          "baseline_n": 3,
+          "incident_n": 3,
+          "baseline_mean_ms": 5.860666666666667,
+          "incident_mean_ms": 64.82233333333333,
+          "baseline_median_ms": 4.914,
+          "incident_median_ms": 53.854,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": 58.961666666666666,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "705a38c8a633d003f6bf4e7d",
+          "source_path": "/trace/15",
+          "locators": [
+            "traces.json:data[3].spans[68]",
+            "traces.json:data[4].spans[10]",
+            "traces.json:data[5].spans[13]",
+            "traces.json:data[0].spans[49]",
+            "traces.json:data[1].spans[21]",
+            "traces.json:data[2].spans[89]"
+          ]
+        }
+      },
+      {
+        "observation_id": "030e7840ec1cedb3cd761863",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "email"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "email",
+          "pod": "email-bbdb755d8-6927j",
+          "pod_uid": "4d4630fd-2a45-41f4-8aa7-246df6b59859",
+          "container": "email",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": 1,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": 1,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T17:08:50Z",
+              "lastUpdateTime": "2026-09-24T17:08:50Z",
+              "message": "ReplicaSet \"email-bbdb755d8\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T02:25:55Z",
+              "lastUpdateTime": "2026-09-25T02:25:55Z",
+              "message": "Deployment has minimum availability.",
+              "reason": "MinimumReplicasAvailable",
+              "status": "True",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "7b0a516040415a0cf9d0b976",
+          "source_path": "/kubernetes/6",
+          "locators": [
+            "k8s_pods.json:items[6]",
+            "k8s_pods.json:items[6]/status/containerStatuses/0"
+          ]
+        }
+      }
+    ]
+  }
+}

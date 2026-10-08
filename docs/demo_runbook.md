@@ -35,9 +35,13 @@ python scripts/run_prepared_demo.py --scenario application-failure-01
 python scripts/run_prepared_demo.py --scenario ad-high-cpu-01
 python scripts/run_prepared_demo.py --scenario dependency-unavailable-01
 python scripts/run_prepared_demo.py --scenario messaging-failure-01
+python scripts/run_prepared_demo.py --scenario cart-failure-01
+python scripts/run_prepared_demo.py --scenario memory-leak-01
+python scripts/run_prepared_demo.py --scenario crash-loop-backoff-01
+python scripts/run_prepared_demo.py --scenario downstream-latency-01
 ~~~
 
-Run all five sequentially (the default):
+Run all nine sequentially (the default):
 
 ~~~powershell
 python scripts/run_prepared_demo.py --scenario all
@@ -111,7 +115,7 @@ If the backend uses a non-default port, set `RCA_DEMO_API_TARGET` in the fronten
 
 Open the local Vite URL printed in the second terminal. Select a prepared incident and read its Scenario Overview before choosing **Analyze incident**. The overview uses the prepared fixture and static presentation copy; it does not contact Groq. Analysis can take several sequential provider calls, so the UI shows elapsed time and polls the in-memory job. A backend failure appears as an execution error, not an RCA abstention. Switching incidents clears the prior result. Qualifications and unresolved questions remain visible on retained hypotheses.
 
-The API provides `GET /api/demo/incidents`, `POST /api/demo/analyses` with `{"incident_id":"missing-secret-01"}`, and `GET /api/demo/analyses/{analysis_id}`. It accepts only the three tracked prepared incidents, runs one job at a time, and forgets jobs on restart. The browser demo does not add a proactive 75-second wait. Groq's bounded transport retries for retryable rate-limit/server/transport failures remain active; if a final HTTP 429 is exhausted, the API reports `RATE_LIMITED`, returns `Retry-After` when available, and the UI enables one manual retry after that delay. Both API keys stay server-side. The execution audit reports Groq / `openai/gpt-oss-120b` for Generator and Cerebras / `gpt-oss-120b` for Validator. For a deployment, route `/api` to the FastAPI service; Vite's proxy is development-only.
+The API provides `GET /api/demo/incidents`, `POST /api/demo/analyses` with `{"incident_id":"missing-secret-01"}`, and `GET /api/demo/analyses/{analysis_id}`. It accepts all nine tracked prepared inputs after catalog and manifest validation. Seven remain verified; `crash-loop-backoff-01` and `downstream-latency-01` are labeled experimental and may fail validation. Such failures are shown as execution errors, with no automatic rerun. The API runs one job at a time and forgets jobs on restart. The browser demo does not add a proactive 75-second wait. Groq's bounded transport retries for retryable rate-limit/server/transport failures remain active; if a final HTTP 429 is exhausted, the API reports `RATE_LIMITED`, returns `Retry-After` when available, and the UI enables one manual retry after that delay. Both API keys stay server-side. The execution audit reports Groq / `openai/gpt-oss-120b` for Generator and Cerebras / `gpt-oss-120b` for Validator. For a deployment, route `/api` to the FastAPI service; Vite's proxy is development-only.
 
 Offline integration checks use fake providers:
 

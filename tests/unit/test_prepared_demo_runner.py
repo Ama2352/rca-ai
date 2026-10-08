@@ -18,10 +18,14 @@ runner = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(runner)
 
 
-SCENARIOS = (
-    "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
-    "dependency-unavailable-01", "messaging-failure-01",
-)
+SCENARIOS = runner.SCENARIOS
+
+def test_runner_exposes_all_nine_prepared_scenarios():
+    assert set(SCENARIOS) == {
+        "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
+        "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+        "memory-leak-01", "crash-loop-backoff-01", "downstream-latency-01",
+    }
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS)

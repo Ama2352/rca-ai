@@ -11,6 +11,8 @@ import pytest
 
 from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
 from rca_ai.providers.groq import ProviderAttempt, ProviderHTTPError, ProviderResult
+from rca_ai.reasoning.validator import ValidatorValidationError
+from rca_ai.api import demo
 from rca_ai.api.demo import create_app
 from rca_ai.demo_catalog import load_scenario_catalog
 
@@ -18,7 +20,8 @@ from rca_ai.demo_catalog import load_scenario_catalog
 ROOT = Path(__file__).resolve().parents[3]
 SCENARIOS = (
     "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
-    "dependency-unavailable-01", "messaging-failure-01",
+    "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+    "memory-leak-01", "crash-loop-backoff-01", "downstream-latency-01",
 )
 
 
@@ -83,11 +86,20 @@ def test_catalog_metadata_matches_prepared_observations_without_diagnosis():
     assert response.status_code == 200
     rows = response.json()["incidents"]
     assert len(rows) == 9
+    assert tuple(row["id"] for row in rows if row["prepared_input"] is not None) == demo.SCENARIOS
+    assert len(demo.SCENARIOS) == 9
     assert sum(row["source"] == "otel-demo" for row in rows) == 7
     assert sum(row["source"] == "custom-k8s" for row in rows) == 2
-    assert {row["id"] for row in rows if row["readiness"] == "demo-ready"} == set(SCENARIOS)
+    assert {row["id"] for row in rows if row["readiness"] == "demo-ready"} == {
+        "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
+        "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+        "memory-leak-01",
+    }
+    assert {row["id"] for row in rows if row["readiness"] == "experimental"} == {
+        "crash-loop-backoff-01", "downstream-latency-01",
+    }
     for row in rows:
-        if row["readiness"] != "demo-ready":
+        if row["prepared_input"] is None:
             assert row["prepared_input"] is None
             assert "description" not in row
             continue
@@ -106,7 +118,7 @@ def test_snapshot_ids_and_values_resolve_from_prepared_fixture_and_manifest():
     rows = _client().get("/api/demo/incidents").json()["incidents"]
     manifest = json.loads((ROOT / "data/demo/selection_manifest.json").read_text(encoding="utf-8"))
     for row in rows:
-        if row["readiness"] != "demo-ready":
+        if row["prepared_input"] is None:
             assert "incident_snapshot" not in row
             continue
         fixture = json.loads((ROOT / row["prepared_input"]).read_text(encoding="utf-8"))
@@ -133,15 +145,36 @@ def test_result_presentation_keeps_exact_fact_value():
         assert shown["raw"] == fact
 
 
-def test_catalog_prevents_experimental_scenarios_from_running():
+def test_experimental_prepared_scenario_can_be_submitted_and_completed():
     client = _client()
-    rows = client.get("/api/demo/incidents").json()["incidents"]
-    experimental = next(row["id"] for row in rows if row["readiness"] == "experimental")
+    non_ready = "downstream-latency-01"
 
-    response = client.post("/api/demo/analyses", json={"incident_id": experimental})
+    response = client.post("/api/demo/analyses", json={"incident_id": non_ready})
 
-    assert response.status_code == 409
-    assert "not available for Demo v1" in response.json()["detail"]
+    assert response.status_code == 202
+    result = _completed(client, response.json()["analysis_id"])
+    assert result["status"] == "completed"
+    assert result["incident_id"] == non_ready
+    assert result["fact_integrity"] is True
+
+
+def test_validator_integrity_failure_shows_actual_safe_error_without_result():
+    class InvalidValidatorPipeline:
+        def run(self, incident):
+            raise ValidatorValidationError("Validator referenced a non-current fact")
+
+    client = TestClient(create_app(
+        pipeline_factory=lambda: InvalidValidatorPipeline(), credential_available=lambda: True,
+    ))
+    started = client.post("/api/demo/analyses", json={"incident_id": "downstream-latency-01"})
+    result = _completed(client, started.json()["analysis_id"])
+
+    assert result["status"] == "failed"
+    assert result["error"] == {
+        "code": "VALIDATION_FAILED",
+        "message": "Validator referenced a non-current fact",
+    }
+    assert "result" not in result
 
 
 def test_catalog_loader_and_api_share_the_same_scenario_records():

@@ -1,0 +1,252 @@
+{
+  "incident_id": "downstream-latency-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790331208.0,
+      "incident_start": 1790331282.0,
+      "incident_end": 1790331402.0
+    },
+    "observations": [
+      {
+        "observation_id": "f7182f3b9b1e689770d30c83",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "shipping"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "shipping",
+          "operation_or_callee": "POST /ship-order",
+          "baseline_n": 2,
+          "incident_n": 6,
+          "baseline_mean_ms": 0.816,
+          "incident_mean_ms": 1670.4983333333332,
+          "baseline_median_ms": 0.816,
+          "incident_median_ms": 2.8605,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": 1669.6823333333332,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "cb1e2e5241921f89d701bcf8",
+          "source_path": "/trace/50",
+          "locators": [
+            "traces.json:data[8].spans[27]",
+            "traces.json:data[10].spans[37]",
+            "traces.json:data[1].spans[53]",
+            "traces.json:data[2].spans[72]",
+            "traces.json:data[3].spans[78]",
+            "traces.json:data[4].spans[17]",
+            "traces.json:data[6].spans[61]",
+            "traces.json:data[7].spans[45]"
+          ]
+        }
+      },
+      {
+        "observation_id": "6b8d40add3516e60450d8828",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "checkout"
+        },
+        "field": "trace.structural.edge",
+        "value": {
+          "lane": "trace.structural.edge",
+          "kind": "edge",
+          "service": "checkout",
+          "operation_or_callee": "shipping",
+          "baseline_n": 4,
+          "incident_n": 12,
+          "baseline_mean_ms": 5.219,
+          "incident_mean_ms": 840.0695833333333,
+          "baseline_median_ms": 3.0845,
+          "incident_median_ms": 6.288,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": 834.8505833333332,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "7b6d891443315e77470d6d0f",
+          "source_path": "/trace/49",
+          "locators": [
+            "traces.json:data[8].spans[26]",
+            "traces.json:data[8].spans[27]",
+            "traces.json:data[10].spans[36]",
+            "traces.json:data[10].spans[37]",
+            "traces.json:data[1].spans[52]",
+            "traces.json:data[1].spans[53]",
+            "traces.json:data[2].spans[71]",
+            "traces.json:data[2].spans[72]",
+            "traces.json:data[3].spans[77]",
+            "traces.json:data[3].spans[78]",
+            "traces.json:data[4].spans[16]",
+            "traces.json:data[4].spans[17]",
+            "traces.json:data[6].spans[8]",
+            "traces.json:data[6].spans[61]",
+            "traces.json:data[7].spans[44]",
+            "traces.json:data[7].spans[45]"
+          ]
+        }
+      },
+      {
+        "observation_id": "611b0d58e2add4341daca248",
+        "signal": "trace",
+        "entity": {
+          "type": "service",
+          "id": "shipping"
+        },
+        "field": "trace.structural.operation",
+        "value": {
+          "lane": "trace.structural.operation",
+          "kind": "operation",
+          "service": "shipping",
+          "operation_or_callee": "POST /get-quote",
+          "baseline_n": 8,
+          "incident_n": 8,
+          "baseline_mean_ms": 7.998125,
+          "incident_mean_ms": 9.27725,
+          "baseline_median_ms": 6.773,
+          "incident_median_ms": 8.186499999999999,
+          "baseline_p95_ms": null,
+          "incident_p95_ms": null,
+          "baseline_errors": 0,
+          "incident_errors": 0,
+          "baseline_error_rate": 0.0,
+          "incident_error_rate": 0.0,
+          "error_rate_delta": 0.0,
+          "signed_latency_change_ms": 1.2791250000000005,
+          "uncertainty": [
+            "p95_insufficient_support"
+          ],
+          "start": null,
+          "end": null,
+          "duration_ms": null,
+          "boundary_error": null,
+          "trace_id": null,
+          "span_id": null,
+          "error": "unchanged"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "6965a49b94400bde3e79bbf0",
+          "source_path": "/trace/6",
+          "locators": [
+            "traces.json:data[8].spans[26]",
+            "traces.json:data[9].spans[15]",
+            "traces.json:data[10].spans[36]",
+            "traces.json:data[11].spans[4]",
+            "traces.json:data[12].spans[3]",
+            "traces.json:data[13].spans[8]",
+            "traces.json:data[14].spans[15]",
+            "traces.json:data[15].spans[3]",
+            "traces.json:data[0].spans[5]",
+            "traces.json:data[1].spans[52]",
+            "traces.json:data[2].spans[71]",
+            "traces.json:data[3].spans[77]",
+            "traces.json:data[4].spans[16]",
+            "traces.json:data[5].spans[15]",
+            "traces.json:data[6].spans[8]",
+            "traces.json:data[7].spans[44]"
+          ]
+        }
+      },
+      {
+        "observation_id": "9e960391a10072755e12e297",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "shipping"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "shipping",
+          "pod": "shipping-764b957d75-9phmt",
+          "pod_uid": "2496de11-3d27-40ec-b730-f7e73c1bd86e",
+          "container": "shipping",
+          "phase": "Running",
+          "ready": true,
+          "container_state": "running",
+          "waiting_reason": null,
+          "termination_reason": "Unknown",
+          "exit_code": null,
+          "restart_count": 1,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": 1,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": 1,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T17:10:35Z",
+              "lastUpdateTime": "2026-09-24T17:10:35Z",
+              "message": "ReplicaSet \"shipping-764b957d75\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T02:26:33Z",
+              "lastUpdateTime": "2026-09-25T02:26:33Z",
+              "message": "Deployment has minimum availability.",
+              "reason": "MinimumReplicasAvailable",
+              "status": "True",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "ca450088fce0dd84c6ce3be2",
+          "source_path": "/kubernetes/28",
+          "locators": [
+            "k8s_pods.json:items[24]",
+            "k8s_pods.json:items[24]/status/containerStatuses/0"
+          ]
+        }
+      }
+    ]
+  }
+}

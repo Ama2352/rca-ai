@@ -14,7 +14,7 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIO_CATALOG, SCENARIOS_BY_ID
+from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIO_CATALOG, SCENARIOS_BY_ID, runnable_scenario_ids
 from rca_ai.api.presentation import present_fact
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
 from rca_ai.facts.builder import build_fact_view
@@ -22,11 +22,12 @@ from rca_ai.pipeline.assembler import resolve_sources
 from rca_ai.pipeline.prepared_demo import DemoEvent, PreparedDemoPipeline, PreparedDemoRunResult
 from rca_ai.pipeline.request_budget import RequestBudgetExceeded
 from rca_ai.reasoning.generator import GENERATOR_MODEL
+from rca_ai.reasoning.validator import ValidatorValidationError
 from rca_ai.providers.cerebras_benchmark import CEREBRAS_MODEL, CerebrasBenchmarkProvider
 from rca_ai.providers.groq import GroqProvider, ProviderError, ProviderHTTPError
 
 
-SCENARIOS = tuple(row["id"] for row in SCENARIO_CATALOG if row["readiness"] == "demo-ready")
+SCENARIOS = runnable_scenario_ids()
 _SIGNAL_ORDER = ("metric", "log", "trace", "kubernetes")
 
 
@@ -39,7 +40,7 @@ def _default_provider_routing() -> dict[str, dict[str, str]]:
 
 def load_incident(scenario: str) -> IncidentInput:
     catalog_row = SCENARIOS_BY_ID.get(scenario)
-    if catalog_row is None or catalog_row["readiness"] != "demo-ready":
+    if catalog_row is None or catalog_row["prepared_input"] is None:
         raise ValueError("Unsupported prepared scenario")
     fixture_path = PROJECT_ROOT / catalog_row["prepared_input"]
     payload = json.loads(fixture_path.read_text(encoding="utf-8"))
@@ -58,7 +59,7 @@ def incident_catalog() -> list[dict[str, object]]:
             "readiness": scenario["readiness"],
             "prepared_input": scenario["prepared_input"],
         }
-        if scenario["readiness"] == "demo-ready":
+        if scenario["prepared_input"] is not None:
             incident = load_incident(scenario["id"])
             signals = {row.signal for row in incident.evidence.observations}
             facts = build_fact_view(incident)
@@ -251,6 +252,11 @@ def create_app(
                         failure["retry_after_seconds"] = retry_after
                 elif isinstance(error, ProviderError):
                     failure = {"code": "PROVIDER_FAILED"}
+                elif isinstance(error, ValidatorValidationError):
+                    failure = {
+                        "code": "VALIDATION_FAILED",
+                        "message": str(error),
+                    }
                 else:
                     failure = {"code": "ANALYSIS_FAILED"}
                 with lock:

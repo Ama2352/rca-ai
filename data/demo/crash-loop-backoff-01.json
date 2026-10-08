@@ -1,0 +1,197 @@
+{
+  "incident_id": "crash-loop-backoff-01",
+  "evidence": {
+    "window": {
+      "baseline_start": 1790341617.0,
+      "incident_start": 1790341677.0,
+      "incident_end": 1790341737.0
+    },
+    "observations": [
+      {
+        "observation_id": "a85a7eff00aa98136235be9e",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "container",
+          "id": "telemetry-docs"
+        },
+        "field": "kubernetes.structural.state",
+        "value": {
+          "lane": "kubernetes.structural.state",
+          "deployment": "telemetry-docs",
+          "pod": "telemetry-docs-555c44f876-fn5mb",
+          "pod_uid": "6780db85-be80-4faf-968d-344217221058",
+          "container": "telemetry-docs",
+          "phase": "Running",
+          "ready": false,
+          "container_state": "terminated",
+          "waiting_reason": null,
+          "termination_reason": "Error",
+          "exit_code": 42,
+          "restart_count": 3,
+          "event_reason": null,
+          "event_message": null,
+          "event_first_at": null,
+          "event_last_at": null,
+          "event_count": null,
+          "desired_replicas": 1,
+          "ready_replicas": null,
+          "uncertainty": [
+            "snapshot_time_not_embedded"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": null,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T16:25:05Z",
+              "lastUpdateTime": "2026-09-25T13:08:03Z",
+              "message": "ReplicaSet \"telemetry-docs-555c44f876\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T13:08:43Z",
+              "lastUpdateTime": "2026-09-25T13:08:43Z",
+              "message": "Deployment does not have minimum availability.",
+              "reason": "MinimumReplicasUnavailable",
+              "status": "False",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "29bd0340654202a62b33899f",
+          "source_path": "/kubernetes/29",
+          "locators": [
+            "k8s_pods.json:items[25]",
+            "k8s_pods.json:items[25]/status/containerStatuses/0"
+          ]
+        }
+      },
+      {
+        "observation_id": "35d8fd27bfcaa31f175ed000",
+        "signal": "kubernetes",
+        "entity": {
+          "type": "event_record",
+          "id": "65172a6a1eb138ad61f17308"
+        },
+        "field": "kubernetes.structural.event",
+        "value": {
+          "lane": "kubernetes.structural.event",
+          "deployment": "telemetry-docs",
+          "pod": "telemetry-docs-555c44f876-fn5mb",
+          "pod_uid": "6780db85-be80-4faf-968d-344217221058",
+          "container": "",
+          "phase": "Running",
+          "ready": false,
+          "container_state": "",
+          "waiting_reason": null,
+          "termination_reason": null,
+          "exit_code": null,
+          "restart_count": null,
+          "event_reason": "BackOff",
+          "event_message": "Back-off restarting failed container telemetry-docs in pod telemetry-docs-555c44f876-fn5mb_otel-demo(6780db85-be80-4faf-968d-344217221058)",
+          "event_first_at": 1790341684.0,
+          "event_last_at": 1790341723.0,
+          "event_count": 4,
+          "desired_replicas": 1,
+          "ready_replicas": null,
+          "uncertainty": [
+            "event_count_cumulative"
+          ],
+          "updated_replicas": 1,
+          "available_replicas": null,
+          "deployment_conditions": [
+            {
+              "lastTransitionTime": "2026-09-24T16:25:05Z",
+              "lastUpdateTime": "2026-09-25T13:08:03Z",
+              "message": "ReplicaSet \"telemetry-docs-555c44f876\" has successfully progressed.",
+              "reason": "NewReplicaSetAvailable",
+              "status": "True",
+              "type": "Progressing"
+            },
+            {
+              "lastTransitionTime": "2026-09-25T13:08:43Z",
+              "lastUpdateTime": "2026-09-25T13:08:43Z",
+              "message": "Deployment does not have minimum availability.",
+              "reason": "MinimumReplicasUnavailable",
+              "status": "False",
+              "type": "Available"
+            }
+          ]
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "65172a6a1eb138ad61f17308",
+          "source_path": "/kubernetes/40",
+          "locators": [
+            "k8s_events.json:items[9]",
+            "k8s_pods.json:items[25]"
+          ]
+        }
+      },
+      {
+        "observation_id": "e989ada43d98489434186637",
+        "signal": "metric",
+        "entity": {
+          "type": "resource",
+          "id": "telemetry-docs-555c44f876-fn5mb"
+        },
+        "field": "metric.structural.series",
+        "value": {
+          "lane": "metric.structural.series",
+          "service": "telemetry-docs",
+          "metric": "k8s_container_restarts",
+          "labels": {
+            "host_name": "otel-collector-agent-65w65",
+            "instance": "otel-demo.telemetry-docs-555c44f876-fn5mb.telemetry-docs",
+            "job": "opentelemetry-demo/telemetry-docs",
+            "k8s_container_name": "telemetry-docs",
+            "k8s_deployment_name": "telemetry-docs",
+            "k8s_namespace_name": "otel-demo",
+            "k8s_node_name": "otel-rca",
+            "k8s_pod_name": "telemetry-docs-555c44f876-fn5mb",
+            "k8s_replicaset_name": "telemetry-docs-555c44f876",
+            "service_instance_id": "otel-demo.telemetry-docs-555c44f876-fn5mb.telemetry-docs",
+            "service_name": "telemetry-docs",
+            "service_namespace": "opentelemetry-demo",
+            "service_version": "3.1.0"
+          },
+          "resource": "telemetry-docs-555c44f876-fn5mb",
+          "metric_kind": "gauge",
+          "unit": "reported_unit",
+          "baseline_value": null,
+          "incident_value": 2.0,
+          "signed_change": null,
+          "relative_change": null,
+          "baseline_n": 0,
+          "incident_n": 4,
+          "uncertainty": [],
+          "baseline_median": null,
+          "incident_median": 2.0,
+          "baseline_sd": null,
+          "baseline_min": null,
+          "baseline_max": null,
+          "incident_min": 1.0,
+          "incident_max": 3.0,
+          "baseline_delta": null,
+          "incident_delta": null,
+          "baseline_resets": 0,
+          "incident_resets": 0,
+          "baseline_event_count": null,
+          "incident_event_count": null,
+          "change": "appeared"
+        },
+        "attributes": {},
+        "source": {
+          "source_ref": "fbcea4e9152855efc5099851",
+          "source_path": "/metric/17",
+          "locators": [
+            "metrics.json:data.result[17]"
+          ]
+        }
+      }
+    ]
+  }
+}

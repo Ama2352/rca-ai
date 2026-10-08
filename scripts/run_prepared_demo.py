@@ -9,7 +9,7 @@ import sys
 from typing import Any
 
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
-from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIOS_BY_ID, demo_ready_scenario_ids
+from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIOS_BY_ID, runnable_scenario_ids
 from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
 from rca_ai.pipeline.prepared_demo_providers import ProviderCallPacer
 from rca_ai.pipeline.request_budget import DEFAULT_MAX_ESTIMATED_TOKENS, request_size
@@ -17,7 +17,7 @@ from rca_ai.providers.groq import GroqProvider
 from rca_ai.providers.cerebras_benchmark import CerebrasBenchmarkProvider
 
 
-SCENARIOS = demo_ready_scenario_ids()
+SCENARIOS = runnable_scenario_ids()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -54,7 +54,7 @@ def load_incident(scenario: str) -> IncidentInput:
     """Load a version-controlled prepared fixture; never consult experiment artifacts."""
 
     catalog_row = SCENARIOS_BY_ID.get(scenario)
-    if catalog_row is None or catalog_row["readiness"] != "demo-ready":
+    if catalog_row is None or catalog_row["prepared_input"] is None:
         raise ValueError(f"Unsupported scenario: {scenario}")
     fixture_path = PROJECT_ROOT / catalog_row["prepared_input"]
     payload = json.loads(fixture_path.read_text(encoding="utf-8"))
