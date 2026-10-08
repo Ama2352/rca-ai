@@ -10,12 +10,13 @@ import pytest
 
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict
 from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
+from rca_ai.pipeline.prepared_demo_providers import ProviderCallPacer
 from rca_ai.pipeline.request_budget import RequestBudgetExceeded, request_size
 from rca_ai.providers.groq import ProviderError, ProviderResult
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "prepared_demo"
+FIXTURE_ROOT = PROJECT_ROOT / "data" / "demo"
 SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
 EXPECTED_HISTORY = {
     "missing-secret-01": ("H020", "H021", "H019"),
@@ -259,6 +260,49 @@ def test_prepared_demo_replays_frozen_retrieval_and_full_requests_fit(scenario):
     assert len(requests) == 3
     assert all(request_size(request)[1] <= 7000 for request in requests)
     assert all(execution.provider_result.http_status == 200 for execution in result.validations)
+
+
+def test_optional_observer_reports_actual_stages_without_changing_output():
+    incident = _load_incident("missing-secret-01")
+    plain = PreparedDemoPipeline(
+        generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider(),
+    ).run(incident)
+    events = []
+    observed = PreparedDemoPipeline(
+        generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider(),
+    ).run(incident, observer=events.append)
+
+    assert observed == plain
+    assert [(event.kind, event.stage, event.candidate_id) for event in events] == [
+        ("stage_started", "evidence", None), ("stage_completed", "evidence", None),
+        ("stage_started", "retrieval", None), ("stage_completed", "retrieval", None),
+        ("stage_started", "generation", None), ("provider_started", "generation", None),
+        ("provider_completed", "generation", None), ("stage_completed", "generation", None),
+        ("stage_started", "validation", "HYP1"), ("provider_started", "validation", "HYP1"),
+        ("provider_completed", "validation", "HYP1"), ("stage_completed", "validation", "HYP1"),
+        ("stage_started", "validation", "HYP2"), ("provider_started", "validation", "HYP2"),
+        ("provider_completed", "validation", "HYP2"), ("stage_completed", "validation", "HYP2"),
+        ("stage_started", "assembly", None), ("stage_completed", "assembly", None),
+    ]
+    assert all(event.timestamp >= 0 for event in events)
+
+
+def test_observer_reports_only_explicit_pacer_waits_as_pacing():
+    events = []
+    pipeline = PreparedDemoPipeline(
+        generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider(),
+        provider_pacer=ProviderCallPacer(fallback_delay_seconds=0.01, sleep=lambda _: None),
+    )
+
+    pipeline.run(_load_incident("missing-secret-01"), observer=events.append)
+
+    pacing = [(event.kind, event.stage, event.candidate_id) for event in events if event.kind.startswith("pacing_")]
+    assert pacing == [
+        ("pacing_started", "validation", "HYP1"),
+        ("pacing_completed", "validation", "HYP1"),
+        ("pacing_started", "validation", "HYP2"),
+        ("pacing_completed", "validation", "HYP2"),
+    ]
 
 
 def test_prepared_demo_repeats_deterministic_stages_identically():

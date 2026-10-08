@@ -7,6 +7,7 @@ import json
 import pytest
 
 from rca_ai.pipeline.prepared_demo_providers import (
+    ObservedProvider,
     ProviderCallPacer,
     PacingProvider,
     ValidatorSchemaRetryProvider,
@@ -226,3 +227,19 @@ def test_recovery_attempt_is_paced_and_remains_budget_checked():
     assert len(provider.requests) == 2
     assert all(item is request for item in provider.requests)
     assert delays == [75]
+
+
+def test_provider_operation_reports_attempt_metadata_separately_from_pacer_wait():
+    attempts = (
+        ProviderAttempt(number=1, http_status=429, retry_after_seconds=12),
+        ProviderAttempt(number=2, http_status=200),
+    )
+    events = []
+    provider = SequenceProvider([_result(attempts=attempts)])
+    observed = ObservedProvider(provider, lambda kind, outcome=None: events.append((kind, outcome)))
+
+    observed.complete({"same": "request"})
+
+    assert events[0] == ("provider_started", None)
+    assert events[1][0] == "provider_completed"
+    assert events[1][1].attempt_log == attempts

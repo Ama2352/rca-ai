@@ -5,24 +5,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from pathlib import Path
 import sys
 from typing import Any
 
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
+from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIOS_BY_ID, demo_ready_scenario_ids
 from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
 from rca_ai.pipeline.prepared_demo_providers import ProviderCallPacer
 from rca_ai.pipeline.request_budget import DEFAULT_MAX_ESTIMATED_TOKENS, request_size
 from rca_ai.providers.groq import GroqProvider
+from rca_ai.providers.cerebras_benchmark import CerebrasBenchmarkProvider
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "prepared_demo"
-SCENARIOS = (
-    "missing-secret-01",
-    "application-failure-01",
-    "ad-high-cpu-01",
-)
+SCENARIOS = demo_ready_scenario_ids()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -58,9 +53,10 @@ def build_parser() -> argparse.ArgumentParser:
 def load_incident(scenario: str) -> IncidentInput:
     """Load a version-controlled prepared fixture; never consult experiment artifacts."""
 
-    if scenario not in SCENARIOS:
+    catalog_row = SCENARIOS_BY_ID.get(scenario)
+    if catalog_row is None or catalog_row["readiness"] != "demo-ready":
         raise ValueError(f"Unsupported scenario: {scenario}")
-    fixture_path = FIXTURE_ROOT / f"{scenario}.json"
+    fixture_path = PROJECT_ROOT / catalog_row["prepared_input"]
     payload = json.loads(fixture_path.read_text(encoding="utf-8"))
     if payload.get("incident_id") != scenario:
         raise ValueError(f"Fixture incident_id does not match selected scenario: {scenario}")
@@ -78,15 +74,16 @@ def make_pipeline(
 ) -> PreparedDemoPipeline:
     """Wire the configured provider once; pacing is an explicit opt-in."""
 
-    provider = GroqProvider()
+    generator_provider = GroqProvider()
+    validator_provider = CerebrasBenchmarkProvider()
     pacer = (
         ProviderCallPacer(fallback_delay_seconds=pacing_delay_seconds)
         if enable_pacing
         else None
     )
     return PreparedDemoPipeline(
-        generator_provider=provider,
-        validator_provider=provider,
+        generator_provider=generator_provider,
+        validator_provider=validator_provider,
         max_estimated_tokens=max_estimated_tokens,
         provider_pacer=pacer,
     )
@@ -143,8 +140,12 @@ def summarize_run(run: Any) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if not os.getenv("GROQ_API_KEY", "").strip():
-        print("GROQ_API_KEY is required; no provider request was made.", file=sys.stderr)
+    missing_credentials = [
+        name for name in ("GROQ_API_KEY", "CEREBRAS_API_KEY")
+        if not os.getenv(name, "").strip()
+    ]
+    if missing_credentials:
+        print(f"{', '.join(missing_credentials)} is required; no provider request was made.", file=sys.stderr)
         return 2
 
     scenarios = SCENARIOS if args.scenario == "all" else (args.scenario,)

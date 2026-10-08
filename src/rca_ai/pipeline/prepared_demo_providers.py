@@ -126,11 +126,17 @@ class ProviderCallPacer:
         self._sleep = sleep
         self._delay_before_next_call: float | None = None
 
-    def before_call(self) -> None:
+    def before_call(self, on_wait: Callable[[str], None] | None = None) -> None:
         delay = self._delay_before_next_call
         self._delay_before_next_call = None
         if delay is not None and delay > 0:
-            self._sleep(delay)
+            if on_wait is not None:
+                on_wait("pacing_started")
+            try:
+                self._sleep(delay)
+            finally:
+                if on_wait is not None:
+                    on_wait("pacing_completed")
 
     def after_call(self, outcome: Any) -> None:
         self._delay_before_next_call = _pacing_delay(outcome, self._fallback_delay_seconds)
@@ -139,16 +145,36 @@ class ProviderCallPacer:
 class PacingProvider:
     """Apply optional shared pacing around one provider boundary."""
 
-    def __init__(self, provider: Any, pacer: ProviderCallPacer) -> None:
+    def __init__(self, provider: Any, pacer: ProviderCallPacer,
+                 on_wait: Callable[[str], None] | None = None) -> None:
         self._provider = provider
         self._pacer = pacer
+        self._on_wait = on_wait
 
     def complete(self, request: Mapping[str, Any]) -> Any:
-        self._pacer.before_call()
+        self._pacer.before_call(self._on_wait)
         try:
             result = self._provider.complete(request)
         except ProviderError as error:
             self._pacer.after_call(error)
             raise
         self._pacer.after_call(result)
+        return result
+
+
+class ObservedProvider:
+    """Report one provider operation without counting external pacer sleep."""
+
+    def __init__(self, provider: Any, on_event: Callable[[str, Any | None], None]) -> None:
+        self._provider = provider
+        self._on_event = on_event
+
+    def complete(self, request: Mapping[str, Any]) -> Any:
+        self._on_event("provider_started", None)
+        try:
+            result = self._provider.complete(request)
+        except Exception as error:
+            self._on_event("provider_failed", error)
+            raise
+        self._on_event("provider_completed", result)
         return result

@@ -111,16 +111,15 @@ def test_every_fresh_validator_request_matches_frozen_candidate_request(incident
     facts, history, knowledge, hypotheses = _context(incident_id, retrieval_name)
     for hypothesis in hypotheses:
         actual = build_validator_request(hypothesis, facts, history, knowledge)
-        expected = json.loads(
-            (VALIDATOR_FIXTURES / "expected" / incident_id / f"{hypothesis.id}.request.json")
-            .read_text(encoding="utf-8")
-        )
         payload = json.loads(actual["messages"][1]["content"])
         if incident_id != "ad-high-cpu-01":
+            expected = json.loads(
+                (VALIDATOR_FIXTURES / "expected" / incident_id / f"{hypothesis.id}.request.json")
+                .read_text(encoding="utf-8")
+            )
             assert actual == expected
         else:
-            # The frozen ad request captured the removed plain-query path.
-            # Its saved response remains useful for output-contract parsing only.
+            # The old frozen ad request captured the removed plain-query path.
             assert len(payload["current_facts"]) == len(facts)
             assert all(row["source_type"] == "HISTORY" for row in payload["history"])
             assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in payload["domain_knowledge"])

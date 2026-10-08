@@ -27,8 +27,10 @@ def test_runner_loads_tracked_prepared_fixture(scenario):
 
     assert incident.incident_id == scenario
     assert incident.evidence.observations
-    assert "tests" in str(runner.FIXTURE_ROOT)
-    assert "experiments" not in str(runner.FIXTURE_ROOT)
+    fixture_path = runner.PROJECT_ROOT / runner.SCENARIOS_BY_ID[scenario]["prepared_input"]
+    assert fixture_path.is_file()
+    assert fixture_path.parent == runner.PROJECT_ROOT / "data" / "demo"
+    assert "experiments" not in str(fixture_path)
 
 
 def test_runner_accepts_one_scenario_or_all_and_pacing_is_opt_in():
@@ -45,24 +47,30 @@ def test_runner_accepts_one_scenario_or_all_and_pacing_is_opt_in():
     assert selected.pacing_delay_seconds == 83
 
 
-def test_runner_wires_one_provider_and_disables_pacing_by_default(monkeypatch):
+def test_runner_wires_groq_generator_and_cerebras_validator_without_default_pacing(monkeypatch):
     calls = {}
 
-    class FakeProvider:
+    class FakeGroqProvider:
         def __init__(self):
-            calls["provider"] = calls.get("provider", 0) + 1
+            calls["groq"] = calls.get("groq", 0) + 1
+
+    class FakeCerebrasProvider:
+        def __init__(self):
+            calls["cerebras"] = calls.get("cerebras", 0) + 1
 
     class FakePipeline:
         def __init__(self, **kwargs):
             calls["pipeline"] = kwargs
 
-    monkeypatch.setattr(runner, "GroqProvider", FakeProvider)
+    monkeypatch.setattr(runner, "GroqProvider", FakeGroqProvider)
+    monkeypatch.setattr(runner, "CerebrasBenchmarkProvider", FakeCerebrasProvider)
     monkeypatch.setattr(runner, "PreparedDemoPipeline", FakePipeline)
 
     runner.make_pipeline(enable_pacing=False, pacing_delay_seconds=75)
 
-    assert calls["provider"] == 1
-    assert calls["pipeline"]["generator_provider"] is calls["pipeline"]["validator_provider"]
+    assert calls["groq"] == calls["cerebras"] == 1
+    assert isinstance(calls["pipeline"]["generator_provider"], FakeGroqProvider)
+    assert isinstance(calls["pipeline"]["validator_provider"], FakeCerebrasProvider)
     assert calls["pipeline"]["provider_pacer"] is None
 
 
@@ -84,6 +92,7 @@ def test_runner_main_executes_only_selected_tracked_scenarios(
             return incident
 
     monkeypatch.setenv("GROQ_API_KEY", "offline-test-placeholder")
+    monkeypatch.setenv("CEREBRAS_API_KEY", "offline-test-placeholder")
     monkeypatch.setattr(runner, "make_pipeline", lambda **kwargs: FakePipeline())
     monkeypatch.setattr(runner, "summarize_run", lambda run: {"incident_id": run.incident_id})
 
@@ -94,8 +103,11 @@ def test_runner_main_executes_only_selected_tracked_scenarios(
     assert [item["incident_id"] for item in output["scenarios"]] == expected
 
 
-def test_runner_stops_before_pipeline_creation_without_credentials(monkeypatch, capsys):
-    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+@pytest.mark.parametrize("missing_key", ["GROQ_API_KEY", "CEREBRAS_API_KEY"])
+def test_runner_stops_before_pipeline_creation_without_credentials(monkeypatch, capsys, missing_key):
+    monkeypatch.setenv("GROQ_API_KEY", "offline-test-placeholder")
+    monkeypatch.setenv("CEREBRAS_API_KEY", "offline-test-placeholder")
+    monkeypatch.delenv(missing_key)
     monkeypatch.setattr(
         runner,
         "make_pipeline",
@@ -103,13 +115,16 @@ def test_runner_stops_before_pipeline_creation_without_credentials(monkeypatch, 
     )
 
     assert runner.main(["--scenario", "missing-secret-01"]) == 2
-    assert "GROQ_API_KEY is required" in capsys.readouterr().err
+    assert f"{missing_key} is required" in capsys.readouterr().err
 
 
 def test_runner_enables_one_shared_pacer_only_when_requested(monkeypatch):
     calls = {}
 
-    class FakeProvider:
+    class FakeGroqProvider:
+        pass
+
+    class FakeCerebrasProvider:
         pass
 
     class FakePacer:
@@ -120,7 +135,8 @@ def test_runner_enables_one_shared_pacer_only_when_requested(monkeypatch):
         def __init__(self, **kwargs):
             calls["pipeline"] = kwargs
 
-    monkeypatch.setattr(runner, "GroqProvider", FakeProvider)
+    monkeypatch.setattr(runner, "GroqProvider", FakeGroqProvider)
+    monkeypatch.setattr(runner, "CerebrasBenchmarkProvider", FakeCerebrasProvider)
     monkeypatch.setattr(runner, "ProviderCallPacer", FakePacer)
     monkeypatch.setattr(runner, "PreparedDemoPipeline", FakePipeline)
 

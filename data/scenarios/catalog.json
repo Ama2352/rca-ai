@@ -1,0 +1,92 @@
+[
+  {
+    "id": "missing-secret-01",
+    "title": "Telemetry Docs — Startup Failure",
+    "source": "custom-k8s",
+    "readiness": "demo-ready",
+    "prepared_input": "data/demo/missing-secret-01.json",
+    "snapshot_observation_ids": ["a85a7eff00aa98136235be9e", "d10a1a35a7c0b7deb0cd5ffb"],
+    "description": "A telemetry-docs pod remains pending while a container waits to start.",
+    "affected_services": ["telemetry-docs"],
+    "symptoms": ["Pending pod", "Container configuration error"],
+    "investigation_focus": [
+      "Inspect pod and container state alongside Kubernetes events",
+      "Compare current observations with historical and domain context",
+      "Validate proposed explanations against the available evidence"
+    ]
+  },
+  {
+    "id": "application-failure-01",
+    "title": "Checkout and Payment — Application Failure",
+    "source": "otel-demo",
+    "readiness": "demo-ready",
+    "prepared_input": "data/demo/application-failure-01.json",
+    "snapshot_observation_ids": ["823d2b475830b7bac53f7246", "c97c2fdf4966378255ff3149", "46338b5aba119b96f991baf2", "36083e98046a8178dfd9ea78", "e6131312e9ae9202469dceac", "c6b85560f2da70de2b939109"],
+    "description": "Checkout PlaceOrder and payment Charge operations show errors during the incident window.",
+    "affected_services": ["checkout", "payment"],
+    "symptoms": ["PlaceOrder and Charge operation errors", "Payment warning logs"],
+    "investigation_focus": [
+      "Compare operation metrics, log patterns, and trace error summaries",
+      "Inspect checkout-to-payment relationships without assuming causation",
+      "Check Kubernetes state and validate competing explanations"
+    ]
+  },
+  {
+    "id": "ad-high-cpu-01",
+    "title": "Ad Service — High CPU",
+    "source": "otel-demo",
+    "readiness": "demo-ready",
+    "prepared_input": "data/demo/ad-high-cpu-01.json",
+    "snapshot_observation_ids": ["310cbe59d2d0675e021d9ef1", "9b3c5c99346cb872996f7cac", "b1c4a1e4412d99c257d36966", "2efa55d3c704bee15b10271d"],
+    "description": "The ad service shows a substantial CPU increase in the incident window.",
+    "affected_services": ["ad"],
+    "symptoms": ["Elevated ad-service CPU usage"],
+    "investigation_focus": [
+      "Compare CPU measurements across baseline and incident windows",
+      "Inspect log patterns, trace summaries, and Kubernetes state",
+      "Validate explanations without treating a symptom as a proven cause"
+    ]
+  },
+  {
+    "id": "cart-failure-01",
+    "title": "Cart Failure",
+    "source": "otel-demo",
+    "readiness": "experimental",
+    "prepared_input": null
+  },
+  {
+    "id": "dependency-unavailable-01",
+    "title": "Dependency Unavailable",
+    "source": "otel-demo",
+    "readiness": "experimental",
+    "prepared_input": null
+  },
+  {
+    "id": "downstream-latency-01",
+    "title": "Downstream Latency",
+    "source": "otel-demo",
+    "readiness": "experimental",
+    "prepared_input": null
+  },
+  {
+    "id": "memory-leak-01",
+    "title": "Memory Leak",
+    "source": "otel-demo",
+    "readiness": "experimental",
+    "prepared_input": null
+  },
+  {
+    "id": "messaging-failure-01",
+    "title": "Messaging Failure",
+    "source": "otel-demo",
+    "readiness": "experimental",
+    "prepared_input": null
+  },
+  {
+    "id": "crash-loop-backoff-01",
+    "title": "Crash Loop Backoff",
+    "source": "custom-k8s",
+    "readiness": "experimental",
+    "prepared_input": null
+  }
+]
