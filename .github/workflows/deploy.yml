@@ -41,9 +41,6 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-24.04
-    outputs:
-      frontend_image: ${{ steps.frontend.outputs.image }}
-      backend_image: ${{ steps.backend.outputs.image }}
     env:
       FRONTEND_REPOSITORY: ${{ vars.DOCKERHUB_FRONTEND_REPOSITORY }}
       BACKEND_REPOSITORY: ${{ vars.DOCKERHUB_BACKEND_REPOSITORY }}
@@ -67,25 +64,17 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
       - name: Build and push frontend
-        id: frontend
         run: |
           set -euo pipefail
           docker buildx build --platform "linux/$IMAGE_ARCHITECTURE" --provenance=false \
             --push --tag "$FRONTEND_REPOSITORY:$GITHUB_SHA" \
-            --metadata-file "$RUNNER_TEMP/frontend.json" \
             -f frontend/Dockerfile.prod frontend
-          digest="$(jq -er '."containerimage.digest" | select(test("^sha256:[0-9a-f]{64}$"))' "$RUNNER_TEMP/frontend.json")"
-          echo "image=$FRONTEND_REPOSITORY@$digest" >> "$GITHUB_OUTPUT"
       - name: Build and push backend
-        id: backend
         run: |
           set -euo pipefail
           docker buildx build --platform "linux/$IMAGE_ARCHITECTURE" --provenance=false \
             --push --tag "$BACKEND_REPOSITORY:$GITHUB_SHA" \
-            --metadata-file "$RUNNER_TEMP/backend.json" \
             -f Dockerfile.prod .
-          digest="$(jq -er '."containerimage.digest" | select(test("^sha256:[0-9a-f]{64}$"))' "$RUNNER_TEMP/backend.json")"
-          echo "image=$BACKEND_REPOSITORY@$digest" >> "$GITHUB_OUTPUT"
       - name: Log out of Docker Hub
         if: always()
         run: docker logout >/dev/null 2>&1 || true
@@ -106,8 +95,8 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION }}
       EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
       AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-      FRONTEND_IMAGE: ${{ needs.build.outputs.frontend_image }}
-      BACKEND_IMAGE: ${{ needs.build.outputs.backend_image }}
+      FRONTEND_REPOSITORY: ${{ vars.DOCKERHUB_FRONTEND_REPOSITORY }}
+      BACKEND_REPOSITORY: ${{ vars.DOCKERHUB_BACKEND_REPOSITORY }}
     steps:
       - name: Check out source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -122,30 +111,36 @@ jobs:
           INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
         run: |
           set -euo pipefail
-          if [[ -n "$FRONTEND_IMAGE" ]]; then
-            frontend_output_state=populated
-          else
-            frontend_output_state=missing
-          fi
-          if [[ -n "$BACKEND_IMAGE" ]]; then
-            backend_output_state=populated
-          else
-            backend_output_state=missing
-          fi
-          echo "Frontend image output: $frontend_output_state"
-          echo "Backend image output: $backend_output_state"
-          if [[ "$frontend_output_state" == missing || "$backend_output_state" == missing ]]; then
-            echo "A required image output is missing; check the build job outputs." >&2
+          repository_pattern='^[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9]+([._-][a-z0-9]+)*$'
+          if [[ ! "$FRONTEND_REPOSITORY" =~ $repository_pattern ]]; then
+            echo "DOCKERHUB_FRONTEND_REPOSITORY is missing or invalid." >&2
             exit 1
           fi
-          if [[ ! "$FRONTEND_IMAGE" =~ ^[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9]+([._-][a-z0-9]+)*@sha256:[0-9a-f]{64}$ ]]; then
-            echo "Frontend image output is invalid; expected a Docker Hub repository pinned to a 64-character SHA256 digest." >&2
+          if [[ ! "$BACKEND_REPOSITORY" =~ $repository_pattern ]]; then
+            echo "DOCKERHUB_BACKEND_REPOSITORY is missing or invalid." >&2
             exit 1
           fi
-          if [[ ! "$BACKEND_IMAGE" =~ ^[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9]+([._-][a-z0-9]+)*@sha256:[0-9a-f]{64}$ ]]; then
-            echo "Backend image output is invalid; expected a Docker Hub repository pinned to a 64-character SHA256 digest." >&2
+
+          frontend_tag="$FRONTEND_REPOSITORY:$GITHUB_SHA"
+          backend_tag="$BACKEND_REPOSITORY:$GITHUB_SHA"
+          if ! frontend_digest="$(docker buildx imagetools inspect "$frontend_tag" --format '{{json .Manifest}}' 2>/dev/null | jq -er '.digest | select(test("^sha256:[0-9a-f]{64}$"))')"; then
+            echo "Could not resolve the published frontend image digest for commit $GITHUB_SHA." >&2
             exit 1
           fi
+          if ! backend_digest="$(docker buildx imagetools inspect "$backend_tag" --format '{{json .Manifest}}' 2>/dev/null | jq -er '.digest | select(test("^sha256:[0-9a-f]{64}$"))')"; then
+            echo "Could not resolve the published backend image digest for commit $GITHUB_SHA." >&2
+            exit 1
+          fi
+          if [[ ! "$frontend_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Docker Hub returned an invalid frontend digest for commit $GITHUB_SHA." >&2
+            exit 1
+          fi
+          if [[ ! "$backend_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Docker Hub returned an invalid backend digest for commit $GITHUB_SHA." >&2
+            exit 1
+          fi
+          FRONTEND_IMAGE="$FRONTEND_REPOSITORY@$frontend_digest"
+          BACKEND_IMAGE="$BACKEND_REPOSITORY@$backend_digest"
           if [[ ! "$INSTANCE_ID" =~ ^i-[0-9a-f]+$ ]]; then
             echo "EC2_INSTANCE_ID is invalid; expected an EC2 instance ID such as i-0123456789abcdef0." >&2
             exit 1

@@ -221,8 +221,9 @@ The first deployment and all later deployments use the same path:
 1. Push the reviewed application commit to `main`.
 2. GitHub Actions runs backend and frontend checks.
 3. After tests pass, it builds and publishes both images tagged with the full
-   commit SHA, captures their Docker Hub digests, and passes the exact
-   `repository@sha256:…` references to the deploy job.
+   commit SHA. The deploy job looks up each published tag in Docker Hub,
+   validates its SHA256 digest, and constructs immutable
+   `repository@sha256:…` references directly before deployment.
 4. The deploy job assumes the repository-restricted AWS role through OIDC and
    invokes only the fixed `RCA-Demo-Deploy` SSM document on `EC2_INSTANCE_ID`.
 5. The EC2 script checks that each digest belongs to the configured repository,
