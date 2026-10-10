@@ -84,11 +84,14 @@ variable "existing_github_oidc_provider_arn" {
 
 variable "github_oidc_thumbprint" {
   type        = string
-  description = "Reviewed thumbprint used only when Terraform creates the provider."
+  description = "Optional OIDC thumbprint used only when Terraform creates the provider."
   default     = ""
   validation {
-    condition     = var.github_oidc_provider_ownership == "create" ? can(regex("^[0-9A-Fa-f]{40}$", var.github_oidc_thumbprint)) : var.github_oidc_thumbprint == ""
-    error_message = "Provide a 40-character thumbprint only in create mode."
+    condition = var.github_oidc_thumbprint == "" || (
+      var.github_oidc_provider_ownership == "create" &&
+      can(regex("^[0-9A-Fa-f]{40}$", var.github_oidc_thumbprint))
+    )
+    error_message = "Leave the thumbprint empty or provide exactly 40 hexadecimal characters in create mode."
   }
 }
 

@@ -10,6 +10,7 @@ proxy_subnet_cidr                = "REPLACE_WITH_UNUSED_DOCKER_SUBNET_CIDR"
 github_repository                = "OWNER/REPOSITORY"
 github_oidc_provider_ownership    = "external"
 existing_github_oidc_provider_arn = "REPLACE_WITH_EXISTING_PROVIDER_ARN"
+# Optional in create mode; leave empty to let AWS use its current OIDC behavior.
 github_oidc_thumbprint            = ""
 dockerhub_frontend_repository    = "NAMESPACE/rca-demo-frontend"
 dockerhub_backend_repository     = "NAMESPACE/rca-demo-backend"

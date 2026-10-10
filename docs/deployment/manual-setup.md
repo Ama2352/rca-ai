@@ -107,10 +107,12 @@ In AWS Console, open **IAM → Identity providers** and search for
 `token.actions.githubusercontent.com`:
 
 - If it is absent, set `github_oidc_provider_ownership = "create"` in tfvars
-  and provide the reviewed 40-character thumbprint required by Terraform.
+  and leave `github_oidc_thumbprint = ""` to let AWS use its current OIDC
+  behavior. A thumbprint is optional; if you choose to provide one, it must be
+  exactly 40 hexadecimal characters.
 - If it exists, set ownership to `external` and copy its provider ARN to
-  `existing_github_oidc_provider_arn`. Terraform will reuse it and will not
-  create a duplicate.
+  `existing_github_oidc_provider_arn`, and leave the thumbprint empty.
+  Terraform will reuse the provider and will not create a duplicate.
 
 Do not manually create the GitHub OIDC provider, deployment role, EC2 role or
 instance profile, security group, or SSM deployment document. Terraform owns

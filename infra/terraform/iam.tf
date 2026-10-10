@@ -49,7 +49,7 @@ resource "aws_iam_openid_connect_provider" "github" {
   count           = var.github_oidc_provider_ownership == "create" ? 1 : 0
   url             = "https://token.actions.githubusercontent.com"
   client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = [var.github_oidc_thumbprint]
+  thumbprint_list = var.github_oidc_thumbprint == "" ? null : [var.github_oidc_thumbprint]
 }
 
 locals {

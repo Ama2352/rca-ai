@@ -127,7 +127,7 @@ jobs:
           [[ "$INSTANCE_ID" =~ ^i-[0-9a-f]+$ ]]
           parameters="$RUNNER_TEMP/ssm-parameters.json"
           jq -n --arg frontend "$FRONTEND_IMAGE" --arg backend "$BACKEND_IMAGE" \
-            '{frontend_image:[$frontend],backend_image:[$backend]}' > "$parameters"
+            '{frontendImage:[$frontend],backendImage:[$backend]}' > "$parameters"
           command_id="$(aws ssm send-command \
             --document-name RCA-Demo-Deploy \
             --instance-ids "$INSTANCE_ID" \
