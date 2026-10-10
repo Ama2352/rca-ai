@@ -95,7 +95,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     concurrency:
       group: rca-demo-ec2-deploy
       cancel-in-progress: false
@@ -122,9 +122,47 @@ jobs:
           INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
         run: |
           set -euo pipefail
-          [[ "$FRONTEND_IMAGE" =~ @sha256:[0-9a-f]{64}$ ]]
-          [[ "$BACKEND_IMAGE" =~ @sha256:[0-9a-f]{64}$ ]]
-          [[ "$INSTANCE_ID" =~ ^i-[0-9a-f]+$ ]]
+          if [[ -n "$FRONTEND_IMAGE" ]]; then
+            frontend_output_state=populated
+          else
+            frontend_output_state=missing
+          fi
+          if [[ -n "$BACKEND_IMAGE" ]]; then
+            backend_output_state=populated
+          else
+            backend_output_state=missing
+          fi
+          echo "Frontend image output: $frontend_output_state"
+          echo "Backend image output: $backend_output_state"
+          if [[ "$frontend_output_state" == missing || "$backend_output_state" == missing ]]; then
+            echo "A required image output is missing; check the build job outputs." >&2
+            exit 1
+          fi
+          if [[ ! "$FRONTEND_IMAGE" =~ ^[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9]+([._-][a-z0-9]+)*@sha256:[0-9a-f]{64}$ ]]; then
+            echo "Frontend image output is invalid; expected a Docker Hub repository pinned to a 64-character SHA256 digest." >&2
+            exit 1
+          fi
+          if [[ ! "$BACKEND_IMAGE" =~ ^[a-z0-9]+([._-][a-z0-9]+)*/[a-z0-9]+([._-][a-z0-9]+)*@sha256:[0-9a-f]{64}$ ]]; then
+            echo "Backend image output is invalid; expected a Docker Hub repository pinned to a 64-character SHA256 digest." >&2
+            exit 1
+          fi
+          if [[ ! "$INSTANCE_ID" =~ ^i-[0-9a-f]+$ ]]; then
+            echo "EC2_INSTANCE_ID is invalid; expected an EC2 instance ID such as i-0123456789abcdef0." >&2
+            exit 1
+          fi
+
+          print_invocation_output() {
+            local stream="$1" content="$2"
+            [[ -n "$content" ]] || return 0
+            echo "SSM $stream (last 12000 bytes; credential-like values redacted):" >&2
+            printf '%s' "$content" | sed -E \
+              -e 's/(GROQ_API_KEY|CEREBRAS_API_KEY|DOCKERHUB_TOKEN|AWS_ACCESS_KEY_ID|AWS_SECRET_ACCESS_KEY|AWS_SESSION_TOKEN|API_KEY|TOKEN|PASSWORD)([" ]*[:=][" ]*)[^",[:space:]]+/\1\2[REDACTED]/Ig' \
+              -e 's/(Bearer[[:space:]]+)[[:alnum:]_.~+\/-]+/\1[REDACTED]/Ig' \
+              -e 's/(gsk_|csk_|gh[pousr]_|github_pat_|AKIA)[[:alnum:]_-]{16,}/[REDACTED]/g' \
+              | tail -c 12000 >&2
+            echo >&2
+          }
+
           parameters="$RUNNER_TEMP/ssm-parameters.json"
           jq -n --arg frontend "$FRONTEND_IMAGE" --arg backend "$BACKEND_IMAGE" \
             '{frontendImage:[$frontend],backendImage:[$backend]}' > "$parameters"
@@ -149,10 +187,14 @@ jobs:
                 ;;
               Failed|Cancelled|TimedOut|DeliveryTimedOut|ExecutionTimedOut)
                 echo "SSM deployment failed: $status ($details). Check EC2 and SSM status, then review the deployment command output in Systems Manager." >&2
+                print_invocation_output stdout "$(jq -r '.StandardOutputContent // empty' <<< "$response")"
+                print_invocation_output stderr "$(jq -r '.StandardErrorContent // empty' <<< "$response")"
                 exit 1
                 ;;
               *) sleep 10 ;;
             esac
           done
           echo "SSM deployment did not finish within 15 minutes. EC2 may be stopped or SSM unavailable; start it manually and rerun the workflow." >&2
+          print_invocation_output stdout "$(jq -r '.StandardOutputContent // empty' <<< "$response" 2>/dev/null || true)"
+          print_invocation_output stderr "$(jq -r '.StandardErrorContent // empty' <<< "$response" 2>/dev/null || true)"
           exit 1
