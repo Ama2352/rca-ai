@@ -22,6 +22,25 @@ See the [architecture](docs/architecture.md), [demo runbook](docs/demo_runbook.m
 
 ## Quick start
 
+### Docker Compose
+
+Create an untracked `.env` from `.env.example` and set `GROQ_API_KEY` and
+`CEREBRAS_API_KEY` for live analysis. Then run from the repository root:
+
+```sh
+docker compose up --build
+```
+
+Open <http://localhost:3000>. Vite serves the frontend and proxies `/api`
+requests to FastAPI. The backend is also available at <http://localhost:8000>
+(for example, `/api/demo/incidents`). Source changes are mounted into the
+containers for local development. Set `FRONTEND_PORT` or `BACKEND_PORT` in
+`.env` if either host port is occupied. The catalog loads without provider
+keys; starting an analysis requires both keys. Stop the stack with
+`docker compose down`.
+
+### Local development
+
 Use Python 3.10 or newer. From the repository root:
 
 ```powershell
