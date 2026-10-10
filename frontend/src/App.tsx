@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tabs"
 import type { AnalysisJob, CandidateResult, DemoIncident, EvidencePresentation, EvidenceSignal, Fact, RCAResult, ResolvedSources, SupportLevel } from "./contract"
 import { getAnalysis, listIncidents, startAnalysis } from "./api"
+import { scenarioOverviews } from "./scenarioOverviews"
 
 const supportLabels: Record<SupportLevel, string> = {
   STRONG: "Strong",
@@ -518,7 +519,7 @@ function Investigation({ incident, job, selectedId, onCandidateChange }: {
       <header className="incident-header">
         <div>
           <p className="breadcrumb">RCA <span>/</span> Investigation</p>
-          <h1>{incident.title}</h1>
+          <h1>{scenarioOverviews[incident.id]?.title ?? incident.id}</h1>
           <p className="incident-id">Incident <code>{result.incident_id}</code></p>
         </div>
         <div className="incident-summary">
@@ -558,117 +559,6 @@ const signalLabels: Record<EvidenceSignal, string> = {
   metric: "Metrics", log: "Logs", trace: "Traces", kubernetes: "Kubernetes",
 }
 
-const scenarioOverviewCopy: Record<string, {
-  context: string
-  cause: string
-  observations: string[]
-  investigation: string[]
-}> = {
-  "missing-secret-01": {
-    context: "A custom Kubernetes configuration exercise targets startup of the telemetry-docs workload.",
-    cause: "A required environment-variable reference was added to the Deployment for a Secret verified absent from the namespace. Kubernetes could not create the new container configuration. The Secret value is not shown.",
-    observations: [
-      "A replacement telemetry-docs pod was Pending; its container was waiting with CreateContainerConfigError.",
-      "A Kubernetes event reported that the referenced Secret was not found.",
-      "A different telemetry-docs pod was Running and Ready in the same snapshot; these are separate pod observations, not a recovery sequence.",
-    ],
-    investigation: [
-      "Relate the recorded Kubernetes event to the affected pod's startup state.",
-      "Keep the separate Running pod as snapshot context, not as a transition.",
-      "State what the Kubernetes-only evidence supports and what remains unobserved.",
-    ],
-  },
-  "application-failure-01": {
-    context: "The OpenTelemetry Demo Checkout and Payment services are examined after a prepared application-failure exercise.",
-    cause: "The preparation script directs the operator to enable OpenTelemetry Demo's `paymentFailure` flag with a non-zero failure percentage. The flag generates errors for a selected share of Payment `charge` calls. The chosen percentage was not recorded.",
-    observations: [
-      "Payment-owned Charge traces recorded 6 errors (0 at baseline); mean duration rose from 2.18 ms to 14.33 ms.",
-      "Checkout-owned PlaceOrder traces recorded 6 errors (0 at baseline), while mean duration fell from 310.78 ms to 269.86 ms.",
-      "Checkout's client-side Charge traces recorded 6 errors; mean duration rose from 5.11 ms to 17.71 ms.",
-      "Payment WARN logs appeared 6 times and include an `Invalid token` message; the log alone does not establish why the calls failed.",
-    ],
-    investigation: [
-      "Assess how the Payment Charge errors relate to Checkout PlaceOrder errors.",
-      "Compare service ownership, trace direction, latency changes, and the Payment warning without treating correlation as proof.",
-      "Preserve the opposing PlaceOrder latency change and state unresolved causal details.",
-    ],
-  },
-  "ad-high-cpu-01": {
-    context: "The OpenTelemetry Demo Ad service is the focus of a prepared CPU-load exercise.",
-    cause: "The preparation script directs the operator to enable OpenTelemetry Demo's `adHighCpu` flag before the incident window. The Demo documents this flag as triggering high CPU load in Ad. The capture does not preserve the exact flag state or variant.",
-    observations: [
-      "The Ad pod's CPU-usage metric rose sharply between baseline and incident windows; the source did not provide a concrete unit.",
-      "Ad request logs show targeted and non-targeted product activity across the two windows.",
-      "Ad GetAds traces recorded no errors in either window.",
-      "The Ad pod was Running and Ready in the captured Kubernetes view.",
-    ],
-    investigation: [
-      "Assess how the CPU increase relates to Ad request activity and the recorded trace behavior.",
-      "Consider the Running/Ready pod state and error-free GetAds traces as counterevidence to service failure.",
-      "Separate the documented CPU-load exercise from any unverified secondary cause.",
-    ],
-  },
-  "dependency-unavailable-01": {
-    context: "This OpenTelemetry Demo exercise examines checkout failures associated with requests from Checkout to Payment.",
-    cause: "The pilot capture script asked the operator to enable OpenTelemetry Demo's `paymentUnreachable` feature flag for the incident window. The Demo documents this flag as making Checkout call Payment at an invalid address so Payment appears unavailable; the capture does not preserve the flag state itself.",
-    observations: [
-      "Checkout's outbound Payment Charge metric records incident responses labeled UNAVAILABLE; the parallel OK-labeled series is retained as contrasting context.",
-      "Checkout-owned Charge and PlaceOrder traces record errors in the incident window, while their mean durations decrease rather than increase.",
-      "The Payment-owned Charge trace summary has baseline samples but no incident samples, so Payment's internal handling is not directly observed.",
-      "The captured Checkout pod is Running and Ready; this snapshot does not prove continuous health across the full window.",
-    ],
-    investigation: [
-      "Determine how the outbound UNAVAILABLE status relates to Checkout's Charge and PlaceOrder errors.",
-      "Keep client-side observations distinct from unobserved Payment server behavior.",
-      "Assess the Running/Ready snapshot and decreasing latency without treating them as proof that no dependency failure occurred.",
-    ],
-  },
-  "messaging-failure-01": {
-    context: "This OpenTelemetry Demo exercise examines Checkout publishing and Fraud Detection consuming messages during a prepared queue/consumer stress simulation.",
-    cause: "The pilot capture script asked the operator to enable OpenTelemetry Demo's `kafkaQueueProblems` feature flag. The captured logs record the queue-overload simulation and a Fraud Detection consumer delay; upstream documentation describes the flag as adding consumer-side delay. The capture does not independently establish that consumer lag increased.",
-    observations: [
-      "Checkout logs record the queue-overload simulation and its completion message; Fraud Detection logs record a one-second consumer delay.",
-      "Fraud Detection's reported last-poll age rises from 0 to 18.5; the source does not specify a concrete unit.",
-      "The measured consumer-lag metric stays at 0 in both windows, which limits a lag-spike conclusion.",
-      "Checkout publish-orders trace mean latency rises from 19.414 ms to 88.732 ms, with no errors recorded in that operation summary.",
-    ],
-    investigation: [
-      "Compare the recorded simulation with producer latency and Fraud Detection consumer observations.",
-      "Treat the zero lag measurements as counterevidence and avoid assuming the broker or consumer stopped working.",
-      "Separate the injected exercise from conclusions the captured signals cannot establish.",
-    ],
-  },
-  "cart-failure-01": {
-    context: "This OpenTelemetry Demo exercise investigates failed Cart EmptyCart requests and their observed effect at Checkout.",
-    cause: "The pilot procedure instructed the operator to enable `cartFailure` with a high non-zero percentage, but the selected value and resulting flag state were not captured. OpenTelemetry Demo documents the flag as routing a selected share of EmptyCart calls to a failing Cart store. The observed Redis connection error is consistent with that setup, but the telemetry alone does not prove the flag state or that all Cart storage calls failed.",
-    observations: [
-      "A Cart error log says it was unable to connect to Redis; the pattern was absent at baseline and appeared once in the incident window.",
-      "The Checkout client and Cart server EmptyCart spans are marked as errors and last about 90.8 seconds; the trace begins just before the timestamped incident marker.",
-      "Other sampled Cart-to-Valkey spans report zero errors across baseline and incident samples, so the capture does not show a blanket storage outage.",
-      "The Cart pod is Running and Ready in an untimed Kubernetes snapshot.",
-    ],
-    investigation: [
-      "Distinguish the failing EmptyCart path from other observed Cart storage activity.",
-      "Relate Cart-side evidence to the Checkout client trace without assuming every Cart request failed.",
-      "Treat the trace boundary and untimed pod snapshot as qualified context, not a complete incident timeline.",
-    ],
-  },
-  "memory-leak-01": {
-    context: "This OpenTelemetry Demo Email exercise investigates memory growth and slower confirmation-email handling over a three-minute capture.",
-    cause: "The pilot script instructed the operator to enable a high non-zero `emailMemoryLeak` variant, but the chosen variant was not recorded. OpenTelemetry Demo describes this flag as simulating a memory leak by padding each confirmation email body. The capture shows short-window memory growth; it cannot establish persistence beyond the three-minute observation window.",
-    observations: [
-      "Email resident memory mean rose from about 48.8 MiB to 63.9 MiB, while available memory fell from about 39.1 MiB to 23.9 MiB.",
-      "Email send_email mean latency rose from about 5.9 ms to 64.8 ms; the operation summary reports zero errors in both windows.",
-      "The Email pod was Running and Ready in an untimed Kubernetes snapshot.",
-    ],
-    investigation: [
-      "Assess whether memory growth during this short capture supports a resource-pressure concern.",
-      "Compare memory movement with send_email latency while accounting for the zero recorded trace errors.",
-      "Avoid treating a short simulation as proof of a persistent memory leak.",
-    ],
-  },
-}
-
 function ScenarioOverview({ incident, onAnalyze, busy }: {
   incident: DemoIncident
   onAnalyze: () => void
@@ -676,7 +566,7 @@ function ScenarioOverview({ incident, onAnalyze, busy }: {
 }) {
   const demoReady = incident.readiness === "demo-ready"
   const runnable = incident.prepared_input !== null
-  const overviewCopy = scenarioOverviewCopy[incident.id]
+  const overviewCopy = scenarioOverviews[incident.id]
   const badgeLabel = demoReady ? "Verified demo scenario" : runnable ? "Experimental · analysis available" : "Research scenario"
   return (
     <section className="scenario-overview" aria-labelledby="overview-title">
@@ -684,35 +574,51 @@ function ScenarioOverview({ incident, onAnalyze, busy }: {
         <div>
           <p className="breadcrumb">RCA <span>/</span> Prepared incident</p>
           <h1 id="overview-title">Scenario overview</h1>
-          <div className="overview-title"><h2>{incident.title}</h2><Badge variant="secondary">{badgeLabel}</Badge></div>
-          <p className="overview-description">{demoReady ? overviewCopy?.context : incident.description ?? "Captured for research; no prepared input is available."}</p>
+          <div className="overview-title"><h2>{overviewCopy?.title ?? incident.id}</h2><Badge variant="secondary">{badgeLabel}</Badge></div>
+          <p className="overview-description">{overviewCopy?.description ?? "No overview is available for this scenario."}</p>
         </div>
         <code className="overview-id">{incident.id}</code>
       </div>
-      {demoReady && overviewCopy ? (
+      {runnable && overviewCopy ? (
         <section className="scenario-cause" aria-labelledby="scenario-cause-title">
           <h3 id="scenario-cause-title">Known scenario cause</h3>
           <p>{overviewCopy.cause}</p>
         </section>
       ) : null}
-      {runnable && (demoReady ? overviewCopy?.observations : incident.symptoms) ? (
+      {runnable && overviewCopy ? (
         <section className="incident-snapshot" aria-labelledby="observed-symptoms-title">
           <h3 id="observed-symptoms-title">Observed symptoms</h3>
-          <ul>{(demoReady ? overviewCopy!.observations : incident.symptoms ?? []).map((observation) => <li key={observation}>{observation}</li>)}</ul>
+          <ul>{overviewCopy.observations.map((observation) => <li key={observation}>{observation}</li>)}</ul>
+        </section>
+      ) : null}
+      {incident.incident_snapshot?.length ? (
+        <section className="incident-snapshot" aria-labelledby="evidence-snapshot-title">
+          <h3 id="evidence-snapshot-title">Evidence snapshot</h3>
+          <ul>{incident.incident_snapshot.map((item) => {
+            const presentation = item.presentation
+            const measurement = presentation.baseline !== null && presentation.incident !== null
+              ? `${formatMeasure(presentation.baseline, presentation.unit)} → ${formatMeasure(presentation.incident, presentation.unit)}`
+              : presentation.state ?? presentation.preview
+            return <li key={item.observation_id}>
+              <span>{presentation.title}</span>
+              {measurement ? <> · {measurement}</> : null}
+              <small> · Source {item.source_ref}</small>
+            </li>
+          })}</ul>
         </section>
       ) : null}
       {runnable ? <div className="overview-grid">
         <div className="overview-config">
           <h3>Incident configuration</h3>
           <dl>
-            <div><dt>Affected services</dt><dd>{incident.affected_services?.join(", ")}</dd></div>
+            <div><dt>Affected services</dt><dd>{overviewCopy?.affectedServices.join(", ") ?? incident.id}</dd></div>
             <div><dt>Available telemetry</dt><dd>{incident.available_evidence_sources?.map((signal) => <Badge variant="outline" key={signal}>{signalLabels[signal]}</Badge>)}</dd></div>
-            <div><dt>Analysis mode</dt><dd>{incident.analysis_mode}</dd></div>
+            <div><dt>Analysis mode</dt><dd>Evidence-grounded RCA</dd></div>
           </dl>
         </div>
         <div className="overview-focus">
           <h3>What RCA will investigate</h3>
-          <ul>{(overviewCopy?.investigation ?? incident.investigation_focus ?? []).map((item) => <li key={item}>{item}</li>)}</ul>
+          <p>{overviewCopy?.investigation}</p>
         </div>
       </div> : null}
       {runnable && <p className="rca-flow-note">RCA reviews current evidence, retrieves historical and domain context, proposes explanations, then checks claims against the observations. Unsupported parts may be qualified or rejected.</p>}
@@ -767,10 +673,10 @@ function ScenarioLibrary({ incidents, selectedId, onSelect }: {
                     key={item.id}
                     type="button"
                     aria-pressed={selectedId === item.id}
-                    aria-label={`${item.title}. ${status}`}
+                    aria-label={`${scenarioOverviews[item.id]?.title ?? item.id}. ${status}`}
                     onClick={() => onSelect(item.id)}
                   >
-                    <span className="scenario-row-title">{item.title}</span>
+                    <span className="scenario-row-title">{scenarioOverviews[item.id]?.title ?? item.id}</span>
                     <span className={`scenario-readiness${ready ? " is-ready" : " is-experimental"}`}>{status}</span>
                   </button>
                 )
@@ -800,7 +706,6 @@ const timingLabels: Record<string, string> = {
   validation: "Validation local processing",
   generation_provider: "Generation provider operation",
   validation_provider: "Validation provider operation",
-  external_pacing: "External provider pacing",
   assembly: "Assembly",
 }
 
@@ -837,7 +742,7 @@ function AnalysisExecution({ job }: { job: AnalysisJob }) {
   if (!audit) return null
   return <section className="analysis-execution" aria-labelledby="execution-title">
     <h2 id="execution-title">Analysis execution</h2>
-    <p>Measured wall-clock time. Provider operation includes provider-internal retry and backoff; external pacing is separate.</p>
+    <p>Measured wall-clock time. Provider operation includes provider-internal retry and backoff.</p>
     {audit.routing && <p className="execution-routing">
       Generator · {audit.routing.generator.provider} / {audit.routing.generator.model}; {" "}
       Validator · {audit.routing.validator.provider} / {audit.routing.validator.model}

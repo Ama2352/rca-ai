@@ -1,11 +1,9 @@
-"""Deterministic RCA pipeline components."""
+"""Official RCA pipeline and its progress/result types."""
 
-from rca_ai.pipeline.orchestrator import PipelineRunResult, RCAPipeline
-from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline, PreparedDemoRunResult
+from rca_ai.pipeline.orchestrator import DemoEvent, PipelineRunResult, RCAPipeline
 
 __all__ = [
+    "DemoEvent",
     "PipelineRunResult",
-    "PreparedDemoPipeline",
-    "PreparedDemoRunResult",
     "RCAPipeline",
 ]

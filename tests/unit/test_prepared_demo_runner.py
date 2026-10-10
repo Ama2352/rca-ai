@@ -40,21 +40,15 @@ def test_runner_loads_tracked_prepared_fixture(scenario):
     assert "experiments" not in str(fixture_path)
 
 
-def test_runner_accepts_one_scenario_or_all_and_pacing_is_opt_in():
+def test_runner_accepts_one_scenario_or_all():
     args = runner.build_parser().parse_args([])
     assert args.scenario == "all"
-    assert args.enable_pacing is False
-    assert args.pacing_delay_seconds == 75
 
-    selected = runner.build_parser().parse_args([
-        "--scenario", "ad-high-cpu-01", "--enable-pacing", "--pacing-delay-seconds", "83",
-    ])
+    selected = runner.build_parser().parse_args(["--scenario", "ad-high-cpu-01"])
     assert selected.scenario == "ad-high-cpu-01"
-    assert selected.enable_pacing is True
-    assert selected.pacing_delay_seconds == 83
 
 
-def test_runner_wires_groq_generator_and_cerebras_validator_without_default_pacing(monkeypatch):
+def test_runner_wires_groq_generator_and_cerebras_validator(monkeypatch):
     calls = {}
 
     class FakeGroqProvider:
@@ -70,15 +64,14 @@ def test_runner_wires_groq_generator_and_cerebras_validator_without_default_paci
             calls["pipeline"] = kwargs
 
     monkeypatch.setattr(runner, "GroqProvider", FakeGroqProvider)
-    monkeypatch.setattr(runner, "CerebrasBenchmarkProvider", FakeCerebrasProvider)
-    monkeypatch.setattr(runner, "PreparedDemoPipeline", FakePipeline)
+    monkeypatch.setattr(runner, "CerebrasProvider", FakeCerebrasProvider)
+    monkeypatch.setattr(runner, "RCAPipeline", FakePipeline)
 
-    runner.make_pipeline(enable_pacing=False, pacing_delay_seconds=75)
+    runner.make_pipeline()
 
     assert calls["groq"] == calls["cerebras"] == 1
     assert isinstance(calls["pipeline"]["generator_provider"], FakeGroqProvider)
     assert isinstance(calls["pipeline"]["validator_provider"], FakeCerebrasProvider)
-    assert calls["pipeline"]["provider_pacer"] is None
 
 
 @pytest.mark.parametrize(
@@ -123,34 +116,6 @@ def test_runner_stops_before_pipeline_creation_without_credentials(monkeypatch, 
 
     assert runner.main(["--scenario", "missing-secret-01"]) == 2
     assert f"{missing_key} is required" in capsys.readouterr().err
-
-
-def test_runner_enables_one_shared_pacer_only_when_requested(monkeypatch):
-    calls = {}
-
-    class FakeGroqProvider:
-        pass
-
-    class FakeCerebrasProvider:
-        pass
-
-    class FakePacer:
-        def __init__(self, *, fallback_delay_seconds):
-            calls["delay"] = fallback_delay_seconds
-
-    class FakePipeline:
-        def __init__(self, **kwargs):
-            calls["pipeline"] = kwargs
-
-    monkeypatch.setattr(runner, "GroqProvider", FakeGroqProvider)
-    monkeypatch.setattr(runner, "CerebrasBenchmarkProvider", FakeCerebrasProvider)
-    monkeypatch.setattr(runner, "ProviderCallPacer", FakePacer)
-    monkeypatch.setattr(runner, "PreparedDemoPipeline", FakePipeline)
-
-    runner.make_pipeline(enable_pacing=True, pacing_delay_seconds=83)
-
-    assert calls["delay"] == 83
-    assert calls["pipeline"]["provider_pacer"] is not None
 
 
 def test_runner_summary_reports_integrity_budget_usage_and_final_result(monkeypatch):

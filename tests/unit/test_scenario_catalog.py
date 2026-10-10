@@ -14,6 +14,9 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_catalog_describes_nine_captures_and_runnable_prepared_inputs():
     rows = load_scenario_catalog()
 
+    editorial_fields = {"title", "description", "affected_services", "symptoms", "investigation_focus"}
+    assert all(editorial_fields.isdisjoint(row) for row in rows)
+
     assert len(rows) == 9
     assert {row["id"] for row in rows} == {
         "ad-high-cpu-01", "application-failure-01", "cart-failure-01",
@@ -66,6 +69,7 @@ def test_all_demo_observations_match_selection_manifest_provenance():
         (lambda rows: rows.append(rows[0].copy()), "duplicate scenario id"),
         (lambda rows: rows[0].update(source="unknown"), "unsupported scenario source"),
         (lambda rows: rows[0].update(readiness="failed"), "unsupported readiness"),
+        (lambda rows: rows[0].update(description="editorial prose"), "unsupported scenario catalog fields"),
         (lambda rows: rows[0].update(prepared_input="data/demo/not-present.json"), "prepared input does not exist"),
     ],
 )
@@ -98,6 +102,12 @@ def test_snapshot_metadata_cannot_duplicate_telemetry_values():
             assert "snapshot_observation_ids" not in row
 
 
+def test_catalog_retains_only_registry_and_integrity_metadata():
+    rows = load_scenario_catalog()
+    allowed = {"id", "source", "readiness", "prepared_input", "snapshot_observation_ids"}
+    assert all(set(row) <= allowed for row in rows)
+
+
 def test_experimental_scenario_with_prepared_fixture_passes_manifest_validation(tmp_path):
     rows = json.loads((ROOT / "data/scenarios/catalog.json").read_text(encoding="utf-8"))
     downstream = next(row for row in rows if row["id"] == "downstream-latency-01")
@@ -113,3 +123,17 @@ def test_experimental_scenario_with_prepared_fixture_passes_manifest_validation(
     scenario = next(row for row in loaded if row["id"] == "downstream-latency-01")
     assert scenario["readiness"] == "experimental"
     assert scenario["prepared_input"] == "data/demo/downstream-latency-01.json"
+
+
+def test_catalog_accepts_readiness_classification_without_prepared_input(tmp_path):
+    rows = json.loads((ROOT / "data/scenarios/catalog.json").read_text(encoding="utf-8"))
+    ready_without_fixture = next(row for row in rows if row["id"] == "missing-secret-01")
+    ready_without_fixture["prepared_input"] = None
+    ready_without_fixture.pop("snapshot_observation_ids")
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps(rows), encoding="utf-8")
+
+    loaded = load_scenario_catalog(path, project_root=ROOT)
+    row = next(row for row in loaded if row["id"] == "missing-secret-01")
+    assert row["readiness"] == "demo-ready"
+    assert row["prepared_input"] is None

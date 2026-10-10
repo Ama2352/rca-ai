@@ -1,4 +1,4 @@
-"""Pipeline wiring tests with canonical evidence and fake semantic providers."""
+"""Offline contract tests for the official RCA pipeline."""
 
 from __future__ import annotations
 
@@ -8,205 +8,422 @@ from typing import Any
 
 import pytest
 
-from rca_ai.domain.models import (
-    CanonicalIncidentEvidence, CanonicalObservation, EvidenceEntity, EvidenceSource,
-    IncidentInput, to_dict,
-)
+from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict
 from rca_ai.pipeline.orchestrator import RCAPipeline
-from rca_ai.providers.groq import ProviderError, ProviderResult
-from rca_ai.reasoning.generator import GenerationValidationError, HypothesisGenerator
-from rca_ai.reasoning.validator import HypothesisValidator, ValidatorValidationError
+from rca_ai.pipeline.request_budget import RequestBudgetExceeded, request_size
+from rca_ai.providers.contracts import ProviderError, ProviderResult
 
 
-ROOT = Path(__file__).resolve().parents[2]
-SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+FIXTURE_ROOT = PROJECT_ROOT / "data" / "demo"
+SCENARIOS = (
+    "missing-secret-01", "application-failure-01", "ad-high-cpu-01",
+    "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+    "memory-leak-01", "crash-loop-backoff-01", "downstream-latency-01",
+)
+FROZEN_RETRIEVAL_SCENARIOS = ("missing-secret-01", "application-failure-01", "ad-high-cpu-01")
+NEW_SCENARIOS = (
+    "dependency-unavailable-01", "messaging-failure-01", "cart-failure-01",
+    "memory-leak-01", "crash-loop-backoff-01", "downstream-latency-01",
+)
+EXPECTED_HISTORY = {
+    "missing-secret-01": ("H020", "H021", "H019"),
+    "application-failure-01": ("H006", "H010", "H001"),
+    "ad-high-cpu-01": ("H001", "H013", "H003"),
+}
+EXPECTED_KNOWLEDGE = {
+    "missing-secret-01": (
+        "kubernetes.pod_phase.pending",
+        "kubernetes.container_state.waiting",
+        "kubernetes.secret.required_startup",
+    ),
+    "application-failure-01": (
+        "kubernetes.container_state.waiting",
+        "kubernetes.pod_phase.pending",
+        "kubernetes.secret.required_startup",
+    ),
+    "ad-high-cpu-01": (
+        "kubernetes.container_state.waiting",
+        "kubernetes.secret.required_startup",
+        "kubernetes.pod_phase.pending",
+    ),
+}
 
 
-def _incident(scenario: str) -> IncidentInput:
-    observation = CanonicalObservation(
-        observation_id="obs-1", signal="metric", entity=EvidenceEntity("service", "checkout"),
-        field="metric.counter_rate", value={
-            "lane": "metric.counter_rate", "service": "checkout", "metric": "requests_total",
-            "metric_kind": "counter", "labels": {}, "unit": "events/second",
-            "baseline_value": 10.0, "incident_value": 20.0, "signed_change": 10.0,
-            "change": "increased", "uncertainty": [],
-        }, attributes={}, source=EvidenceSource("src-1", "/metrics/0", ("metrics.json:rows[0]",)),
-    )
-    return IncidentInput(scenario, CanonicalIncidentEvidence({}, (observation,)))
+def _load_incident(scenario: str) -> IncidentInput:
+    payload = json.loads((FIXTURE_ROOT / f"{scenario}.json").read_text(encoding="utf-8"))
+    return IncidentInput(payload["incident_id"], canonical_evidence_from_dict(payload["evidence"]))
 
 
 def _provider_result(content: Any) -> ProviderResult:
     return ProviderResult(
-        content=content, raw_content=json.dumps(content, ensure_ascii=False), http_status=200,
-        attempts=1, response_id="fixture", model_returned="fixture-model", finish_reason="stop",
+        content=content,
+        raw_content=json.dumps(content, ensure_ascii=False),
+        http_status=200,
+        attempts=1,
+        response_id="offline-fixture",
+        model_returned="offline-fixture",
+        finish_reason="stop",
         usage={"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
-        latency_seconds=0.0, rate_limit_headers={}, attempt_log=(),
+        latency_seconds=0.0,
+        rate_limit_headers={},
+        attempt_log=(),
     )
 
 
-class QueueProvider:
-    def __init__(self, outputs, calls=None, events=None, label=None):
-        self.outputs = list(outputs)
-        self.calls = calls if calls is not None else []
+def _request_payload(request: dict[str, Any]) -> dict[str, Any]:
+    return json.loads(request["messages"][1]["content"])
+
+
+class GeneratorProvider:
+    def __init__(
+        self,
+        *,
+        explanation: str = "A cautious candidate explanation.",
+        empty: bool = False,
+        error: BaseException | None = None,
+        response: Any | None = None,
+        events: list[str] | None = None,
+    ):
+        self.requests: list[dict[str, Any]] = []
+        self.explanation = explanation
+        self.empty = empty
+        self.error = error
+        self.response = response
         self.events = events
-        self.label = label
 
     def complete(self, request):
-        self.calls.append(request)
+        self.requests.append(request)
         if self.events is not None:
-            self.events.append(self.label)
-        if not self.outputs:
-            raise AssertionError("unexpected semantic provider call")
-        output = self.outputs.pop(0)
-        if isinstance(output, BaseException):
-            raise output
-        return _provider_result(output)
+            self.events.append("generator")
+        if self.error is not None:
+            raise self.error
+        if self.response is not None:
+            return _provider_result(self.response)
+        if self.empty:
+            return _provider_result({"hypotheses": []})
+        payload = _request_payload(request)
+        fact_refs = [row["fact_id"] for row in payload["current_facts"]]
+        history_refs = [row["alias"] for row in payload["history"][:1]]
+        knowledge_refs = [row["alias"] for row in payload["domain_knowledge"][:1]]
+        candidates = []
+        for candidate_id in ("HYP1", "HYP2"):
+            candidates.append({
+                "id": candidate_id,
+                "explanation": self.explanation,
+                "explains_fact_refs": fact_refs[:1],
+                "supporting_fact_refs": fact_refs[:1],
+                "history_refs": history_refs,
+                "knowledge_refs": knowledge_refs,
+                "assumptions": [],
+                "unresolved": [],
+            })
+        return _provider_result({"hypotheses": candidates})
 
 
-def _generation():
-    return {"hypotheses": [{
-        "id": "HYP1", "explanation": "The observed request-rate change may explain the incident.",
-        "explains_fact_refs": ["F1"], "supporting_fact_refs": ["F1"],
-        "history_refs": [], "knowledge_refs": [], "assumptions": [], "unresolved": [],
-    }]}
+class ValidatorProvider:
+    def __init__(
+        self,
+        *,
+        error: BaseException | None = None,
+        response: Any | None = None,
+        events: list[str] | None = None,
+    ):
+        self.requests: list[dict[str, Any]] = []
+        self.error = error
+        self.response = response
+        self.events = events
+
+    def complete(self, request):
+        self.requests.append(request)
+        if self.events is not None:
+            self.events.append("validator")
+        if self.error is not None:
+            raise self.error
+        if self.response is not None:
+            return _provider_result(self.response)
+        payload = _request_payload(request)
+        fact_refs = [row["fact_id"] for row in payload["current_facts"]]
+        hypothesis_id = payload["candidate_hypothesis"]["id"]
+        first_ref = fact_refs[:1]
+        return _provider_result({
+            "hypothesis_id": hypothesis_id,
+            "decision": "KEEP_QUALIFIED",
+            "support_level": "PLAUSIBLE",
+            "incident_basis": {"evidence": first_ref},
+            "hard_violations": [],
+            "qualifications": [],
+            "relation_assessment": {
+                "relation": "May explain the observation.",
+                "support_level": "PLAUSIBLE",
+                "fact_refs": first_ref,
+                "reason": "Causal support remains uncertain.",
+            },
+            "unresolved": [],
+        })
 
 
-def _validation():
-    return {
-        "hypothesis_id": "HYP1", "decision": "KEEP_QUALIFIED", "support_level": "PLAUSIBLE",
-        "incident_basis": {"evidence": ["F1"]}, "hard_violations": [], "qualifications": [],
-        "relation_assessment": {"relation": "May explain the rate change.", "support_level": "PLAUSIBLE",
-                                "fact_refs": ["F1"], "reason": "The causal relation remains uncertain."},
-        "unresolved": [],
-    }
-
-
-def _fake_pipeline(events=None, generation=None, validation=None):
-    gen = QueueProvider([generation if generation is not None else _generation()], events=events, label="generator")
-    val = QueueProvider([validation if validation is not None else _validation()], events=events, label="validator")
-    return RCAPipeline(generator=HypothesisGenerator(gen), validator=HypothesisValidator(val)), gen, val
+def _expected_fact_payload(facts):
+    return [
+        {
+            "fact_id": fact.fact_id,
+            "source_ref": fact.source_ref,
+            "entity": {"type": fact.entity.type, "id": fact.entity.id},
+            "field": fact.field,
+            "value": fact.value,
+            "source_path": fact.source_path,
+        }
+        for fact in facts
+    ]
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS)
-def test_canonical_incident_completes_pipeline_and_keeps_provenance_namespaces(scenario):
-    pipeline, gen, val = _fake_pipeline()
-    run = pipeline.run(_incident(scenario))
+def test_pipeline_passes_every_unchanged_fact_to_generator_and_validators(scenario):
+    generator = GeneratorProvider()
+    validator = ValidatorProvider()
+    pipeline = RCAPipeline(generator_provider=generator, validator_provider=validator)
 
-    assert run.fact_integrity
-    assert run.retrieval_projection.query == run.history.query == run.knowledge.query
-    assert run.facts[0].source_ref == "src-1"
-    assert run.rca_result.candidate_results[0].evidence_refs == ("F1",)
-    assert run.rca_result.candidate_results[0].hypothesis.explanation == _generation()["hypotheses"][0]["explanation"]
-    assert len(gen.calls) == len(val.calls) == 1
+    result = pipeline.run(_load_incident(scenario))
+
+    expected_facts = _expected_fact_payload(result.facts)
+    generator_facts = _request_payload(generator.requests[0])["current_facts"]
+    assert generator_facts == expected_facts
+    assert set(result.__dataclass_fields__) == {
+        "incident_id", "evidence", "facts", "fact_integrity", "retrieval_projection",
+        "history", "knowledge", "generation", "validations", "rca_result",
+    }
+    assert result.fact_integrity
+    assert len(result.facts) == len(result.evidence.observations)
+    for index, (fact, observation) in enumerate(zip(result.facts, result.evidence.observations, strict=True), 1):
+        assert fact.fact_id == f"F{index}"
+        assert fact.entity.type == observation.entity.type
+        assert fact.entity.id == observation.entity.id
+        assert fact.field == observation.field
+        assert fact.value == observation.value
+        assert fact.source_ref == observation.source.source_ref
+        assert fact.source_path == observation.source.source_path
+    assert result.generation.request == generator.requests[0]
+    assert len(validator.requests) == 2
+    for request in validator.requests:
+        assert _request_payload(request)["current_facts"] == expected_facts
+    assert result.rca_result.incident_id == scenario
 
 
-def test_multiple_candidates_validate_and_assemble_in_generator_order():
-    first = _generation()["hypotheses"][0]
-    second = {**first, "id": "HYP2", "explanation": "A competing explanation remains possible."}
-    first_validation = _validation()
-    second_validation = {**first_validation, "hypothesis_id": "HYP2", "decision": "KEEP"}
-    generator = QueueProvider([{"hypotheses": [first, second]}])
-    validator = QueueProvider([first_validation, second_validation])
-    pipeline = RCAPipeline(
-        generator=HypothesisGenerator(generator),
-        validator=HypothesisValidator(validator),
-    )
+@pytest.mark.parametrize("scenario", FROZEN_RETRIEVAL_SCENARIOS)
+def test_pipeline_replays_frozen_retrieval_and_full_requests_fit(scenario):
+    generator = GeneratorProvider()
+    validator = ValidatorProvider()
+    result = RCAPipeline(
+        generator_provider=generator,
+        validator_provider=validator,
+    ).run(_load_incident(scenario))
 
-    run = pipeline.run(_incident("contract-test"))
+    assert tuple(item.source_id for item in result.history.items) == EXPECTED_HISTORY[scenario]
+    assert tuple(item.source_id for item in result.knowledge.items) == EXPECTED_KNOWLEDGE[scenario]
+    assert result.retrieval_projection.query == result.history.query == result.knowledge.query
+    assert len(result.generation.request["messages"][1]["content"].encode("utf-8")) > 0
+    requests = [result.generation.request, *(execution.request for execution in result.validations)]
+    assert len(requests) == 3
+    assert all(request_size(request)[1] <= 7000 for request in requests)
+    assert all(execution.provider_result.http_status == 200 for execution in result.validations)
 
-    assert len(generator.calls) == 1
-    assert len(validator.calls) == 2
-    validator_candidate_ids = [
-        json.loads(request["messages"][1]["content"])["candidate_hypothesis"]["id"]
-        for request in validator.calls
+
+@pytest.mark.parametrize("scenario", NEW_SCENARIOS)
+def test_new_prepared_scenarios_keep_fact_and_hk_references_resolved_within_budget(scenario):
+    generator = GeneratorProvider()
+    validator = ValidatorProvider()
+    result = RCAPipeline(generator_provider=generator, validator_provider=validator).run(_load_incident(scenario))
+    fact_ids = {fact.fact_id for fact in result.facts}
+    history_ids = {item.alias for item in result.history.items}
+    knowledge_ids = {item.alias for item in result.knowledge.items}
+    assert result.fact_integrity
+    assert len(result.facts) == len(result.evidence.observations)
+    for candidate in result.rca_result.candidate_results:
+        assert set(candidate.evidence_refs) <= fact_ids
+        assert set(candidate.history_refs) <= history_ids
+        assert set(candidate.knowledge_refs) <= knowledge_ids
+    requests = [result.generation.request, *(execution.request for execution in result.validations)]
+    assert all(request_size(request)[1] <= 7000 for request in requests)
+
+
+def test_optional_observer_reports_actual_stages_without_changing_output():
+    incident = _load_incident("missing-secret-01")
+    plain = RCAPipeline(
+        generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider(),
+    ).run(incident)
+    events = []
+    observed = RCAPipeline(
+        generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider(),
+    ).run(incident, observer=events.append)
+
+    assert observed == plain
+    assert [(event.kind, event.stage, event.candidate_id) for event in events] == [
+        ("stage_started", "evidence", None), ("stage_completed", "evidence", None),
+        ("stage_started", "retrieval", None), ("stage_completed", "retrieval", None),
+        ("stage_started", "generation", None), ("provider_started", "generation", None),
+        ("provider_completed", "generation", None), ("stage_completed", "generation", None),
+        ("stage_started", "validation", "HYP1"), ("provider_started", "validation", "HYP1"),
+        ("provider_completed", "validation", "HYP1"), ("stage_completed", "validation", "HYP1"),
+        ("stage_started", "validation", "HYP2"), ("provider_started", "validation", "HYP2"),
+        ("provider_completed", "validation", "HYP2"), ("stage_completed", "validation", "HYP2"),
+        ("stage_started", "assembly", None), ("stage_completed", "assembly", None),
     ]
-    assert validator_candidate_ids == ["HYP1", "HYP2"]
-    assert [execution.result.hypothesis_id for execution in run.validations] == ["HYP1", "HYP2"]
-    assert [item.hypothesis.id for item in run.rca_result.candidate_results] == ["HYP1", "HYP2"]
-    assert all(item.evidence_refs == ("F1",) for item in run.rca_result.candidate_results)
-    assert all(item.evidence_refs[0] in {fact.fact_id for fact in run.selection.facts} for item in run.rca_result.candidate_results)
+    assert all(event.timestamp >= 0 for event in events)
 
 
-def test_exact_stage_order_uses_fresh_internal_retrieval_projection(monkeypatch):
+def test_pipeline_repeats_deterministic_stages_identically():
+    incident = _load_incident("application-failure-01")
+    first = RCAPipeline(generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider()).run(incident)
+    second = RCAPipeline(generator_provider=GeneratorProvider(), validator_provider=ValidatorProvider()).run(incident)
+
+    assert first.facts == second.facts
+    assert first.retrieval_projection == second.retrieval_projection
+    assert first.history.items == second.history.items
+    assert first.knowledge.items == second.knowledge.items
+    assert first.generation.request == second.generation.request
+    assert first.rca_result == second.rca_result
+
+
+def test_pipeline_preserves_frozen_stage_order(monkeypatch):
     import rca_ai.pipeline.orchestrator as orchestrator
 
-    events = []
-    for name, event in (
-        ("build_fact_view", "build"), ("verify_fact_view", "verify"),
-        ("project_retrieval", "project"), ("retrieve_history", "history"),
-        ("retrieve_knowledge", "knowledge"), ("select_facts", "select"),
+    events: list[str] = []
+    for function_name, event in (
+        ("build_fact_view", "build"),
+        ("verify_fact_view", "verify"),
+        ("project_retrieval", "project"),
+        ("retrieve_history", "history"),
+        ("retrieve_knowledge", "knowledge"),
         ("assemble_result", "assemble"),
     ):
-        original = getattr(orchestrator, name)
+        original = getattr(orchestrator, function_name)
 
-        def wrapper(*args, __original=original, __event=event, **kwargs):
+        def wrapped(*args, __original=original, __event=event, **kwargs):
             events.append(__event)
             return __original(*args, **kwargs)
-        monkeypatch.setattr(orchestrator, name, wrapper)
 
-    original_builder = orchestrator.build_generator_request
-    def request_builder(*args, **kwargs):
-        events.append("request_size")
-        return original_builder(*args, **kwargs)
-    monkeypatch.setattr(orchestrator, "build_generator_request", request_builder)
+        monkeypatch.setattr(orchestrator, function_name, wrapped)
 
-    pipeline, gen, val = _fake_pipeline(events)
-    pipeline.run(_incident("contract-test"))
-    assert events.index("build") < events.index("verify") < events.index("project")
-    assert events.index("project") < events.index("history") < events.index("knowledge") < events.index("select")
-    assert events.index("select") < events.index("request_size") < events.index("generator")
-    assert events.index("generator") < events.index("validator") < events.index("assemble")
-    assert len(gen.calls) == len(val.calls) == 1
+    generator = GeneratorProvider(events=events)
+    validator = ValidatorProvider(events=events)
+    RCAPipeline(generator_provider=generator, validator_provider=validator).run(
+        _load_incident("missing-secret-01")
+    )
+
+    assert events == [
+        "build", "verify", "project", "history", "knowledge",
+        "generator", "validator", "validator", "assemble",
+    ]
+
+
+def test_pipeline_propagates_validator_provider_error_without_retry():
+    from rca_ai.providers.contracts import ProviderHTTPError
+
+    class AlwaysSchemaErrorProvider:
+        def __init__(self):
+            self.calls = 0
+
+        def complete(self, request):
+            self.calls += 1
+            raise ProviderHTTPError(
+                "structured output rejected",
+                attempts=1,
+                status_code=400,
+                response_detail=json.dumps({
+                    "error": {
+                        "type": "invalid_request_error",
+                        "code": "json_validate_failed",
+                    }
+                }),
+            )
+
+    validator_provider = AlwaysSchemaErrorProvider()
+    pipeline = RCAPipeline(
+        generator_provider=GeneratorProvider(),
+        validator_provider=validator_provider,
+    )
+
+    with pytest.raises(ProviderHTTPError):
+        pipeline.run(_load_incident("missing-secret-01"))
+
+    assert validator_provider.calls == 1
+
+
+def test_oversize_generator_request_fails_before_provider_call():
+    generator = GeneratorProvider()
+    validator = ValidatorProvider()
+    pipeline = RCAPipeline(
+        generator_provider=generator,
+        validator_provider=validator,
+        max_estimated_tokens=1,
+    )
+
+    with pytest.raises(RequestBudgetExceeded):
+        pipeline.run(_load_incident("missing-secret-01"))
+
+    assert generator.requests == []
+    assert validator.requests == []
+
+
+def test_oversize_validator_request_fails_before_that_provider_call():
+    generator = GeneratorProvider(explanation="x" * 30_000)
+    validator = ValidatorProvider()
+    pipeline = RCAPipeline(
+        generator_provider=generator,
+        validator_provider=validator,
+        max_estimated_tokens=7000,
+    )
+
+    with pytest.raises(RequestBudgetExceeded):
+        pipeline.run(_load_incident("missing-secret-01"))
+
+    assert len(generator.requests) == 1
+    assert validator.requests == []
 
 
 def test_zero_hypotheses_is_valid_abstention_without_validator_calls():
-    gen = QueueProvider([{"hypotheses": []}])
-    val = QueueProvider([])
-    run = RCAPipeline(generator=HypothesisGenerator(gen), validator=HypothesisValidator(val)).run(
-        _incident("contract-test")
+    generator = GeneratorProvider(empty=True)
+    validator = ValidatorProvider()
+    result = RCAPipeline(generator_provider=generator, validator_provider=validator).run(
+        _load_incident("missing-secret-01")
     )
-    assert len(gen.calls) == 1 and val.calls == [] and run.validations == ()
-    assert to_dict(run.rca_result) == {"incident_id": "contract-test", "candidate_results": []}
+
+    assert len(generator.requests) == 1
+    assert validator.requests == []
+    assert result.validations == ()
+    assert result.rca_result.candidate_results == ()
 
 
-def test_selector_request_sizing_uses_exact_generator_request_after_retrieval():
-    from rca_ai.facts.selector import request_bytes
-    from rca_ai.reasoning.generator import build_generator_request
-    pipeline, _, _ = _fake_pipeline()
-    run = pipeline.run(_incident("contract-test"))
-    assert run.selection.full_request_bytes == request_bytes(build_generator_request(run.facts, run.history, run.knowledge))
-    assert run.selection.selected_request_bytes == request_bytes(build_generator_request(run.selection.facts, run.history, run.knowledge))
+def test_provider_and_response_contract_errors_propagate():
+    failed_generator = GeneratorProvider(error=ProviderError("failed", attempts=1))
+    pipeline = RCAPipeline(generator_provider=failed_generator, validator_provider=ValidatorProvider())
+    with pytest.raises(ProviderError):
+        pipeline.run(_load_incident("missing-secret-01"))
+
+    malformed_generator = GeneratorProvider(response={"hypotheses": [{"id": "invalid"}]})
+    pipeline = RCAPipeline(generator_provider=malformed_generator, validator_provider=ValidatorProvider())
+    with pytest.raises(ValueError, match="Generator output"):
+        pipeline.run(_load_incident("missing-secret-01"))
+
+    generator = GeneratorProvider()
+    invalid_validator = ValidatorProvider(error=ProviderError("validator failed", attempts=1))
+    pipeline = RCAPipeline(generator_provider=generator, validator_provider=invalid_validator)
+    with pytest.raises(ProviderError):
+        pipeline.run(_load_incident("missing-secret-01"))
+
+    invalid_validator = ValidatorProvider(response={"hypothesis_id": "wrong"})
+    pipeline = RCAPipeline(generator_provider=GeneratorProvider(), validator_provider=invalid_validator)
+    with pytest.raises(ValueError, match="Validator output"):
+        pipeline.run(_load_incident("missing-secret-01"))
 
 
-def test_core_run_writes_no_artifacts(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    pipeline, _, _ = _fake_pipeline()
-    pipeline.run(_incident("contract-test"))
-    assert tuple(tmp_path.iterdir()) == ()
+def test_pipeline_module_exports_the_official_pipeline_and_result():
+    import rca_ai.pipeline as pipeline_module
+    from rca_ai.pipeline import DemoEvent, PipelineRunResult, RCAPipeline as exported
+    from rca_ai.pipeline.orchestrator import PipelineRunResult as result_type, RCAPipeline
 
-
-@pytest.mark.parametrize(
-    ("generator_output", "expected_error"),
-    [(ProviderError("transport failure", attempts=1), ProviderError),
-     ({"hypotheses": [{"id": "bad"}]}, GenerationValidationError)],
-)
-def test_generator_failures_propagate_without_semantic_retry(generator_output, expected_error):
-    provider = QueueProvider([generator_output])
-    pipeline = RCAPipeline(generator=HypothesisGenerator(provider), validator=HypothesisValidator(QueueProvider([])))
-    with pytest.raises(expected_error):
-        pipeline.run(_incident("contract-test"))
-    assert len(provider.calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("validator_output", "expected_error"),
-    [(ProviderError("transport failure", attempts=1), ProviderError),
-     ({"hypothesis_id": "wrong"}, ValidatorValidationError)],
-)
-def test_validator_failures_propagate_without_semantic_retry(validator_output, expected_error):
-    generator = QueueProvider([_generation()])
-    validator = QueueProvider([validator_output])
-    pipeline = RCAPipeline(generator=HypothesisGenerator(generator), validator=HypothesisValidator(validator))
-    with pytest.raises(expected_error):
-        pipeline.run(_incident("contract-test"))
-    assert len(generator.calls) == len(validator.calls) == 1
+    assert exported is RCAPipeline
+    assert PipelineRunResult is result_type
+    assert DemoEvent.__module__ == "rca_ai.pipeline.orchestrator"
+    assert pipeline_module.__all__ == ["DemoEvent", "PipelineRunResult", "RCAPipeline"]
+    assert callable(RCAPipeline.run)

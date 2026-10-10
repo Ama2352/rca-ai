@@ -27,17 +27,15 @@ from rca_ai.domain.models import (
     RelationAssessment,
     ValidationResult,
 )
-from rca_ai.providers.groq import ProviderResult
+from rca_ai.providers.contracts import ProviderResult
 from rca_ai.reasoning.generator import (
     GENERATOR_MAX_COMPLETION_TOKENS,
     GENERATOR_MODEL,
     GENERATOR_REASONING_EFFORT,
     GENERATOR_TEMPERATURE,
     JsonCompletionProvider,
-    _fact_payload,
-    _history_payload,
-    _knowledge_payload,
 )
+from rca_ai.reasoning.payloads import fact_payload, history_payload, knowledge_payload
 from rca_ai.reasoning.prompts import VALIDATOR_SYSTEM_PROMPT
 from rca_ai.reasoning.schemas import VALIDATOR_JSON_SCHEMA, VALIDATOR_SCHEMA_NAME
 from rca_ai.retrieval.history import HistoryRetrievalResult
@@ -86,9 +84,9 @@ def build_validator_request(
     """
 
     user_payload = {
-        "current_facts": [_fact_payload(fact) for fact in facts],
-        "history": _history_payload(history),
-        "domain_knowledge": _knowledge_payload(knowledge),
+        "current_facts": [fact_payload(fact) for fact in facts],
+        "history": history_payload(history),
+        "domain_knowledge": knowledge_payload(knowledge),
         "candidate_hypothesis": _hypothesis_payload(hypothesis),
     }
     return {

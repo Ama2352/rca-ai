@@ -14,12 +14,13 @@ from typing import Any, Protocol
 
 import jsonschema
 
-from rca_ai.domain.models import Fact, HistoricalContext, Hypothesis, KnowledgeItem
-from rca_ai.providers.groq import ProviderResult
+from rca_ai.domain.models import Fact, Hypothesis
+from rca_ai.providers.contracts import ProviderResult
 from rca_ai.reasoning.prompts import GENERATOR_SYSTEM_PROMPT
 from rca_ai.reasoning.schemas import GENERATOR_JSON_SCHEMA, GENERATOR_SCHEMA_NAME
 from rca_ai.retrieval.history import HistoryRetrievalResult
 from rca_ai.retrieval.knowledge import KnowledgeRetrievalResult
+from rca_ai.reasoning.payloads import fact_payload, history_payload, knowledge_payload
 
 
 GENERATOR_MODEL = "openai/gpt-oss-120b"
@@ -48,82 +49,21 @@ class GenerationResult:
     provider_result: ProviderResult
 
 
-def _fact_payload(fact: Fact) -> dict[str, Any]:
-    """Serialize only the frozen Fact fields, retaining projection field order.
-
-    The final runner's composite normalized shape emitted entity before source
-    provenance, while the two other supported projections emitted source first.
-    This is a representation detail of those existing structural contracts,
-    not scenario-specific semantic routing.
-    """
-
-    if fact.source_path.startswith("/facts/"):
-        keys = ("fact_id", "entity", "field", "value", "source_ref", "source_path")
-    else:
-        keys = ("fact_id", "source_ref", "entity", "field", "value", "source_path")
-    row = {
-        "fact_id": fact.fact_id,
-        "source_ref": fact.source_ref,
-        "entity": {"type": fact.entity.type, "id": fact.entity.id},
-        "field": fact.field,
-        "value": fact.value,
-        "source_path": fact.source_path,
-    }
-    return {key: row[key] for key in keys}
-
-
-def _history_payload(result: HistoryRetrievalResult) -> list[dict[str, Any]]:
-    ranked = {
-        row["incident_id"]: (row["rank"], row["bm25_score"])
-        for row in result.metadata.get("ranked", ())
-    }
-    payload = []
-    for item in result.items:
-        row: dict[str, Any] = {
-            "alias": item.alias,
-            "source_id": item.source_id,
-            "source_type": item.source_type,
-        }
-        if result.strategy == "plain_bm25":
-            rank, score = ranked[item.source_id]
-            row["retrieval_rank"] = rank
-            row["bm25_score"] = score
-        row["record"] = item.record
-        payload.append(row)
-    return payload
-
-
-def _knowledge_payload(result: KnowledgeRetrievalResult) -> list[dict[str, Any]]:
-    ranked = {source_id: (rank, score) for rank, (source_id, score) in enumerate(result.ranking, 1)}
-    payload = []
-    for item in result.items:
-        rank, score = ranked[item.source_id]
-        payload.append({
-            "alias": item.alias,
-            "source_id": item.source_id,
-            "source_type": item.source_type,
-            "retrieval_rank": rank,
-            "bm25_score": score,
-            "record": item.record,
-        })
-    return payload
-
-
 def build_generator_request(
     facts: Sequence[Fact],
     history: HistoryRetrievalResult,
     knowledge: KnowledgeRetrievalResult,
 ) -> dict[str, Any]:
-    """Build the exact frozen Groq request from selected Facts and fresh H/K.
+    """Build the exact frozen Groq request from complete Facts and fresh H/K.
 
     Operational ranking metadata is added only where the final request carried
     it. The F/H/K aliases, records, values, and provenance remain unchanged.
     """
 
     user_payload = {
-        "current_facts": [_fact_payload(fact) for fact in facts],
-        "history": _history_payload(history),
-        "domain_knowledge": _knowledge_payload(knowledge),
+        "current_facts": [fact_payload(fact) for fact in facts],
+        "history": history_payload(history),
+        "domain_knowledge": knowledge_payload(knowledge),
     }
     user_message = json.dumps(user_payload, ensure_ascii=False, separators=(",", ":"))
     return {

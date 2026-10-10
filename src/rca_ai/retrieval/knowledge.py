@@ -10,7 +10,7 @@ from typing import Any
 
 from rca_ai.domain.models import KnowledgeItem
 from rca_ai.retrieval._bm25 import BM25Index
-from rca_ai.retrieval.history import _query_for_retrieval_projection
+from rca_ai.retrieval.query import build_retrieval_query
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -47,7 +47,7 @@ def retrieve_knowledge(
     `KnowledgeItem` and cannot enter current incident Evidence.
     """
 
-    query = _query_for_retrieval_projection(retrieval_projection)
+    query = build_retrieval_query(retrieval_projection)
     records = load_knowledge_store(store)
     indexed = {str(row["knowledge_key"]): f"{row['knowledge_key']} {row['claim']}" for row in records}
     ranking = tuple(BM25Index(indexed, k1=1.5, b=0.75).rank(query, k=3))

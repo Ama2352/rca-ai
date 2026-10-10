@@ -11,6 +11,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CATALOG_PATH = PROJECT_ROOT / "data" / "scenarios" / "catalog.json"
 SUPPORTED_SOURCES = {"otel-demo", "custom-k8s"}
 SUPPORTED_READINESS = {"demo-ready", "experimental", "unverified"}
+SUPPORTED_FIELDS = {
+    "id", "source", "readiness", "prepared_input", "snapshot_observation_ids",
+}
 
 
 def _validate_snapshot_references(row: dict[str, Any], fixture: dict[str, Any], root: Path) -> None:
@@ -60,6 +63,9 @@ def load_scenario_catalog(
     for row in rows:
         if not isinstance(row, dict):
             raise ValueError("scenario catalog entries must be objects")
+        unexpected = set(row) - SUPPORTED_FIELDS
+        if unexpected:
+            raise ValueError(f"unsupported scenario catalog fields: {sorted(unexpected)}")
         scenario_id = row.get("id")
         if not isinstance(scenario_id, str) or not scenario_id.strip():
             raise ValueError("scenario id must be a non-empty string")
@@ -72,12 +78,7 @@ def load_scenario_catalog(
         readiness = row.get("readiness")
         if not isinstance(readiness, str) or readiness not in SUPPORTED_READINESS:
             raise ValueError(f"unsupported readiness: {readiness}")
-        if not isinstance(row.get("title"), str) or not row["title"].strip():
-            raise ValueError(f"scenario title must be a non-empty string: {scenario_id}")
-
         prepared_input = row.get("prepared_input")
-        if readiness == "demo-ready" and not isinstance(prepared_input, str):
-            raise ValueError(f"demo-ready scenario requires prepared_input: {scenario_id}")
         if prepared_input is not None:
             if not isinstance(prepared_input, str) or not prepared_input.strip():
                 raise ValueError(f"prepared_input must be a non-empty path or null: {scenario_id}")
@@ -96,11 +97,6 @@ def load_scenario_catalog(
             if not isinstance(fixture, dict) or fixture.get("incident_id") != scenario_id:
                 raise ValueError(f"prepared input incident ID mismatch: {scenario_id}")
             _validate_snapshot_references(row, fixture, root)
-            if not isinstance(row.get("description"), str) or not row["description"].strip():
-                raise ValueError(f"runnable scenario requires description: {scenario_id}")
-            for field in ("affected_services", "symptoms", "investigation_focus"):
-                if not isinstance(row.get(field), list) or not row[field]:
-                    raise ValueError(f"runnable scenario requires {field}: {scenario_id}")
         elif "snapshot_observation_ids" in row:
             raise ValueError(f"scenario without prepared input must not define snapshot: {scenario_id}")
 

@@ -5,24 +5,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
-import math
 from pathlib import Path
-import re
 from collections.abc import Mapping
 from typing import Any
 
 from rca_ai.domain.models import HistoricalContext
 from rca_ai.retrieval._bm25 import BM25Index
 from rca_ai.retrieval._channels import CHANNELS, fuse, render_channels
+from rca_ai.retrieval.query import build_retrieval_query
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_HISTORY_PATH = _PROJECT_ROOT / "data" / "history" / "historical_incidents.jsonl"
-_SEMANTIC_METRIC_LABELS = frozenset({
-    "operation", "status", "status_code", "error", "direction", "method",
-    "http_request_method", "http_response_status_code", "rpc_method",
-})
-_BARE = re.compile(r"^[A-Za-z0-9_./:+-]+$")
 
 
 @dataclass(frozen=True)
@@ -52,117 +46,6 @@ def load_history_store(path: Path = DEFAULT_HISTORY_PATH) -> tuple[Mapping[str, 
     if any("retrieval_text" not in row for row in rows):
         raise ValueError("Historical corpus record lacks retrieval_text")
     return rows
-
-
-def _value(value: object) -> str:
-    compact = " ".join(str(value).split())
-    return compact if _BARE.fullmatch(compact) else json.dumps(compact, ensure_ascii=False)
-
-
-def _line(kind: str, fields) -> str:
-    return " ".join([kind] + [f"{key}={_value(value)}" for key, value in fields if value is not None and value != ""])
-
-
-def _number(value: float | None) -> str | None:
-    return None if value is None else f"{value:.2g}"
-
-
-def _direction(change: float | None, before: object | None = None, during: object | None = None) -> str | None:
-    if before is None and during is not None:
-        return "appeared"
-    if before is not None and during is None:
-        return "disappeared"
-    if change is None:
-        return None
-    return "increased" if change > 0 else "decreased" if change < 0 else "unchanged"
-
-
-def _metric_query(fact: Mapping[str, Any]) -> str:
-    labels = fact["labels"]
-    fields = [
-        ("lane", fact["lane"]), ("service", fact["service"]), ("metric", fact["metric"]),
-        ("type", fact["metric_kind"]),
-        ("direction", _direction(fact["signed_change"], fact["baseline_value"], fact["incident_value"])),
-        ("unit", fact["unit"]),
-    ]
-    fields.extend((f"label.{key}", labels[key]) for key in sorted(_SEMANTIC_METRIC_LABELS & labels.keys()))
-    fields.extend((("before", _number(fact["baseline_value"])), ("incident", _number(fact["incident_value"]))))
-    if "insufficient_rate_support" in fact.get("uncertainty", ()):
-        fields.append(("support", f"{fact['baseline_n']}/{fact['incident_n']}"))
-    return _line("METRIC", fields)
-
-
-def _log_query(fact: Mapping[str, Any]) -> str:
-    direction = (
-        "appeared" if fact["baseline_count"] == 0 and fact["incident_count"] > 0 else
-        "disappeared" if fact["incident_count"] == 0 and fact["baseline_count"] > 0 else
-        _direction(fact["signed_rate_change"])
-    )
-    return _line("LOG", (("lane", fact["lane"]), ("service", fact["service"]),
-                          ("severity", fact["severity"]), ("pattern", fact["pattern"]), ("change", direction)))
-
-
-def _trace_query(fact: Mapping[str, Any]) -> str:
-    identity = "callee" if fact["kind"] == "edge" else "operation"
-    error = (
-        None if fact["boundary_error"] is None else "present" if fact["boundary_error"] else "absent"
-    ) if fact["lane"] == "trace.boundary" else _direction(fact["error_rate_delta"])
-    latency = _direction(fact["signed_latency_change_ms"], fact["baseline_mean_ms"], fact["incident_mean_ms"])
-    return _line("TRACE", (("lane", fact["lane"]), ("kind", fact["kind"]), ("service", fact["service"]),
-                            (identity, fact["operation_or_callee"]), ("error", error),
-                            ("latency", latency),
-                            ("attribution", "boundary_crossing" if fact["lane"] == "trace.boundary" else None)))
-
-
-def _kubernetes_query(fact: Mapping[str, Any]) -> str:
-    replicas = (
-        f"{fact['ready_replicas']}/{fact['desired_replicas']}"
-        if fact["ready_replicas"] is not None and fact["desired_replicas"] is not None else None
-    )
-    ready = str(fact["ready"]).lower() if fact["ready"] is not None else None
-    return _line("KUBERNETES", (("lane", fact["lane"]), ("workload", fact["deployment"]),
-                                 ("container", fact["container"]), ("phase", fact["phase"]),
-                                 ("ready", ready), ("state", fact["container_state"]),
-                                 ("reason", fact["waiting_reason"]), ("termination_reason", fact["termination_reason"]),
-                                 ("exit_code", fact["exit_code"]), ("event", fact["event_reason"]),
-                                 ("replicas", replicas)))
-
-
-def _canonical_query(payload: Mapping[str, Any]) -> str:
-    """Port the frozen normalized IncidentEvidence-to-query projection.
-
-    This accepts the already normalized retrieval payload; it does not invoke
-    raw telemetry adapters or change the Fact View.
-    """
-
-    if not isinstance(payload.get("window"), Mapping):
-        raise ValueError("IncidentEvidence.window must be an object")
-    renderers = (
-        ("metrics", _metric_query, lambda row: (row["lane"], row["service"], row["metric"], row["metric_kind"],
-            tuple((key, str(row["labels"][key])) for key in sorted(_SEMANTIC_METRIC_LABELS & row["labels"].keys())))),
-        ("logs", _log_query, lambda row: (row["lane"], row["service"], row["severity"], row["pattern"])),
-        ("traces", _trace_query, lambda row: (row["lane"], row["kind"], row["service"], row["operation_or_callee"])),
-        ("kubernetes", _kubernetes_query, lambda row: (row["lane"], row["deployment"], row["container"], row["phase"],
-            row["container_state"], row["waiting_reason"] or "", row["termination_reason"] or "", row["event_reason"] or "")),
-    )
-    lines: list[str] = []
-    for modality, render, identity in renderers:
-        rows = payload.get(modality, ())
-        if not isinstance(rows, (list, tuple)):
-            raise ValueError(f"IncidentEvidence.{modality} must be an array")
-        projected = []
-        for row in rows:
-            if not isinstance(row, Mapping):
-                raise ValueError(f"IncidentEvidence.{modality} items must be objects")
-            if modality == "logs":
-                eligible = row.get("retrieval_eligible")
-                if not isinstance(eligible, bool):
-                    raise ValueError("v1.1 log retrieval eligibility metadata is required")
-                if not eligible:
-                    continue
-            projected.append((row["lane"], identity(row), render(row)))
-        lines.extend(rendered for _, _, rendered in sorted(projected))
-    return "\n".join(lines) + ("\n" if lines else "")
 
 
 def _make_context(alias: str, record: Mapping[str, Any]) -> HistoricalContext:
@@ -219,12 +102,6 @@ def retrieve_history(retrieval_projection: Mapping[str, Any], store: Path = DEFA
     if not isinstance(retrieval_projection, Mapping):
         raise TypeError("retrieval_projection must be a structured mapping")
     corpus = load_history_store(store)
-    query = _canonical_query(retrieval_projection)
+    query = build_retrieval_query(retrieval_projection)
     items, diagnostics = _channel_retrieval(query, corpus)
     return HistoryRetrievalResult(query, "channel_bm25_rrf", items, {"diagnostics": diagnostics})
-
-
-def _query_for_retrieval_projection(retrieval_projection: Mapping[str, Any]) -> str:
-    if not isinstance(retrieval_projection, Mapping):
-        raise TypeError("retrieval_projection must be a structured mapping")
-    return _canonical_query(retrieval_projection)

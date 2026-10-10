@@ -25,17 +25,16 @@ The ad-high-cpu execution artifacts were written under the ignored local artifac
 
 ## Offline verification
 
-The prepared-demo regression covers:
+The following regression record predates pipeline consolidation and is retained as historical verification evidence. It is not a claim that the current workspace test suite was run.
+
 
 - Deterministic Fact construction and source-reference resolution.
 - Complete Fact preservation through Generator and each Validator request.
-- Fact Selector bypass for PreparedDemoPipeline.
+- Complete Fact preservation through the pipeline.
 - H/K retrieval and request construction.
-- Complete request-budget guards, including each retry attempt.
-- Exact structured json_validate_failed classification and one-retry limit.
-- Optional pacing and default-pacing-disabled behavior.
-- Separation from the default RCAPipeline.run().
-- Prepared runner fixture loading, argument selection, pacing wiring, and summaries.
+- Complete request-budget guards that reject oversized requests.
+- Provider error propagation and stage timing.
+- Runner fixture loading, argument handling, and summaries.
 
 At the original three-scenario freeze, the full suite had **162 passed** and the focused prepared-demo/provider/budget/runner subset had **46 passed**. These are historical baseline counts.
 
@@ -49,13 +48,11 @@ Run the current suite with:
 python -m pytest -q -p no:cacheprovider
 ~~~
 
-The suite is offline and uses fake providers. Current final verification after enabling all nine prepared scenarios: **254 Python tests passed**, **32 frontend tests passed**, TypeScript typecheck passed, ESLint passed, Vite production build passed, and `git diff --check` passed. No prepared fixture content was changed for the runnability update.
+The suite was offline and used fake providers. The last verification before pipeline consolidation after enabling all nine scenarios recorded **254 Python tests passed**, **32 frontend tests passed**, TypeScript typecheck passed, ESLint passed, Vite production build passed, and `git diff --check` passed. No prepared fixture content was changed for the runnability update.
 
-## Recovery and budget notes
+## Request budget
 
-The Validator recovery path passed offline tests for exact structured error matching, identical request replay, a maximum of two semantic attempts, and error propagation. It was **not exercised in the accepted successful live run**.
-
-The local request estimate is ceil(UTF-8 serialized request bytes / 4); it is not the Groq tokenizer and is not a quota guarantee. Provider-reported usage, where available, is separate.
+The guard measures the complete serialized Generator or Validator request using ceil(UTF-8 bytes / 4). An oversized request fails before transport, with all Facts intact. This estimate is not provider tokenization or a quota guarantee. Groq's bounded transport retry remains separate from this guard.
 
 ## Reproducibility boundary
 

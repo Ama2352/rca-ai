@@ -6,13 +6,13 @@ from typing import Any
 import httpx
 import pytest
 
-from rca_ai.providers.groq import (
-    GroqProvider,
+from rca_ai.providers.contracts import (
     ProviderConfigurationError,
     ProviderHTTPError,
     ProviderResponseError,
     ProviderTransportError,
 )
+from rca_ai.providers.groq import GroqProvider
 
 
 SECRET = "test-groq-key-do-not-leak"

@@ -12,7 +12,7 @@ import re
 from typing import Any
 
 from rca_ai.domain.models import CanonicalIncidentEvidence
-from rca_ai.retrieval.history import _canonical_query
+from rca_ai.retrieval.query import build_retrieval_query
 
 
 _CONTROL_SCOPE = re.compile(r"(?:feature[._ -]?flag|flagd|experiment|fault[._ -]?inject|chaos)", re.I)
@@ -66,5 +66,5 @@ def project_retrieval(evidence: CanonicalIncidentEvidence) -> RetrievalProjectio
             row["retrieval_eligible"] = True
         payload[_PAYLOAD_KEYS[observation.signal]].append(row)
         counts[observation.signal] += 1
-    query = _canonical_query(payload)
+    query = build_retrieval_query(payload)
     return RetrievalProjection(payload, query, counts, tuple(excluded))

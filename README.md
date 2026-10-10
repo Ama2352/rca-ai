@@ -16,7 +16,7 @@ Prepared Canonical Evidence
   → RCAResult
 ```
 
-The prepared-demo path passes every generated Fact to the Generator and Validator without invoking the Fact Selector. A complete-request guard rejects an oversized Generator or Validator request rather than truncating evidence. The default `RCAPipeline.run()` remains the separate Selector-backed path.
+The official `RCAPipeline` builds and verifies every Fact, retrieves History and Knowledge, then passes the complete Fact set to the Generator and each Validator call. A complete-request guard rejects oversized requests rather than truncating or reducing evidence.
 
 See the [architecture](docs/architecture.md), [demo runbook](docs/demo_runbook.md), [verification record](docs/verification.md), and the [RCA contract](docs/rca_contract.md). The telemetry and [provenance](docs/provenance.md) contracts document the upstream research boundary; raw telemetry collection is not part of the prepared-demo run.
 
@@ -54,7 +54,7 @@ Configure `GROQ_API_KEY` and `CEREBRAS_API_KEY` in the backend environment befor
 python scripts/run_prepared_demo.py --scenario all
 ```
 
-Optional provider pacing is disabled by default. See the [runbook](docs/demo_runbook.md) for `--enable-pacing`, test commands, and troubleshooting.
+Provider calls use Groq’s bounded transport retries. The prepared pipeline adds no pacing or automatic Validator retry. See the [runbook](docs/demo_runbook.md) for test commands and troubleshooting.
 
 For the full-stack interface, install the API extra and frontend dependencies, then start the two local servers in separate terminals:
 

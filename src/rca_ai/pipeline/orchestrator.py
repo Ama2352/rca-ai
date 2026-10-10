@@ -1,22 +1,31 @@
-"""Coordinate the frozen RCA stages without adding semantic behavior.
-
-History and Knowledge retrieval precede selection because the frozen runner
-measures the complete Generator request, including retrieved context. This
-operational detail preserves the original input-budget decision while keeping
-Fact construction and selection deterministic.
-"""
+"""Canonical RCA orchestration over source-linked Facts."""
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
-from rca_ai.domain.models import CanonicalIncidentEvidence, Fact, IncidentInput, RCAResult, ValidationResult
+import time
+from typing import Callable, Iterator
+from typing import Any
+
+from rca_ai.domain.models import (
+    CanonicalIncidentEvidence,
+    Fact,
+    IncidentInput,
+    RCAResult,
+    ValidationResult,
+)
 from rca_ai.facts.builder import build_fact_view, verify_fact_view
-from rca_ai.facts.selector import SelectionResult, request_bytes, select_facts
 from rca_ai.pipeline.assembler import assemble_result
+from rca_ai.pipeline.provider_observation import ObservedProvider
+from rca_ai.pipeline.request_budget import (
+    DEFAULT_MAX_ESTIMATED_TOKENS,
+    BudgetGuardProvider,
+)
 from rca_ai.reasoning.generator import (
     GenerationResult,
     HypothesisGenerator,
-    build_generator_request,
+    JsonCompletionProvider,
 )
 from rca_ai.reasoning.validator import HypothesisValidator, ValidationExecution
 from rca_ai.retrieval.history import HistoryRetrievalResult, retrieve_history
@@ -26,18 +35,12 @@ from rca_ai.retrieval.projection import RetrievalProjection, project_retrieval
 
 @dataclass(frozen=True)
 class PipelineRunResult:
-    """Operational stage outputs for audit/persistence outside the core run.
-
-    The object intentionally keeps F, H, K, generated hypotheses, and
-    validations in their own types. A later runner may persist these outputs;
-    this core class performs no filesystem writes.
-    """
+    """Typed outputs from the official RCA pipeline stages."""
 
     incident_id: str
     evidence: CanonicalIncidentEvidence
     facts: tuple[Fact, ...]
     fact_integrity: bool
-    selection: SelectionResult
     retrieval_projection: RetrievalProjection
     history: HistoryRetrievalResult
     knowledge: KnowledgeRetrievalResult
@@ -46,74 +49,126 @@ class PipelineRunResult:
     rca_result: RCAResult
 
 
-class RCAPipeline:
-    """Run the frozen deterministic/reasoning stages in their validated order.
+@dataclass(frozen=True)
+class DemoEvent:
+    """Optional, content-free event for official RCA progress and timing."""
 
-    Coordination adds no inference, ranking, repair, or text transformation.
-    Provider and contract errors propagate unchanged: execution failure is not
-    semantic abstention, and an empty hypothesis tuple remains a valid result.
+    kind: str
+    stage: str
+    timestamp: float
+    candidate_id: str | None = None
+    attempts: int | None = None
+    http_429s: int | None = None
+    retry_after_seconds: float | None = None
+
+
+class RCAPipeline:
+    """Execute the official RCA stages over canonical Facts.
+
+    Every Fact built from canonical evidence is passed unchanged to the
+    Generator and each candidate-specific Validator request. Provider guards
+    reject complete requests over budget before transport.
     """
 
     def __init__(
         self,
         *,
-        generator: HypothesisGenerator,
-        validator: HypothesisValidator,
+        generator_provider: JsonCompletionProvider,
+        validator_provider: JsonCompletionProvider,
+        max_estimated_tokens: int = DEFAULT_MAX_ESTIMATED_TOKENS,
     ) -> None:
-        self._generator = generator
-        self._validator = validator
+        self._observer: Callable[[DemoEvent], None] | None = None
+        self._active_stage = ""
+        self._active_candidate: str | None = None
+        generator_provider = ObservedProvider(generator_provider, self._provider_event)
+        validator_provider = ObservedProvider(validator_provider, self._provider_event)
+        self._generator = HypothesisGenerator(BudgetGuardProvider(
+            generator_provider,
+            max_estimated_tokens=max_estimated_tokens,
+        ))
+        guarded_validator = BudgetGuardProvider(
+            validator_provider,
+            max_estimated_tokens=max_estimated_tokens,
+        )
+        self._validator = HypothesisValidator(guarded_validator)
 
-    def run(self, incident: IncidentInput) -> PipelineRunResult:
-        """Build fresh F/H/K context, generate once, validate each H, assemble.
+    def _provider_event(self, kind: str, outcome: Any | None = None) -> None:
+        self._emit(kind, self._active_stage, self._active_candidate, outcome)
 
-        One independent Validator call is made per generated hypothesis, in
-        Generator order. The returned operational artifacts are left for an
-        outer runner to save; keeping writes out of this method makes repeated
-        runs reproducible and easy to test.
-        """
-        facts = build_fact_view(incident)
-        fact_integrity = verify_fact_view(facts, incident)
-        if not fact_integrity:
-            raise ValueError("Fresh Fact View failed deterministic integrity verification")
+    def _emit(self, kind: str, stage: str, candidate_id: str | None = None,
+              outcome: Any | None = None) -> None:
+        if self._observer is not None:
+            attempts = getattr(outcome, "attempts", None)
+            log = getattr(outcome, "attempt_log", ()) if outcome is not None else ()
+            retries_429 = sum(getattr(item, "http_status", None) == 429 for item in log)
+            retry_after = [getattr(item, "retry_after_seconds", None) for item in log]
+            self._observer(DemoEvent(
+                kind, stage, time.perf_counter(), candidate_id,
+                attempts=attempts if isinstance(attempts, int) else None,
+                http_429s=retries_429 if log else None,
+                retry_after_seconds=max((item for item in retry_after if isinstance(item, (int, float))), default=None),
+            ))
 
-        retrieval_projection = project_retrieval(incident.evidence)
-        history = retrieve_history(retrieval_projection.payload)
-        knowledge = retrieve_knowledge(retrieval_projection.payload)
+    @contextmanager
+    def _stage(self, stage: str, candidate_id: str | None = None) -> Iterator[None]:
+        self._active_stage, self._active_candidate = stage, candidate_id
+        self._emit("stage_started", stage, candidate_id)
+        try:
+            yield
+        except Exception:
+            self._emit("stage_failed", stage, candidate_id)
+            raise
+        else:
+            self._emit("stage_completed", stage, candidate_id)
 
-        def exact_request_size(candidate_facts: tuple[Fact, ...]) -> int:
-            request = build_generator_request(candidate_facts, history, knowledge)
-            return request_bytes(request)
+    def run(self, incident: IncidentInput,
+            *, observer: Callable[[DemoEvent], None] | None = None) -> PipelineRunResult:
+        """Build F/H/K, send every Fact to reasoning, then assemble deterministically."""
+        self._observer = observer
+        try:
+            with self._stage("evidence"):
+                facts = build_fact_view(incident)
+                fact_integrity = verify_fact_view(facts, incident)
+                if not fact_integrity:
+                    raise ValueError("Fresh Fact View failed deterministic integrity verification")
 
-        selection = select_facts(facts, request_size_for=exact_request_size)
-        generation = self._generator.generate(selection.facts, history, knowledge)
+            with self._stage("retrieval"):
+                retrieval_projection = project_retrieval(incident.evidence)
+                history = retrieve_history(retrieval_projection.payload)
+                knowledge = retrieve_knowledge(retrieval_projection.payload)
 
-        validations: list[ValidationExecution] = []
-        for hypothesis in generation.hypotheses:
-            validations.append(
-                self._validator.validate(hypothesis, selection.facts, history, knowledge)
+            with self._stage("generation"):
+                generation = self._generator.generate(facts, history, knowledge)
+            validations: list[ValidationExecution] = []
+            for hypothesis in generation.hypotheses:
+                with self._stage("validation", hypothesis.id):
+                    validations.append(self._validator.validate(hypothesis, facts, history, knowledge))
+
+            with self._stage("assembly"):
+                validation_results: tuple[ValidationResult, ...] = tuple(
+                    execution.result for execution in validations
+                )
+                final_result = assemble_result(
+                    incident.incident_id,
+                    generation.hypotheses,
+                    validation_results,
+                    facts,
+                    history,
+                    knowledge,
+                )
+            return PipelineRunResult(
+                incident_id=incident.incident_id,
+                evidence=incident.evidence,
+                facts=facts,
+                fact_integrity=fact_integrity,
+                retrieval_projection=retrieval_projection,
+                history=history,
+                knowledge=knowledge,
+                generation=generation,
+                validations=tuple(validations),
+                rca_result=final_result,
             )
-
-        validation_results: tuple[ValidationResult, ...] = tuple(
-            execution.result for execution in validations
-        )
-        final_result = assemble_result(
-            incident.incident_id,
-            generation.hypotheses,
-            validation_results,
-            selection.facts,
-            history,
-            knowledge,
-        )
-        return PipelineRunResult(
-            incident_id=incident.incident_id,
-            evidence=incident.evidence,
-            facts=facts,
-            fact_integrity=fact_integrity,
-            selection=selection,
-            retrieval_projection=retrieval_projection,
-            history=history,
-            knowledge=knowledge,
-            generation=generation,
-            validations=tuple(validations),
-            rca_result=final_result,
-        )
+        finally:
+            self._observer = None
+            self._active_stage = ""
+            self._active_candidate = None

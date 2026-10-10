@@ -10,4 +10,4 @@
 
 Only original `F` records may populate current Evidence. History, Domain Knowledge, hypothesis wording, and validator rationale must never be promoted into immutable Facts. The result stores references to F/H/K records separately; an API/UI dereferences each reference from its original store rather than asking an LLM to summarize it.
 
-Fact construction preserves the normalized source’s entity, field, value, source reference, and source path. Optional selection returns existing Fact objects without modification. The assembler checks reference namespaces and identities, and a saved result must be reproducible exactly from the same stored inputs and semantic outputs.
+Fact construction preserves the normalized source’s entity, field, value, source reference, and source path. The official pipeline passes every constructed Fact unchanged through Generator and Validator requests. The assembler checks reference namespaces and identities, and a saved result must be reproducible exactly from the same stored inputs and semantic outputs.

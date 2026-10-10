@@ -10,11 +10,10 @@ from typing import Any
 
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
 from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIOS_BY_ID, runnable_scenario_ids
-from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
-from rca_ai.pipeline.prepared_demo_providers import ProviderCallPacer
+from rca_ai.pipeline.orchestrator import RCAPipeline
 from rca_ai.pipeline.request_budget import DEFAULT_MAX_ESTIMATED_TOKENS, request_size
 from rca_ai.providers.groq import GroqProvider
-from rca_ai.providers.cerebras_benchmark import CerebrasBenchmarkProvider
+from rca_ai.providers.cerebras import CerebrasProvider
 
 
 SCENARIOS = runnable_scenario_ids()
@@ -22,24 +21,13 @@ SCENARIOS = runnable_scenario_ids()
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run the prepared RCA demo without Processor or Fact Selector stages."
+        description="Run RCA on the reviewed prepared incident inputs without the telemetry Processor."
     )
     parser.add_argument(
         "--scenario",
         choices=(*SCENARIOS, "all"),
         default="all",
         help="prepared incident to run (default: all, sequentially)",
-    )
-    parser.add_argument(
-        "--enable-pacing",
-        action="store_true",
-        help="pace semantic provider calls using response headers and a fallback delay",
-    )
-    parser.add_argument(
-        "--pacing-delay-seconds",
-        type=float,
-        default=75.0,
-        help="fallback inter-call delay when pacing is enabled (default: 75)",
     )
     parser.add_argument(
         "--max-estimated-tokens",
@@ -68,24 +56,16 @@ def load_incident(scenario: str) -> IncidentInput:
 
 def make_pipeline(
     *,
-    enable_pacing: bool = False,
-    pacing_delay_seconds: float = 75.0,
     max_estimated_tokens: int = DEFAULT_MAX_ESTIMATED_TOKENS,
-) -> PreparedDemoPipeline:
-    """Wire the configured provider once; pacing is an explicit opt-in."""
+) -> RCAPipeline:
+    """Build the official RCA pipeline with the configured providers."""
 
     generator_provider = GroqProvider()
-    validator_provider = CerebrasBenchmarkProvider()
-    pacer = (
-        ProviderCallPacer(fallback_delay_seconds=pacing_delay_seconds)
-        if enable_pacing
-        else None
-    )
-    return PreparedDemoPipeline(
+    validator_provider = CerebrasProvider()
+    return RCAPipeline(
         generator_provider=generator_provider,
         validator_provider=validator_provider,
         max_estimated_tokens=max_estimated_tokens,
-        provider_pacer=pacer,
     )
 
 
@@ -149,11 +129,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     scenarios = SCENARIOS if args.scenario == "all" else (args.scenario,)
-    pipeline = make_pipeline(
-        enable_pacing=args.enable_pacing,
-        pacing_delay_seconds=args.pacing_delay_seconds,
-        max_estimated_tokens=args.max_estimated_tokens,
-    )
+    pipeline = make_pipeline(max_estimated_tokens=args.max_estimated_tokens)
     output: list[dict[str, Any]] = []
     for scenario in scenarios:
         try:

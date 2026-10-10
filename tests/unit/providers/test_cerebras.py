@@ -1,4 +1,4 @@
-"""Offline contract checks for the optional Cerebras benchmark transport."""
+"""Offline contract checks for the active Cerebras Validator transport."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ import json
 import httpx
 import pytest
 
-from rca_ai.providers.cerebras_benchmark import (
-    CerebrasBenchmarkProvider,
-    cerebras_benchmark_body,
+from rca_ai.providers.cerebras import (
+    CerebrasProvider,
+    cerebras_request_body,
 )
-from rca_ai.providers.groq import ProviderConfigurationError, ProviderHTTPError
+from rca_ai.providers.contracts import ProviderConfigurationError, ProviderHTTPError
 from rca_ai.pipeline.request_budget import BudgetGuardProvider, RequestBudgetExceeded
 from rca_ai.reasoning.schemas import GENERATOR_JSON_SCHEMA, VALIDATOR_JSON_SCHEMA
 
@@ -34,7 +34,7 @@ def _request(schema):
 @pytest.mark.parametrize("schema", [GENERATOR_JSON_SCHEMA, VALIDATOR_JSON_SCHEMA])
 def test_transport_mapping_preserves_semantic_contract(schema):
     original = _request(schema)
-    body = cerebras_benchmark_body(original)
+    body = cerebras_request_body(original)
     assert original["model"] == "openai/gpt-oss-120b"
     assert body == {key: value for key, value in original.items() if key != "include_reasoning"} | {
         "model": "gpt-oss-120b"
@@ -71,7 +71,7 @@ def test_frozen_schemas_fit_documented_cerebras_strict_subset(schema):
 ])
 def test_incompatible_contract_fails_closed(change):
     with pytest.raises(ProviderConfigurationError):
-        cerebras_benchmark_body(_request(GENERATOR_JSON_SCHEMA) | change)
+        cerebras_request_body(_request(GENERATOR_JSON_SCHEMA) | change)
 
 
 def test_fake_http_transport_keeps_schema_and_returns_parsed_result():
@@ -86,12 +86,12 @@ def test_fake_http_transport_keeps_schema_and_returns_parsed_result():
         })
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
-        result = CerebrasBenchmarkProvider(api_key="offline-key", client=client).complete(
+        result = CerebrasProvider(api_key="offline-key", client=client).complete(
             _request(GENERATOR_JSON_SCHEMA)
         )
     assert len(requests) == 1
     assert str(requests[0].url) == "https://api.cerebras.ai/v1/chat/completions"
-    assert json.loads(requests[0].content) == cerebras_benchmark_body(_request(GENERATOR_JSON_SCHEMA))
+    assert json.loads(requests[0].content) == cerebras_request_body(_request(GENERATOR_JSON_SCHEMA))
     assert result.content == {"hypotheses": []}
     assert result.usage["prompt_tokens"] == 10
     assert "offline-key" not in repr(result)
@@ -106,7 +106,7 @@ def test_existing_budget_guard_rejects_before_cerebras_transport():
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         guarded = BudgetGuardProvider(
-            CerebrasBenchmarkProvider(api_key="offline-key", client=client),
+            CerebrasProvider(api_key="offline-key", client=client),
             max_estimated_tokens=1,
         )
         with pytest.raises(RequestBudgetExceeded):
@@ -117,7 +117,7 @@ def test_existing_budget_guard_rejects_before_cerebras_transport():
 def test_missing_key_and_http_failure_do_not_recover_or_expose_credential(monkeypatch):
     monkeypatch.delenv("CEREBRAS_API_KEY", raising=False)
     with pytest.raises(ProviderConfigurationError):
-        CerebrasBenchmarkProvider().complete(_request(GENERATOR_JSON_SCHEMA))
+        CerebrasProvider().complete(_request(GENERATOR_JSON_SCHEMA))
     calls = []
 
     def handler(request):
@@ -127,7 +127,7 @@ def test_missing_key_and_http_failure_do_not_recover_or_expose_credential(monkey
 
     with httpx.Client(transport=httpx.MockTransport(handler)) as client:
         with pytest.raises(ProviderHTTPError) as caught:
-            CerebrasBenchmarkProvider(api_key="offline-key", client=client).complete(
+            CerebrasProvider(api_key="offline-key", client=client).complete(
                 _request(GENERATOR_JSON_SCHEMA)
             )
     assert len(calls) == 1

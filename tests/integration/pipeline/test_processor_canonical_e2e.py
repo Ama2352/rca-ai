@@ -11,9 +11,7 @@ import pytest
 
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict
 from rca_ai.pipeline.orchestrator import RCAPipeline
-from rca_ai.providers.groq import ProviderResult
-from rca_ai.reasoning.generator import HypothesisGenerator
-from rca_ai.reasoning.validator import HypothesisValidator
+from rca_ai.providers.contracts import ProviderResult
 from rca_ai.retrieval.history import retrieve_history
 from rca_ai.retrieval.knowledge import retrieve_knowledge
 from rca_ai.retrieval.projection import project_retrieval
@@ -88,8 +86,8 @@ def test_saved_capture_runs_through_canonical_processor_and_core(scenario, expec
     generator_provider = FakeSemanticProvider("generator")
     validator_provider = FakeSemanticProvider("validator")
     run = RCAPipeline(
-        generator=HypothesisGenerator(generator_provider),
-        validator=HypothesisValidator(validator_provider),
+        generator_provider=generator_provider,
+        validator_provider=validator_provider,
     ).run(IncidentInput(scenario, evidence))
 
     assert run.fact_integrity
@@ -117,7 +115,7 @@ def test_saved_capture_runs_through_canonical_processor_and_core(scenario, expec
         signal for signal, count in run.retrieval_projection.included_counts.items() if count
     }
     assert len(generator_provider.calls) == len(validator_provider.calls) == 1
-    assert run.rca_result.candidate_results[0].evidence_refs == (run.selection.facts[0].fact_id,)
+    assert run.rca_result.candidate_results[0].evidence_refs == (run.facts[0].fact_id,)
     excluded_ids = {observation_id for observation_id, _ in run.retrieval_projection.excluded_observations}
     excluded_source_refs = {
         observation.source.source_ref

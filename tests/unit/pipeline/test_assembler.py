@@ -19,9 +19,8 @@ from rca_ai.domain.models import (
     ValidationResult,
     to_dict,
 )
-from rca_ai.facts.selector import request_bytes, select_facts
 from rca_ai.pipeline.assembler import assemble_result, resolve_sources
-from rca_ai.reasoning.generator import build_generator_request, validate_generation
+from rca_ai.reasoning.generator import validate_generation
 from rca_ai.reasoning.validator import validate_validator_output
 from rca_ai.retrieval.history import retrieve_history
 from rca_ai.retrieval.knowledge import retrieve_knowledge
@@ -53,14 +52,11 @@ def _fresh_case(incident_id, query_fixture):
     )
     history = retrieve_history(retrieval_input)
     knowledge = retrieve_knowledge(retrieval_input)
-    size_for = lambda selected: request_bytes(build_generator_request(selected, history, knowledge))
-    selected_facts = select_facts(facts, request_size_for=size_for).facts
-
     fixture_root = FIXTURES / "reasoning" / "validator"
     generation = json.loads(
         (fixture_root / "inputs" / f"{incident_id}.generation.json").read_text(encoding="utf-8")
     )
-    hypotheses = validate_generation(generation, selected_facts, history.items, knowledge.items)
+    hypotheses = validate_generation(generation, facts, history.items, knowledge.items)
     validations = tuple(
         validate_validator_output(
             json.loads(
@@ -68,7 +64,7 @@ def _fresh_case(incident_id, query_fixture):
                 .read_text(encoding="utf-8")
             ),
             hypothesis,
-            selected_facts,
+            facts,
         )
         for hypothesis in hypotheses
     )

@@ -107,16 +107,10 @@ export type EvidenceSignal = "metric" | "log" | "trace" | "kubernetes"
 
 export interface DemoIncident {
   id: string
-  title: string
   source: "otel-demo" | "custom-k8s"
   readiness: "demo-ready" | "experimental" | "unverified"
   prepared_input: string | null
-  description?: string
-  affected_services?: string[]
-  symptoms?: string[]
   available_evidence_sources?: EvidenceSignal[]
-  analysis_mode?: string
-  investigation_focus?: string[]
   incident_snapshot?: IncidentSnapshotItem[]
 }
 

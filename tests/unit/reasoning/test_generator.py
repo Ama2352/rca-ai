@@ -5,8 +5,7 @@ from pathlib import Path
 import pytest
 
 from rca_ai.domain.models import Fact, FactEntity, Hypothesis
-from rca_ai.facts.selector import request_bytes, select_facts
-from rca_ai.providers.groq import ProviderError, ProviderResult
+from rca_ai.providers.contracts import ProviderError, ProviderResult
 from rca_ai.reasoning.generator import (
     GenerationValidationError,
     HypothesisGenerator,
@@ -50,11 +49,7 @@ def _case(incident_id, retrieval_name):
 
 def _request_for_case(incident_id, retrieval_name):
     facts, history, knowledge = _case(incident_id, retrieval_name)
-    size_for = lambda selected: request_bytes(
-        build_generator_request(selected, history, knowledge)
-    )
-    selection = select_facts(facts, request_size_for=size_for)
-    return selection, build_generator_request(selection.facts, history, knowledge)
+    return facts, build_generator_request(facts, history, knowledge)
 
 
 def test_frozen_generator_prompt_and_schema_hashes_match():
@@ -78,33 +73,14 @@ def test_request_uses_frozen_model_and_strict_structured_output():
 
 
 @pytest.mark.parametrize(("incident_id", "retrieval_name"), SCENARIOS)
-def test_fresh_fact_retrieval_selection_and_request_match_frozen_contract(
-    incident_id, retrieval_name
-):
-    selection, actual = _request_for_case(incident_id, retrieval_name)
-    expected = None if incident_id == "ad-high-cpu-01" else json.loads(
-        (GENERATOR_FIXTURES / "expected" / f"{incident_id}.request.json").read_text(encoding="utf-8")
-    )
-
-    expected_counts = {
-        "missing-secret-01": (21, 21),
-        "application-failure-01": (52, 25),
-        "ad-high-cpu-01": (14, 14),
-    }
-    assert (selection.full_fact_count, selection.selected_fact_count) == expected_counts[incident_id]
+def test_fresh_fact_retrieval_request_contains_every_fact(incident_id, retrieval_name):
+    facts, actual = _request_for_case(incident_id, retrieval_name)
     supplied = json.loads(actual["messages"][1]["content"])
-    assert [fact["fact_id"] for fact in supplied["current_facts"]] == list(selection.selected_ids)
+    assert [fact["fact_id"] for fact in supplied["current_facts"]] == [fact.fact_id for fact in facts]
     assert all(row["source_type"] == "HISTORY" for row in supplied["history"])
     assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in supplied["domain_knowledge"])
-    if expected is not None:
-        assert actual == expected
-    else:
-        # The old ad-high-cpu request is a frozen plain-BM25 research artifact.
-        # Keep it as historical evidence, but exercise only the current structured contract here.
-        assert actual["model"] == "openai/gpt-oss-120b"
-        assert actual["response_format"]["json_schema"]["strict"] is True
-        assert all(row["source_type"] == "HISTORY" for row in supplied["history"])
-        assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in supplied["domain_knowledge"])
+    assert actual["model"] == "openai/gpt-oss-120b"
+    assert actual["response_format"]["json_schema"]["strict"] is True
 
 
 class FakeProvider:

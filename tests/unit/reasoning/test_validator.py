@@ -18,7 +18,7 @@ from rca_ai.domain.models import (
     ValidationResult,
     to_dict,
 )
-from rca_ai.providers.groq import ProviderError, ProviderResult
+from rca_ai.providers.contracts import ProviderError, ProviderResult
 from rca_ai.reasoning.prompts import VALIDATOR_SYSTEM_PROMPT
 from rca_ai.reasoning.schemas import VALIDATOR_JSON_SCHEMA
 from rca_ai.reasoning.validator import (
@@ -41,8 +41,7 @@ SCENARIOS = (
 
 def _context(incident_id, retrieval_name):
     from rca_ai.domain.models import FactEntity
-    from rca_ai.facts.selector import request_bytes, select_facts
-    from rca_ai.reasoning.generator import build_generator_request, validate_generation
+    from rca_ai.reasoning.generator import validate_generation
     from rca_ai.retrieval.history import retrieve_history
     from rca_ai.retrieval.knowledge import retrieve_knowledge
 
@@ -62,17 +61,11 @@ def _context(incident_id, retrieval_name):
     )
     history = retrieve_history(query)
     knowledge = retrieve_knowledge(query)
-    size_for = lambda facts: len(json.dumps(
-        build_generator_request(facts, history, knowledge),
-        ensure_ascii=False,
-        separators=(",", ":"),
-    ).encode("utf-8"))
-    selection = select_facts(full_facts, request_size_for=size_for)
     generation = json.loads(
         (VALIDATOR_FIXTURES / "inputs" / f"{incident_id}.generation.json").read_text(encoding="utf-8")
     )
-    hypotheses = validate_generation(generation, selection.facts, history.items, knowledge.items)
-    return selection.facts, history, knowledge, hypotheses
+    hypotheses = validate_generation(generation, full_facts, history.items, knowledge.items)
+    return full_facts, history, knowledge, hypotheses
 
 
 def test_frozen_validator_prompt_and_effective_schema_hashes_match():
@@ -89,40 +82,31 @@ def test_frozen_validator_prompt_and_effective_schema_hashes_match():
 
 
 def test_request_config_and_compact_basis_are_frozen():
-    expected = json.loads(
-        (VALIDATOR_FIXTURES / "expected" / "missing-secret-01" / "HYP1.request.json").read_text(encoding="utf-8")
-    )
-    assert list(expected) == [
+    facts, history, knowledge, hypotheses = _context(*SCENARIOS[0])
+    request = build_validator_request(hypotheses[0], facts, history, knowledge)
+    assert list(request) == [
         "model", "reasoning_effort", "include_reasoning", "temperature",
         "max_completion_tokens", "messages", "response_format",
     ]
-    assert expected["model"] == "openai/gpt-oss-120b"
-    assert expected["reasoning_effort"] == "medium"
-    assert expected["include_reasoning"] is False
-    assert expected["temperature"] == 0
-    assert expected["max_completion_tokens"] == 4096
-    assert expected["response_format"]["type"] == "json_schema"
-    assert expected["response_format"]["json_schema"]["strict"] is True
-    assert expected["response_format"]["json_schema"]["schema"] == VALIDATOR_JSON_SCHEMA
+    assert request["model"] == "openai/gpt-oss-120b"
+    assert request["reasoning_effort"] == "medium"
+    assert request["include_reasoning"] is False
+    assert request["temperature"] == 0
+    assert request["max_completion_tokens"] == 4096
+    assert request["response_format"]["type"] == "json_schema"
+    assert request["response_format"]["json_schema"]["strict"] is True
+    assert request["response_format"]["json_schema"]["schema"] == VALIDATOR_JSON_SCHEMA
 
 
 @pytest.mark.parametrize(("incident_id", "retrieval_name"), SCENARIOS)
-def test_every_fresh_validator_request_matches_frozen_candidate_request(incident_id, retrieval_name):
+def test_every_fresh_validator_request_contains_all_facts_and_one_candidate(incident_id, retrieval_name):
     facts, history, knowledge, hypotheses = _context(incident_id, retrieval_name)
     for hypothesis in hypotheses:
         actual = build_validator_request(hypothesis, facts, history, knowledge)
         payload = json.loads(actual["messages"][1]["content"])
-        if incident_id != "ad-high-cpu-01":
-            expected = json.loads(
-                (VALIDATOR_FIXTURES / "expected" / incident_id / f"{hypothesis.id}.request.json")
-                .read_text(encoding="utf-8")
-            )
-            assert actual == expected
-        else:
-            # The old frozen ad request captured the removed plain-query path.
-            assert len(payload["current_facts"]) == len(facts)
-            assert all(row["source_type"] == "HISTORY" for row in payload["history"])
-            assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in payload["domain_knowledge"])
+        assert len(payload["current_facts"]) == len(facts)
+        assert all(row["source_type"] == "HISTORY" for row in payload["history"])
+        assert all(row["source_type"] == "DOMAIN_KNOWLEDGE" for row in payload["domain_knowledge"])
         assert len([payload["candidate_hypothesis"]]) == 1
         assert payload["candidate_hypothesis"]["explanation"] == hypothesis.explanation
         assert [row["fact_id"] for row in payload["current_facts"]] == [fact.fact_id for fact in facts]

@@ -1,146 +1,113 @@
 [
   {
     "id": "missing-secret-01",
-    "title": "Telemetry Docs — Startup Failure",
     "source": "custom-k8s",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/missing-secret-01.json",
-    "snapshot_observation_ids": ["a85a7eff00aa98136235be9e", "d10a1a35a7c0b7deb0cd5ffb"],
-    "description": "A telemetry-docs pod remains pending while a container waits to start.",
-    "affected_services": ["telemetry-docs"],
-    "symptoms": ["Pending pod", "Container configuration error"],
-    "investigation_focus": [
-      "Inspect pod and container state alongside Kubernetes events",
-      "Compare current observations with historical and domain context",
-      "Validate proposed explanations against the available evidence"
+    "snapshot_observation_ids": [
+      "a85a7eff00aa98136235be9e",
+      "d10a1a35a7c0b7deb0cd5ffb"
     ]
   },
   {
     "id": "application-failure-01",
-    "title": "Checkout and Payment — Application Failure",
     "source": "otel-demo",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/application-failure-01.json",
-    "snapshot_observation_ids": ["823d2b475830b7bac53f7246", "c97c2fdf4966378255ff3149", "46338b5aba119b96f991baf2", "36083e98046a8178dfd9ea78", "e6131312e9ae9202469dceac", "c6b85560f2da70de2b939109"],
-    "description": "Checkout PlaceOrder and payment Charge operations show errors during the incident window.",
-    "affected_services": ["checkout", "payment"],
-    "symptoms": ["PlaceOrder and Charge operation errors", "Payment warning logs"],
-    "investigation_focus": [
-      "Compare operation metrics, log patterns, and trace error summaries",
-      "Inspect checkout-to-payment relationships without assuming causation",
-      "Check Kubernetes state and validate competing explanations"
+    "snapshot_observation_ids": [
+      "823d2b475830b7bac53f7246",
+      "c97c2fdf4966378255ff3149",
+      "46338b5aba119b96f991baf2",
+      "36083e98046a8178dfd9ea78",
+      "e6131312e9ae9202469dceac",
+      "c6b85560f2da70de2b939109"
     ]
   },
   {
     "id": "ad-high-cpu-01",
-    "title": "Ad Service — High CPU",
     "source": "otel-demo",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/ad-high-cpu-01.json",
-    "snapshot_observation_ids": ["310cbe59d2d0675e021d9ef1", "9b3c5c99346cb872996f7cac", "b1c4a1e4412d99c257d36966", "2efa55d3c704bee15b10271d"],
-    "description": "The ad service shows a substantial CPU increase in the incident window.",
-    "affected_services": ["ad"],
-    "symptoms": ["Elevated ad-service CPU usage"],
-    "investigation_focus": [
-      "Compare CPU measurements across baseline and incident windows",
-      "Inspect log patterns, trace summaries, and Kubernetes state",
-      "Validate explanations without treating a symptom as a proven cause"
+    "snapshot_observation_ids": [
+      "310cbe59d2d0675e021d9ef1",
+      "9b3c5c99346cb872996f7cac",
+      "b1c4a1e4412d99c257d36966",
+      "2efa55d3c704bee15b10271d"
     ]
   },
   {
     "id": "cart-failure-01",
-    "title": "Cart Failure",
     "source": "otel-demo",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/cart-failure-01.json",
-    "snapshot_observation_ids": ["4408b0f7e2e62ad0e719e1d4", "e1732a19ec990fb481af4520", "ae13cb4cb54422fef0b04461", "63e6303982fde506d4ed0673", "d4a998a4885083afca56cf58"],
-    "description": "Cart EmptyCart calls failed to reach their storage path while the Cart workload remained Running/Ready; other sampled Valkey activity was also observed.",
-    "affected_services": ["checkout", "cart"],
-    "symptoms": ["Redis connection error on Cart EmptyCart", "A failed Checkout-to-Cart EmptyCart trace", "Other successful Cart-to-Valkey spans"],
-    "investigation_focus": [
-      "Distinguish the failing EmptyCart path from other observed Cart storage activity",
-      "Relate Cart-side failure evidence to the Checkout client trace without assuming all Cart calls failed",
-      "Treat the untimed Running/Ready pod snapshot as context rather than a timeline"
+    "snapshot_observation_ids": [
+      "4408b0f7e2e62ad0e719e1d4",
+      "e1732a19ec990fb481af4520",
+      "ae13cb4cb54422fef0b04461",
+      "63e6303982fde506d4ed0673",
+      "d4a998a4885083afca56cf58"
     ]
   },
   {
     "id": "dependency-unavailable-01",
-    "title": "Checkout → Payment · Dependency Unavailable",
     "source": "otel-demo",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/dependency-unavailable-01.json",
-    "snapshot_observation_ids": ["f72ce786bfd65db1a9320c20", "cdb851d670ef3056e456eac1", "6442cdfeaeef74058fee9800", "014b17ef67481f5602c49177", "c6b85560f2da70de2b939109"],
-    "description": "Checkout records UNAVAILABLE responses on outbound Payment Charge requests, with errors observed in related Checkout operations.",
-    "affected_services": ["checkout", "payment"],
-    "symptoms": ["Payment Charge responses labeled UNAVAILABLE", "Checkout PlaceOrder and Charge errors"],
-    "investigation_focus": [
-      "Inspect the outbound Checkout-to-Payment Charge status and related Checkout operation errors",
-      "Compare client-side and server-side observations without assuming unobserved Payment behavior",
-      "Use Kubernetes state as context and preserve the gaps in service-side evidence"
+    "snapshot_observation_ids": [
+      "f72ce786bfd65db1a9320c20",
+      "cdb851d670ef3056e456eac1",
+      "6442cdfeaeef74058fee9800",
+      "014b17ef67481f5602c49177",
+      "c6b85560f2da70de2b939109"
     ]
   },
   {
     "id": "downstream-latency-01",
-    "title": "Downstream Latency",
     "source": "otel-demo",
     "readiness": "experimental",
     "prepared_input": "data/demo/downstream-latency-01.json",
-    "snapshot_observation_ids": ["f7182f3b9b1e689770d30c83", "6b8d40add3516e60450d8828", "611b0d58e2add4341daca248", "9e960391a10072755e12e297"],
-    "description": "Checkout-to-Shipping and Shipping /ship-order traces show longer durations during the incident window, while /get-quote remains near baseline. Experimental: a prior live analysis failed Validator reference-integrity checks; failures remain visible and analyses are not automatically retried.",
-    "affected_services": ["checkout", "shipping"],
-    "symptoms": ["Shipping /ship-order latency increased", "Checkout-to-Shipping edge latency increased", "Shipping /get-quote latency stayed near baseline"],
-    "investigation_focus": [
-      "Compare Shipping operation latency with the caller-side Checkout-to-Shipping edge",
-      "Keep the near-baseline /get-quote operation as counterevidence to a broad Shipping slowdown",
-      "Separate an observed latency increase from a proven downstream causal bottleneck"
+    "snapshot_observation_ids": [
+      "f7182f3b9b1e689770d30c83",
+      "6b8d40add3516e60450d8828",
+      "611b0d58e2add4341daca248",
+      "9e960391a10072755e12e297"
     ]
   },
   {
     "id": "memory-leak-01",
-    "title": "Memory Leak",
     "source": "otel-demo",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/memory-leak-01.json",
-    "snapshot_observation_ids": ["ff12bca38ca471504045495e", "a26efa11c7f9c807d77c0217", "1619d48d044d0ec8579d122b", "c1d15a703a6582a14ee81f90", "030e7840ec1cedb3cd761863"],
-    "description": "Email memory measurements rise and available memory falls over the three-minute incident capture; send_email traces also take longer without reported operation errors.",
-    "affected_services": ["email"],
-    "symptoms": ["Resident and usage memory measurements increased", "Available memory decreased", "send_email mean latency increased without recorded operation errors"],
-    "investigation_focus": [
-      "Assess whether memory growth during the short capture supports resource-pressure concerns",
-      "Compare memory movement with the send_email latency increase and zero reported trace errors",
-      "Avoid treating a three-minute simulation as proof of a persistent memory leak"
+    "snapshot_observation_ids": [
+      "ff12bca38ca471504045495e",
+      "a26efa11c7f9c807d77c0217",
+      "1619d48d044d0ec8579d122b",
+      "c1d15a703a6582a14ee81f90",
+      "030e7840ec1cedb3cd761863"
     ]
   },
   {
     "id": "messaging-failure-01",
-    "title": "Messaging Failure",
     "source": "otel-demo",
     "readiness": "demo-ready",
     "prepared_input": "data/demo/messaging-failure-01.json",
-    "snapshot_observation_ids": ["7b4ce16b86967b8a529bfd8c", "5db48f63cc31148449f4ae55", "c0049806056ee83f82c1c473", "0968ce5e8ae92d29ff27bd68", "027da736a147d8b9c550f1bb"],
-    "description": "A prepared messaging exercise records a queue-overload simulation and a consumer-side delay alongside producer and consumer telemetry.",
-    "affected_services": ["checkout", "fraud-detection", "kafka"],
-    "symptoms": ["Fraud Detection last-poll age rises", "Checkout publish-orders latency rises", "Measured consumer lag remains at zero"],
-    "investigation_focus": [
-      "Compare the captured queue-overload and consumer-delay records with producer and consumer signals",
-      "Account for the zero measured consumer-lag values rather than assuming a lag spike",
-      "Separate the intended simulation from what the telemetry independently establishes"
+    "snapshot_observation_ids": [
+      "7b4ce16b86967b8a529bfd8c",
+      "5db48f63cc31148449f4ae55",
+      "c0049806056ee83f82c1c473",
+      "0968ce5e8ae92d29ff27bd68",
+      "027da736a147d8b9c550f1bb"
     ]
   },
   {
     "id": "crash-loop-backoff-01",
-    "title": "Crash Loop Backoff",
     "source": "custom-k8s",
     "readiness": "experimental",
     "prepared_input": "data/demo/crash-loop-backoff-01.json",
-    "snapshot_observation_ids": ["a85a7eff00aa98136235be9e", "35d8fd27bfcaa31f175ed000", "e989ada43d98489434186637"],
-    "description": "The telemetry-docs container terminated with exit code 42 and Kubernetes reported BackOff restarts; the pod phase still reads Running while readiness is false. Experimental: a prior live run produced speculative qualified hypotheses that did not usefully explain the injected exit-42 fault.",
-    "affected_services": ["telemetry-docs"],
-    "symptoms": ["Container terminated with exit code 42", "Kubernetes BackOff restart event", "Container readiness false after repeated restarts"],
-    "investigation_focus": [
-      "Relate the container termination and restart metric to the Kubernetes BackOff event",
-      "Distinguish the pod-level Running phase from the terminated, not-ready container state",
-      "State the limits of a Kubernetes-only capture without logs or traces"
+    "snapshot_observation_ids": [
+      "a85a7eff00aa98136235be9e",
+      "35d8fd27bfcaa31f175ed000",
+      "e989ada43d98489434186637"
     ]
   }
 ]

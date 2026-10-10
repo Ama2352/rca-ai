@@ -2,11 +2,11 @@
 
 The entries below preserve provenance for the earlier frozen RCA implementation that produced `R/rca_demo_milestone/artifacts/fresh_pipeline_smoke_20261004/summary.json`. That implementation and its saved normalized/query inputs remain historical regression controls. The current public Processor-to-Core boundary is the canonical evidence contract described in the update note at the end of this document.
 
-## Current prepared-demo status
+## Current official pipeline status
 
-RCA Demo v1 is a separate prepared-input execution path. The version-controlled inputs are in `data/demo/`; `scripts/run_prepared_demo.py` invokes `PreparedDemoPipeline`, which builds and verifies all Facts, retrieves H/K, and bypasses the Fact Selector. All nine prepared fixtures that pass catalog/manifest integrity checks can run. Seven scenarios are demo-ready; `crash-loop-backoff-01` and `downstream-latency-01` remain experimental after prior live outputs failed usefulness/reference-integrity acceptance. The normal `RCAPipeline.run()` remains Selector-backed.
+`RCAPipeline` is the one supported RCA execution pipeline. The Demo API, `scripts/run_prepared_demo.py`, release regression runner, and tests use it. It builds and verifies all Facts, retrieves H/K, sends the complete Fact set through reasoning, and rejects oversized complete requests at the provider boundary. All nine prepared fixtures that pass catalog/manifest integrity checks can run. Seven scenarios are demo-ready; `crash-loop-backoff-01` and `downstream-latency-01` remain experimental after prior live outputs failed usefulness/reference-integrity acceptance.
 
-The complete Generator and Validator requests are guarded by the configurable prepared-demo budget (default 7,000 estimated tokens using ceil(UTF-8 bytes / 4)). The estimate is not a provider tokenizer or quota guarantee. The prepared-demo Validator may make one identical-request retry for the exact structured Groq `json_validate_failed` error. Optional shared pacing is disabled by default. Recovery passed offline tests but was not exercised in the successful live runs.
+The complete Generator and Validator requests are guarded by the configurable prepared-demo budget (default 7,000 estimated tokens using ceil(UTF-8 bytes / 4)). The estimate is not a provider tokenizer or quota guarantee. An earlier prepared-demo iteration included one identical-request Validator retry for a structured Groq `json_validate_failed` response and optional shared pacing. Both were removed from the supported Demo v1 path; Groq's bounded transport retries remain active. The earlier recovery passed offline tests and was not exercised in successful live runs.
 
 Accepted live status: missing-secret-01 PASS; application-failure-01 PASS with qualified hypotheses; ad-high-cpu-01 PASS with qualified hypotheses; dependency-unavailable-01 PASS with explicitly qualified Payment-side uncertainty; messaging-failure-01 PASS with qualifications preserving the measured zero consumer lag; cart-failure-01 PASS with qualified network/dependency hypotheses and successful Valkey counterevidence; memory-leak-01 PASS as a qualified short-window memory-growth investigation, not proof of a persistent leak. Crash-loop-backoff-01 produced only speculative causes despite direct exit-42 evidence; downstream-latency-01 failed Validator current-F reference integrity. These are prepared-demo outcomes, not claims of confirmed root causes or arbitrary telemetry support. See [architecture](architecture.md), [runbook](demo_runbook.md), and [verification](verification.md).
 
@@ -15,7 +15,7 @@ Path prefixes below are exact Windows workspace roots:
 - `R` = `D:\Dev\SideProjects\rca-ai\otel_demo_dataset`
 - `E` = `D:\Dev\SideProjects\rca-ai\e2e-local-demo`
 
-The decisive call graph is `R/rca_demo_milestone/fresh_pipeline_smoke.py:main` → `run_scenario` → fresh `build_fact_view`, `retrieve_context`, `select_exact_facts`, `request_for_facts`, `provider_call`, `compact_validator_request`, `assemble_result`, and `reassemble_from_fresh`. The run manifest records source/code hashes and model configuration. The old `release_smoke.py` alone is **not** the source of truth for the normalized-evidence boundary: it loaded saved Fact Views and context. Its `provider_call` and frozen request-template constants were imported by the final fresh runner.
+The historical migration call graph is `R/rca_demo_milestone/fresh_pipeline_smoke.py:main` → `run_scenario` → `build_fact_view`, `retrieve_context`, `request_for_facts`, `provider_call`, `compact_validator_request`, `assemble_result`, and `reassemble_from_fresh`. The current `RCAPipeline` constructs every Fact from canonical input and never reduces the Fact set. The run manifest records source/code hashes and model configuration. The old `release_smoke.py` alone is **not** the source of truth for the normalized-evidence boundary: it loaded saved Fact Views and context. Its `provider_call` and frozen request-template constants were imported by the final fresh runner.
 
 Statuses in the historical entries below describe the original port. The canonical evidence boundary migration at the end supersedes earlier input-shape/query-input descriptions.
 
@@ -39,7 +39,7 @@ Migration notes: **STATUS: SUPERSEDED BY CANONICAL EVIDENCE MIGRATION.** `Incide
 
 Purpose: represent Facts, source records, hypotheses, validator outputs, and final results.
 
-Frozen source: dict shapes created in `R/rca_demo_milestone/fresh_pipeline_smoke.py:40-103`, consumed by `R/rca_demo_milestone/selector.py`, `pipeline.py`, and `assembler.py`; strict LLM object shapes in the request artifacts listed below.
+Frozen source: dict shapes created in `R/rca_demo_milestone/fresh_pipeline_smoke.py:40-103`, consumed by the historical pipeline and assembler; strict LLM object shapes in the request artifacts listed below.
 
 Evidence that canonical: the final runner passed dictionaries directly between these functions and validated model JSON against the saved schemas; no shared typed RCA domain-model module was imported.
 
@@ -67,21 +67,15 @@ Dependencies: normalized input contract; integrity verifiers.
 
 Migration notes: **STATUS: REPLACED AT THE INPUT BOUNDARY.** `src/rca_ai/facts/builder.py` now has one generic observation-to-Fact projection and independent deterministic re-projection verification. It copies explicit entity, field, structured value, source reference, and source path; it has no backend or Kubernetes field-name ownership logic. The former container_event/composite/grouped builders and their expected Fact Views describe historical curation, not the current public contract.
 
-### 4. Deterministic Fact Selector
+### 4. Complete Fact submission and request budget
 
-Purpose: bound generator input by selecting whole Facts when needed.
+Purpose: keep source evidence complete and fail visibly when a full request exceeds the local estimate.
 
-Frozen source: `R/rca_demo_milestone/selector.py:_category,select_facts`; invocation and 8,000-token-estimate/20,000-byte budget in `R/rca_demo_milestone/fresh_pipeline_smoke.py:select_exact_facts`; request sizing in `R/rca_demo_milestone/run_application_failure.py:request_bytes`.
+Current source: `src/rca_ai/pipeline/orchestrator.py` and `src/rca_ai/pipeline/request_budget.py`.
 
-Evidence that canonical: only application-failure selected 25 of 52 exact Facts in `fresh_pipeline_smoke_20261004/application-failure-01/fact_selection.json`; the other two used all Facts.
+Behavior: `RCAPipeline` sends every built Fact to Generator and each Validator call. `BudgetGuardProvider` measures the complete serialized request and rejects it before transport when it exceeds the configured estimate. The guard does not change the request.
 
-Target: `src/rca_ai/facts/selector.py`.
-
-Frozen behavior that MUST NOT change: select existing objects only; stable category/order rules and budget decision; no paraphrase, merge, derived Fact, or cause inference.
-
-Dependencies: Fact View and generator request-size accounting.
-
-Migration notes: **STATUS: MIGRATED.** `src/rca_ai/facts/selector.py` ports `_category`, the stable-priority greedy whole-Fact byte selector, and the fresh runner's selection decision/guards. The caller supplies a request-size callback so selection can size the exact future request without importing prompts or provider code. The frozen 8,000-token estimate, 20,000-byte Fact budget, `empty_request_bytes - 2` context accounting, 7,000-token post-selection guard, UTF-8 compact JSON sizing, and category/order behavior are fixed. `SelectionResult` preserves exact selected Fact objects, IDs, omitted IDs, reasons, counts, and byte metadata. Tests compare all three decisions to copied expected selection artifacts; no ranking tuning was done.
+Dependencies: complete Fact View, provider contracts, and explicit request-budget errors.
 
 ### 5. History Retrieval
 
@@ -125,7 +119,7 @@ Evidence that canonical: `fresh_pipeline_smoke.py:CORPUS` points to this JSONL; 
 
 Target: `data/history/` plus `src/rca_ai/retrieval/history.py` store access.
 
-Frozen behavior that MUST NOT change: retrieval uses historical evidence text; resolution fields are precedent after selection, not current Facts.
+Frozen behavior that MUST NOT change: retrieval uses historical evidence text; resolution fields are precedent, not current Facts.
 
 Dependencies: corpus JSONL and freeze manifest.
 
@@ -175,9 +169,9 @@ Target: `src/rca_ai/reasoning/generator.py`.
 
 Frozen behavior that MUST NOT change: current Facts are immutable input, H/K separate, zero to three candidate hypotheses accepted by deterministic validation, no forced diagnosis or semantic repair. Use the exact prompt/schema/config artifacts below.
 
-Dependencies: Fact selection, H/K context, provider, prompt/schema, JSON Schema validator.
+Dependencies: complete current Facts, H/K context, provider, prompt/schema, JSON Schema validator.
 
-Migration notes: **STATUS: MIGRATED.** `src/rca_ai/reasoning/generator.py` ports the frozen request construction, exact selected-F serialization, H/K alias and record representation (including the final run's ranking metadata), and deterministic schema/count/ID/reference checks. It injects the Phase 4 provider; provider failures propagate and completed-but-invalid outputs raise `GenerationValidationError`. Request reconstruction exactly matches all three saved final-run requests using freshly built Facts, fresh selector decisions, and fresh migrated retrieval results. No semantic response was used as runtime input and no live provider call was made.
+Migration notes: **STATUS: MIGRATED.** `src/rca_ai/reasoning/generator.py` builds the frozen request with the complete current Fact set, H/K aliases and record representation, and deterministic schema/count/ID/reference checks. Provider failures propagate and completed-but-invalid outputs raise `GenerationValidationError`. No semantic response is used as runtime input and no live provider call is made by offline tests.
 
 ### 11. Generator prompt
 
@@ -223,9 +217,9 @@ Target: `src/rca_ai/reasoning/validator.py`.
 
 Frozen behavior that MUST NOT change: `KEEP`/`KEEP_QUALIFIED`/`REJECT` distinct from `STRONG`/`PLAUSIBLE`/`WEAK`/`CONTRADICTED`; lack of causal proof alone is not rejection; qualifications are separate from Facts; no H rewrite.
 
-Dependencies: candidate H, exact selected Fact objects, fresh H/K, prompt/schema, provider.
+Dependencies: candidate H, complete current Fact objects, fresh H/K, prompt/schema, provider.
 
-Migration notes: **STATUS: MIGRATED.** `src/rca_ai/reasoning/validator.py` ports `compact_validator_request` semantics, one independent call per candidate, mapping into the Phase 1 `ValidationResult` types, and `validate_validator`'s exact schema/identity/current-F-reference checks. `incident_basis.evidence` remains compact. All nine final-run candidate requests reconstruct exactly from fresh clean Facts, selector output, retrieval results, and saved Generator outputs used only as test fixtures. Provider failures propagate; completed invalid output raises `ValidatorValidationError`. The wrapper adds no causal-proof threshold or semantic decision rule.
+Migration notes: **STATUS: MIGRATED.** `src/rca_ai/reasoning/validator.py` builds one independent request per candidate, maps outputs into `ValidationResult`, and enforces exact schema/identity/current-F-reference checks. `incident_basis.evidence` remains compact. Provider failures propagate; completed invalid output raises `ValidatorValidationError`. The wrapper adds no causal-proof threshold or semantic decision rule.
 
 ### 14. Validator prompt
 
@@ -329,19 +323,19 @@ Migration notes: **STATUS: HISTORICAL INPUTS.** The source captures now feed `pr
 
 ### 19. Regression and freeze tests
 
-Purpose: guard structure, Fact fidelity, selection, reference validity, provider contract, and deterministic reassembly.
+Purpose: guard structure, complete Fact fidelity, reference validity, provider contract, and deterministic reassembly.
 
-Frozen source: `R/rca_demo_milestone/tests/test_contract.py`, `test_selector.py`, `test_assembly.py`, `test_release_smoke.py`; final fresh-run checks in `R/rca_demo_milestone/fresh_pipeline_smoke.py:main,run_scenario,reassemble_from_fresh`; evidence in `R/rca_demo_milestone/artifacts/fresh_pipeline_smoke_20261004/{manifest.json,summary.json,<scenario>/fact_integrity.json,<scenario>/assembly_verification.json}`.
+Frozen source: `R/rca_demo_milestone/tests/test_contract.py`, `test_assembly.py`, `test_release_smoke.py`; final fresh-run checks in `R/rca_demo_milestone/fresh_pipeline_smoke.py:main,run_scenario,reassemble_from_fresh`; evidence in `R/rca_demo_milestone/artifacts/fresh_pipeline_smoke_20261004/{manifest.json,summary.json,<scenario>/fact_integrity.json,<scenario>/assembly_verification.json}`.
 
 Evidence that canonical: the successful run saved fresh intermediate artifacts and exact reassembly results for all three; the focused/processor test invocation reported 37 passing tests after the run.
 
 Target: `tests/unit/`, `tests/integration/`, `tests/fixtures/`.
 
-Frozen behavior that MUST NOT change: source hashes, Fact IDs/values, selection-only behavior, F/H/K role checks, prompt/schema hashes, frozen provider config, and saved-output reassembly equality.
+Frozen behavior that MUST NOT change: source hashes, Fact IDs/values, complete Fact submission, F/H/K role checks, prompt/schema hashes, frozen provider config, and saved-output reassembly equality.
 
 Dependencies: all migrated components and immutable fixtures.
 
-Migration notes: **STATUS: EXTENDED.** `tests/integration/pipeline/test_processor_canonical_e2e.py` runs the three saved captures through Processor v1.1, the canonical parser, Core projections, retrieval, selection, and assembly with fake semantic providers. This is deterministic wiring/provenance coverage, not live model validation.
+Migration notes: **STATUS: EXTENDED.** `tests/integration/pipeline/test_processor_canonical_e2e.py` runs the three saved captures through Processor v1.1, the canonical parser, Core projections, retrieval, complete Fact reasoning, and assembly with fake semantic providers. This is deterministic wiring/provenance coverage, not live model validation.
 
 ## Original planned target structure (historical)
 
@@ -352,7 +346,6 @@ src/rca_ai/
 │   └── enums.py
 ├── facts/
 │   ├── builder.py
-│   └── selector.py
 ├── retrieval/
 │   ├── history.py
 │   └── knowledge.py
@@ -378,7 +371,7 @@ This was the Phase 0 proposal; most listed core modules were later implemented a
 
 **Current status:** implemented in the Processor v1.1 bridge and clean Core Layer 1.
 
-**Execution distinction:** the accepted RCA Demo v1 runner loads the three prepared canonical fixtures and invokes `PreparedDemoPipeline`; it does not invoke either Processor entry point. The Processor bridge and structural-only entry point remain separate integration/research paths. The prepared-demo live outcomes are recorded in [verification.md](verification.md).
+**Execution distinction:** the RCA Demo v1 runner loads prepared canonical fixtures and invokes the official `RCAPipeline`; it does not invoke either Processor entry point. The Processor bridge and structural-only entry point remain separate integration/research paths. The demo live outcomes are recorded in [verification.md](verification.md).
 
 - Processor target: `rca_processor_v1_1/canonical.py` (`to_canonical_evidence`) and `process_capture_canonical`. It converts every selected metric/log/trace/Kubernetes observation to a stable, source-linked canonical observation. Processor log output no longer carries `retrieval_eligible` or `quarantine_reason`.
 - Core targets: `src/rca_ai/domain/models.py`, `src/rca_ai/facts/builder.py`, `src/rca_ai/retrieval/projection.py`, and `src/rca_ai/pipeline/orchestrator.py`.

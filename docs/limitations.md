@@ -5,10 +5,10 @@
 - Validator qualifications do not guarantee that every wording, scope, or semantic issue will be identified.
 - Pod/container wording may be imprecise.
 - History or Domain Knowledge retrieval may be weakly relevant. H/K provenance is kept separate from current Facts.
-- The prepared-demo budget guard uses ceil(serialized UTF-8 bytes / 4), not the provider tokenizer or a quota guarantee.
-- Groq may rate-limit requests. Existing provider retries are bounded; optional pacing is not a quota guarantee.
-- The prepared-demo Validator json_validate_failed recovery is offline-tested but was not exercised during the successful final live retest.
+- The Core request budget guard uses ceil(serialized UTF-8 bytes / 4), not the provider tokenizer or a quota guarantee.
+- Groq may rate-limit requests. Its existing transport retries are bounded; `RCAPipeline` adds no pacing or Validator retry.
+- Earlier prepared-demo versions tested a Validator retry for json_validate_failed, but it was removed from the supported execution path.
 - The catalog exposes nine fixture- and manifest-validated inputs to analysis. Seven are verified; `crash-loop-backoff-01` and `downstream-latency-01` remain experimental because prior live outputs did not satisfy usefulness/reference-integrity acceptance. Their failures remain visible and are not retried automatically. This does not establish behavior on arbitrary incident inputs.
-- The prepared-demo runtime begins from prepared canonical evidence. It does not ingest arbitrary raw telemetry or invoke the telemetry Processor/connectors.
+- The Demo API and runner begin from prepared canonical evidence. `RCAPipeline` accepts canonical evidence and does not ingest raw telemetry or invoke the telemetry Processor/connectors.
 
 These limits do not authorize silent changes to prompts, models, schemas, retrieval, or validation policy.

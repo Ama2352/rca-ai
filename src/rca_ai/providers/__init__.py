@@ -1,7 +1,6 @@
 """Transport providers for semantic stages; no RCA policy is defined here."""
 
-from rca_ai.providers.groq import (
-    GroqProvider,
+from rca_ai.providers.contracts import (
     ProviderAttempt,
     ProviderConfigurationError,
     ProviderError,
@@ -10,6 +9,7 @@ from rca_ai.providers.groq import (
     ProviderResult,
     ProviderTransportError,
 )
+from rca_ai.providers.groq import GroqProvider
 
 __all__ = [
     "GroqProvider",

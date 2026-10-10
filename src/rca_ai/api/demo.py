@@ -1,4 +1,4 @@
-"""Three-route, in-process API over the unchanged prepared-demo pipeline."""
+"""Three-route, in-process API over the official RCA pipeline."""
 
 from __future__ import annotations
 
@@ -19,12 +19,13 @@ from rca_ai.api.presentation import present_fact
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
 from rca_ai.facts.builder import build_fact_view
 from rca_ai.pipeline.assembler import resolve_sources
-from rca_ai.pipeline.prepared_demo import DemoEvent, PreparedDemoPipeline, PreparedDemoRunResult
+from rca_ai.pipeline.orchestrator import DemoEvent, PipelineRunResult, RCAPipeline
 from rca_ai.pipeline.request_budget import RequestBudgetExceeded
 from rca_ai.reasoning.generator import GENERATOR_MODEL
 from rca_ai.reasoning.validator import ValidatorValidationError
-from rca_ai.providers.cerebras_benchmark import CEREBRAS_MODEL, CerebrasBenchmarkProvider
-from rca_ai.providers.groq import GroqProvider, ProviderError, ProviderHTTPError
+from rca_ai.providers.cerebras import CEREBRAS_MODEL, CerebrasProvider
+from rca_ai.providers.contracts import ProviderError, ProviderHTTPError
+from rca_ai.providers.groq import GroqProvider
 
 
 SCENARIOS = runnable_scenario_ids()
@@ -54,7 +55,6 @@ def incident_catalog() -> list[dict[str, object]]:
     for scenario in SCENARIO_CATALOG:
         item = {
             "id": scenario["id"],
-            "title": scenario["title"],
             "source": scenario["source"],
             "readiness": scenario["readiness"],
             "prepared_input": scenario["prepared_input"],
@@ -74,27 +74,22 @@ def incident_catalog() -> list[dict[str, object]]:
                 if observation.observation_id in snapshot_ids
             ]
             item.update({
-                "description": scenario["description"],
-                "affected_services": scenario["affected_services"],
-                "symptoms": scenario["symptoms"],
-                "investigation_focus": scenario["investigation_focus"],
                 "available_evidence_sources": [signal for signal in _SIGNAL_ORDER if signal in signals],
-                "analysis_mode": "Evidence-grounded RCA",
                 "incident_snapshot": snapshot,
             })
         rows.append(item)
     return rows
 
 
-def _default_pipeline() -> PreparedDemoPipeline:
+def _default_pipeline() -> RCAPipeline:
     generator_provider = GroqProvider()
-    validator_provider = CerebrasBenchmarkProvider()
-    return PreparedDemoPipeline(
+    validator_provider = CerebrasProvider()
+    return RCAPipeline(
         generator_provider=generator_provider, validator_provider=validator_provider,
     )
 
 
-def _serialize_run(run: PreparedDemoRunResult) -> dict[str, object]:
+def _serialize_run(run: PipelineRunResult) -> dict[str, object]:
     return {
         "result": to_dict(run.rca_result),
         "facts": to_dict(run.facts),
@@ -116,7 +111,7 @@ class AnalysisRequest(BaseModel):
 
 def create_app(
     *,
-    pipeline_factory: Callable[[], PreparedDemoPipeline] | None = None,
+    pipeline_factory: Callable[[], RCAPipeline] | None = None,
     credential_available: Callable[[], bool] | None = None,
 ) -> FastAPI:
     """Own one worker and volatile jobs; no provider is created for catalog reads."""
@@ -192,36 +187,30 @@ def create_app(
                     rows = audit["rows"]
                     if event.kind == "stage_started":
                         active.clear()
-                        active.update(start=event.timestamp, provider=0.0, pacing=0.0)
+                        active.update(start=event.timestamp, provider=0.0)
                         job.update(stage=event.stage, stage_label=stage_labels[event.stage],
                                    candidate_id=event.candidate_id,
                                    stage_started_at=datetime.now(timezone.utc).isoformat())
-                    elif event.kind in {"provider_started", "pacing_started"}:
+                    elif event.kind == "provider_started":
                         active[event.kind] = event.timestamp
-                        if event.kind == "pacing_started":
-                            job["stage_label"] = "Waiting for provider pacing"
-                    elif event.kind in {"provider_completed", "provider_failed", "pacing_completed"}:
-                        category = "provider" if event.kind.startswith("provider") else "pacing"
-                        beginning = active.pop(f"{category}_started", None)
+                    elif event.kind in {"provider_completed", "provider_failed"}:
+                        beginning = active.pop("provider_started", None)
                         if isinstance(beginning, (int, float)):
                             seconds = max(0.0, event.timestamp - beginning)
-                            active[category] = float(active.get(category, 0.0)) + seconds
-                            row = {"name": f"{event.stage}_{category}" if category == "provider" else "external_pacing",
+                            active["provider"] = float(active.get("provider", 0.0)) + seconds
+                            row = {"name": f"{event.stage}_provider",
                                    "seconds": seconds, "relationship": "exclusive",
                                    "candidate_id": event.candidate_id}
-                            if category == "provider":
-                                for field in ("attempts", "http_429s", "retry_after_seconds"):
-                                    detail = getattr(event, field)
-                                    if detail is not None:
-                                        row[field] = detail
+                            for field in ("attempts", "http_429s", "retry_after_seconds"):
+                                detail = getattr(event, field)
+                                if detail is not None:
+                                    row[field] = detail
                             rows.append(row)
-                        if category == "pacing":
-                            job["stage_label"] = stage_labels[event.stage]
                     elif event.kind in {"stage_completed", "stage_failed"}:
                         beginning = active.get("start")
                         if isinstance(beginning, (int, float)):
                             wall = max(0.0, event.timestamp - beginning)
-                            local = max(0.0, wall - float(active.get("provider", 0.0)) - float(active.get("pacing", 0.0)))
+                            local = max(0.0, wall - float(active.get("provider", 0.0)))
                             rows.append({"name": event.stage, "seconds": local,
                                          "relationship": "exclusive", "candidate_id": event.candidate_id,
                                          "status": "partial" if event.kind == "stage_failed" else "completed"})
@@ -233,7 +222,7 @@ def create_app(
                 jobs[analysis_id]["status"] = "running"
             try:
                 pipeline = make_pipeline()
-                run = pipeline.run(incident, observer=record) if isinstance(pipeline, PreparedDemoPipeline) else pipeline.run(incident)
+                run = pipeline.run(incident, observer=record)
                 completed = _serialize_run(run)
                 with lock:
                     jobs[analysis_id].update(status="completed", stage="completed", stage_label="Completed",

@@ -1,4 +1,4 @@
-"""Cerebras transport used by the prepared-demo Validator and benchmark.
+"""Cerebras transport used by the prepared-demo Validator.
 
 It accepts
 the frozen Groq-shaped reasoning request, changing only the provider model ID
@@ -17,7 +17,7 @@ from typing import Any
 
 import httpx
 
-from rca_ai.providers.groq import (
+from rca_ai.providers.contracts import (
     ProviderAttempt,
     ProviderConfigurationError,
     ProviderHTTPError,
@@ -42,7 +42,7 @@ _FIELDS = frozenset({
 })
 
 
-def cerebras_benchmark_body(request: Mapping[str, Any]) -> dict[str, Any]:
+def cerebras_request_body(request: Mapping[str, Any]) -> dict[str, Any]:
     """Map only documented transport-envelope differences; reject semantic drift."""
 
     response_format = request.get("response_format")
@@ -71,7 +71,7 @@ def cerebras_benchmark_body(request: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-class CerebrasBenchmarkProvider:
+class CerebrasProvider:
     """One-attempt prepared-demo transport; no fallback, repair, or provider switch."""
 
     def __init__(self, *, api_key: str | None = None, client: httpx.Client | None = None) -> None:
@@ -79,7 +79,7 @@ class CerebrasBenchmarkProvider:
         self._client = client
 
     def complete(self, request: Mapping[str, Any]) -> ProviderResult:
-        body = cerebras_benchmark_body(request)
+        body = cerebras_request_body(request)
         credential = self._api_key if self._api_key is not None else os.getenv("CEREBRAS_API_KEY")
         if not credential or not credential.strip():
             raise ProviderConfigurationError("CEREBRAS_API_KEY is required", attempts=0)

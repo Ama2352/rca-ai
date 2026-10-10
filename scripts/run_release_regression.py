@@ -18,21 +18,23 @@ from typing import Any
 
 from rca_ai.domain.models import IncidentInput, canonical_evidence_from_dict, to_dict
 from rca_ai.facts.builder import build_fact_view, verify_fact_view
-from rca_ai.facts.selector import request_bytes, select_facts
 from rca_ai.pipeline.assembler import assemble_result, resolve_sources
 from rca_ai.pipeline.orchestrator import RCAPipeline
+from rca_ai.pipeline.request_budget import (
+    DEFAULT_MAX_ESTIMATED_TOKENS,
+    RequestBudgetExceeded,
+    request_size,
+)
 from rca_ai.providers.groq import GroqProvider
 from rca_ai.reasoning.generator import (
     GENERATOR_MAX_COMPLETION_TOKENS,
     GENERATOR_MODEL,
     GENERATOR_REASONING_EFFORT,
     GENERATOR_TEMPERATURE,
-    HypothesisGenerator,
     build_generator_request,
 )
 from rca_ai.reasoning.prompts import GENERATOR_SYSTEM_PROMPT, VALIDATOR_SYSTEM_PROMPT
 from rca_ai.reasoning.schemas import GENERATOR_JSON_SCHEMA, VALIDATOR_JSON_SCHEMA
-from rca_ai.reasoning.validator import HypothesisValidator
 from rca_ai.retrieval.history import retrieve_history
 from rca_ai.retrieval.knowledge import retrieve_knowledge
 from rca_ai.retrieval.projection import project_retrieval
@@ -99,9 +101,10 @@ def _preflight(incident: IncidentInput) -> dict[str, Any]:
     retrieval_projection = project_retrieval(incident.evidence)
     history = retrieve_history(retrieval_projection.payload)
     knowledge = retrieve_knowledge(retrieval_projection.payload)
-    size_for = lambda candidate: request_bytes(build_generator_request(candidate, history, knowledge))
-    selection = select_facts(facts, request_size_for=size_for)
-    request = build_generator_request(selection.facts, history, knowledge)
+    request = build_generator_request(facts, history, knowledge)
+    request_bytes, estimated_tokens = request_size(request)
+    if estimated_tokens > DEFAULT_MAX_ESTIMATED_TOKENS:
+        raise RequestBudgetExceeded(request_bytes, estimated_tokens, DEFAULT_MAX_ESTIMATED_TOKENS)
     if (
         request["model"] != GENERATOR_MODEL
         or request["reasoning_effort"] != GENERATOR_REASONING_EFFORT
@@ -117,10 +120,8 @@ def _preflight(incident: IncidentInput) -> dict[str, Any]:
         "retrieval_query": retrieval_projection.query,
         "fact_ids": [fact.fact_id for fact in facts],
         "fact_count": len(facts),
-        "selected_ids": list(selection.selected_ids),
-        "selected_fact_count": selection.selected_fact_count,
-        "full_request_bytes": selection.full_request_bytes,
-        "selected_request_bytes": selection.selected_request_bytes,
+        "generator_request_bytes": request_bytes,
+        "generator_estimated_tokens": estimated_tokens,
         "history_ids": [item.alias for item in history.items],
         "knowledge_ids": [item.alias for item in knowledge.items],
         "history_count": len(history.items),
@@ -147,18 +148,6 @@ def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any
     """Persist the actual returned stages and verify output provenance/reassembly."""
     _write_json(folder / "canonical_evidence.json", to_dict(run.evidence))
     _write_json(folder / "fact_view.json", to_dict(run.facts))
-    _write_json(folder / "fact_selection.json", {
-        "selected_facts": to_dict(run.selection.facts),
-        "selected_ids": list(run.selection.selected_ids),
-        "omitted_ids": list(run.selection.omitted_ids),
-        "selection_reasons": dict(run.selection.selection_reasons),
-        "selector_used": run.selection.selector_used,
-        "full_fact_count": run.selection.full_fact_count,
-        "selected_fact_count": run.selection.selected_fact_count,
-        "full_request_bytes": run.selection.full_request_bytes,
-        "selected_request_bytes": run.selection.selected_request_bytes,
-        "selected_fact_bytes": run.selection.selected_fact_bytes,
-    })
     _write_json(folder / "history_retrieval.json", to_dict(run.history))
     _write_json(folder / "knowledge_retrieval.json", to_dict(run.knowledge))
     _write_json(folder / "retrieval_projection.json", {
@@ -186,7 +175,7 @@ def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any
     final_result = to_dict(run.rca_result)
     _write_json(folder / "final_result.json", final_result)
     resolved = [
-        resolve_sources(candidate, run.selection.facts, run.history, run.knowledge)
+        resolve_sources(candidate, run.facts, run.history, run.knowledge)
         for candidate in run.rca_result.candidate_results
     ]
     _write_json(folder / "resolved_sources.json", resolved)
@@ -195,13 +184,13 @@ def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any
         run.incident_id,
         run.generation.hypotheses,
         tuple(execution.result for execution in run.validations),
-        run.selection.facts,
+        run.facts,
         run.history,
         run.knowledge,
     )
     reassembly_pass = to_dict(reassembled) == final_result
 
-    f_ids = {fact.fact_id for fact in run.selection.facts}
+    f_ids = {fact.fact_id for fact in run.facts}
     h_ids = {item.alias for item in run.history.items}
     k_ids = {item.alias for item in run.knowledge.items}
     provenance_pass = all(
@@ -228,7 +217,8 @@ def _save_success(folder: Path, run, preflight: dict[str, Any]) -> dict[str, Any
         "facts": len(run.facts),
         "observations": len(run.evidence.observations),
         "signal_counts": preflight["signal_counts"],
-        "selected_facts": run.selection.selected_fact_count,
+        "fact_integrity": run.fact_integrity,
+        "fact_ids": [fact.fact_id for fact in run.facts],
         "history_count": len(run.history.items),
         "knowledge_count": len(run.knowledge.items),
         "generated_hypotheses": len(run.generation.hypotheses),
@@ -288,8 +278,8 @@ def main() -> int:
         folder.mkdir()
         try:
             pipeline = RCAPipeline(
-                generator=HypothesisGenerator(provider),
-                validator=HypothesisValidator(provider),
+                generator_provider=provider,
+                validator_provider=provider,
             )
             run = pipeline.run(incident)
             scenario_summary = _save_success(folder, run, preflights[incident.incident_id])

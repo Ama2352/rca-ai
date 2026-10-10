@@ -16,27 +16,24 @@ flowchart TD
     A[Normalized Incident Evidence]
     B[Canonical Fact projection]
     C[Canonical retrieval projection and fresh H/K]
-    D[Whole-Fact selection if needed]
-    E[Hypothesis Generator]
-    F[Validator per candidate]
-    G[Deterministic Assembler]
-    H[RCAResult]
-    A --> B --> C --> D --> E --> F --> G --> H
+    D[Hypothesis Generator]
+    E[Validator per candidate]
+    F[Deterministic Assembler]
+    G[RCAResult]
+    A --> B --> C --> D --> E --> F --> G
 ~~~
 
-Operationally, the Core independently projects canonical observations into Facts and retrieval material. Retrieval runs before selection because the selector estimates the size of the exact Generator request, including current History and Knowledge context. If the request is within budget all Facts are kept; otherwise the existing deterministic selector chooses whole Facts. It never truncates or rewrites a Fact. Historical frozen request fixtures contained manual/query-specific preparation and are not required as current runtime input.
+`RCAPipeline` independently projects every canonical observation into a Fact and builds retrieval material. It verifies the Fact projection, retrieves H/K, and sends the complete Fact set through Generator and each candidate-specific Validator call. A provider-boundary budget guard measures each complete request; over-budget requests fail visibly without truncation or Fact reduction. Historical frozen request fixtures may encode earlier curated inputs and are not current runtime requirements.
 
-The current release runner obtains evidence through `process_capture_canonical`, which retains the Processor's existing modality-level selection. A separate structural-only Processor experiment is not wired into the runner and has not had live E2E validation. This distinction matters when interpreting counts: the captures below describe the current canonical entry point, not the broader structural-only experiment.
+The current release runner obtains evidence through `process_capture_canonical`, which retains the Processor's upstream modality-level filtering. A separate structural-only Processor experiment is not wired into the runner and has not had live E2E validation. This distinction matters when interpreting counts: the captures below describe the current canonical entry point, not the broader structural-only experiment.
 
-| Capture | Canonical observations | Facts | Selected Facts | Retrieved H | Retrieved K |
-|---|---:|---:|---:|---:|---:|
-| missing-secret-01 | 19 | 19 | 9 | 3 | 3 |
-| application-failure-01 | 53 | 53 | 13 | 3 | 1 |
-| ad-high-cpu-01 | 14 | 14 | 14 | 3 | 2 |
+| Capture | Canonical observations | Core Facts | Retrieved H | Retrieved K |
+|---|---:|---:|---:|---:|
+| missing-secret-01 | 19 | 19 | 3 | 3 |
+| application-failure-01 | 53 | 53 | 3 | 1 |
+| ad-high-cpu-01 | 14 | 14 | 3 | 2 |
 
-These are saved-capture deterministic counts under the canonical boundary. Historical Fact Views (21/52/14) and selected counts (21/25/14) remain controls from a different, curated input pipeline, not expected equality targets. Scenario IDs name test captures; they are not production projection rules.
-
-The Selector remains a resource guard with a frozen category-priority policy; it is not lossless evidence compression. In the separate structural-only deterministic experiment, application-failure produced 1,145 Facts and the current Selector retained 7, all metrics, because error-label text such as `ERROR` receives the highest category. That experiment made no LLM call and did not establish that the selected Facts adequately cover the incident. This is a known context-coverage limitation; the Selector policy has not been changed or validated as a modality-coverage policy.
+These are saved-capture deterministic counts under the canonical boundary. Historical Fact Views (21/52/14) came from a different curated input path and are not expected equality targets. Scenario IDs name test captures; they are not production projection rules. Earlier Fact reduction experiments were not retained in Core because the chosen RCA contract requires complete evidence and visible failure when a full request exceeds its budget.
 
 The count differences have identifiable causes. The old missing-secret Fact View expanded Kubernetes records into 21 field-level Facts and did not use its 17 Processor metrics as current Facts; the canonical path emits 17 metric observations plus two structured Kubernetes observations. The old application-failure input omitted one Processor log pattern (`Payment request failed. Invalid token...`); the canonical path retains all seven logs. For ad-high-cpu, the control-narration log remains a Fact but is omitted from retrieval. These are historical-curation differences, not changes to retrieval ranking or semantic stages.
 
@@ -211,7 +208,7 @@ stateDiagram-v2
 | Transient timeout/5xx/transport error or HTTP 429 later succeeds | Operational retry | Provider retries the identical request within the bounded policy; it is not model semantics. |
 | Provider retry budget exhausted | Execution failure | Propagate provider failure; do not convert it to abstention or REJECT. |
 | Malformed JSON, strict-schema violation, or unknown F/H/K reference | Contract/execution failure | Fail closed; do not silently drop or repair the invalid result. |
-| Request size requires selection | Deterministic context reduction | Select whole exact Facts under the frozen policy; no Fact is shortened. |
+| Complete request exceeds budget | Visible execution failure | Reject the unchanged request before transport; preserve every Fact. |
 | Live wording differs between runs | Expected LLM variability | Contract/provenance are checked; exact wording need not match. |
 | Retrieved H/K not referenced by a candidate | Valid unused context | It remains in its own store and is not promoted into Evidence. |
 | Reassembly from identical saved stage outputs | Deterministic check | Must reproduce the same RCAResult exactly. |
@@ -234,13 +231,13 @@ Paired outcomes for adding retrieval were 86 improved, 43 worsened, 219 correct 
 
 ![Effect of adding logs, traces, and retrieval](assets/experiments/ex3_effect-of-additional-evidence.png)
 
-The supplied summary reports approximately −20.75 points for logs, −4.23 for traces, and +9.89 for retrieval. This comparison motivates relevant context selection; it does not prove that any modality is inherently good or bad.
+The supplied summary reports approximately −20.75 points for logs, −4.23 for traces, and +9.89 for retrieval. This comparison motivates relevant context retrieval; it does not prove that any modality is inherently good or bad.
 
 > **Research finding:** blindly increasing the amount of evidence did not reliably improve the tested LLM results.
 >
-> **Design consequence:** keep source provenance, shape evidence deterministically, and retrieve/select context rather than treating all available content as equally useful.
+> **Design consequence:** keep source provenance, shape evidence deterministically, and retrieve context without treating it as current incident evidence.
 >
-> **Current frozen behavior:** whole-Fact budget selection plus deterministic BM25-family retrieval; semantic inference is isolated to Generator/Validator stages.
+> **Current frozen behavior:** complete-Fact submission, a visible request-budget guard, and deterministic BM25-family retrieval; semantic inference is isolated to Generator/Validator stages.
 
 ### BM25 and semantic reranking
 
@@ -278,7 +275,7 @@ The experiment score summaries and paired counts in this section were supplied f
 The frozen implementation and regression tests support:
 
 - deterministic Fact projection and integrity verification;
-- deterministic whole-Fact selection;
+- deterministic construction and complete submission of source-linked Facts;
 - separate F/H/K namespaces and fail-closed reference resolution;
 - strict structured Generator and Validator contracts;
 - decision and support as independent dimensions;

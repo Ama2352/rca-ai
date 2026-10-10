@@ -9,8 +9,8 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 import pytest
 
-from rca_ai.pipeline.prepared_demo import PreparedDemoPipeline
-from rca_ai.providers.groq import ProviderAttempt, ProviderHTTPError, ProviderResult
+from rca_ai.pipeline.orchestrator import RCAPipeline
+from rca_ai.providers.contracts import ProviderAttempt, ProviderHTTPError, ProviderResult
 from rca_ai.reasoning.validator import ValidatorValidationError
 from rca_ai.api import demo
 from rca_ai.api.demo import create_app
@@ -64,7 +64,7 @@ class FakeValidator:
 
 def _client():
     return TestClient(create_app(
-        pipeline_factory=lambda: PreparedDemoPipeline(
+        pipeline_factory=lambda: RCAPipeline(
             generator_provider=FakeGenerator(), validator_provider=FakeValidator(),
         ),
         credential_available=lambda: True,
@@ -107,11 +107,8 @@ def test_catalog_metadata_matches_prepared_observations_without_diagnosis():
         fixture = json.loads((ROOT / "data" / "demo" / f"{row['id']}.json").read_text(encoding="utf-8"))
         signals = {item["signal"] for item in fixture["evidence"]["observations"]}
         assert set(row["available_evidence_sources"]) == signals
-        assert row["title"] and row["description"] and row["symptoms"]
-        assert row["affected_services"] and len(row["investigation_focus"]) in (2, 3)
-        assert all(service in json.dumps(fixture["evidence"]) for service in row["affected_services"])
+        assert not {"title", "description", "symptoms", "affected_services", "investigation_focus", "analysis_mode"}.intersection(row)
         assert "eda-capture-secret-does-not-exist" not in json.dumps(row)
-        assert "root cause" not in row["description"].lower()
 
 
 def test_snapshot_ids_and_values_resolve_from_prepared_fixture_and_manifest():
@@ -160,7 +157,7 @@ def test_experimental_prepared_scenario_can_be_submitted_and_completed():
 
 def test_validator_integrity_failure_shows_actual_safe_error_without_result():
     class InvalidValidatorPipeline:
-        def run(self, incident):
+        def run(self, incident, *, observer=None):
             raise ValidatorValidationError("Validator referenced a non-current fact")
 
     client = TestClient(create_app(
@@ -217,7 +214,7 @@ def test_concurrent_submission_is_rejected_and_failure_is_separate_from_abstenti
     gate = Event()
 
     class FailingPipeline:
-        def run(self, incident):
+        def run(self, incident, *, observer=None):
             gate.wait(2)
             raise RuntimeError("provider unavailable")
 
@@ -236,7 +233,7 @@ def test_concurrent_submission_is_rejected_and_failure_is_separate_from_abstenti
 
 def test_exhausted_provider_429_returns_sanitized_rate_limit_and_retry_after():
     class RateLimitedPipeline:
-        def run(self, incident):
+        def run(self, incident, *, observer=None):
             raise ProviderHTTPError(
                 "provider request failed", attempts=3, status_code=429,
                 response_detail='{"error":"too many requests"}',
@@ -258,7 +255,7 @@ def test_exhausted_provider_429_returns_sanitized_rate_limit_and_retry_after():
     assert "response_detail" not in result["error"]
 
 
-def test_default_demo_pipeline_does_not_enable_proactive_pacing(monkeypatch):
+def test_default_demo_pipeline_wires_groq_and_cerebras_without_extra_provider_wrappers(monkeypatch):
     import rca_ai.api.demo as demo
 
     class CapturePipeline:
@@ -266,15 +263,14 @@ def test_default_demo_pipeline_does_not_enable_proactive_pacing(monkeypatch):
             self.kwargs = kwargs
 
     providers = []
-    monkeypatch.setenv("RCA_DEMO_ENABLE_PACING", "1")
     monkeypatch.setattr(demo, "GroqProvider", lambda: providers.append("groq") or object())
-    monkeypatch.setattr(demo, "CerebrasBenchmarkProvider", lambda: providers.append("cerebras") or object())
-    monkeypatch.setattr(demo, "PreparedDemoPipeline", CapturePipeline)
+    monkeypatch.setattr(demo, "CerebrasProvider", lambda: providers.append("cerebras") or object())
+    monkeypatch.setattr(demo, "RCAPipeline", CapturePipeline)
     pipeline = demo._default_pipeline()
 
     assert providers == ["groq", "cerebras"]
+    assert set(pipeline.kwargs) == {"generator_provider", "validator_provider"}
     assert pipeline.kwargs["generator_provider"] is not pipeline.kwargs["validator_provider"]
-    assert "provider_pacer" not in pipeline.kwargs
 
 
 def test_default_provider_routing_is_explicit_in_completed_execution_audit():
@@ -302,7 +298,7 @@ def test_default_job_exposes_actual_provider_routing_without_live_calls(monkeypa
     import rca_ai.api.demo as demo
 
     class OfflineFailurePipeline:
-        def run(self, incident):
+        def run(self, incident, *, observer=None):
             raise RuntimeError("offline routing audit test")
 
     monkeypatch.setattr(demo, "_default_pipeline", OfflineFailurePipeline)
@@ -326,7 +322,7 @@ def test_job_exposes_real_stage_progress_and_authoritative_timing():
             return super().complete(request)
 
     client = TestClient(create_app(
-        pipeline_factory=lambda: PreparedDemoPipeline(
+        pipeline_factory=lambda: RCAPipeline(
             generator_provider=WaitingGenerator(), validator_provider=FakeValidator(),
         ), credential_available=lambda: True,
     ))
