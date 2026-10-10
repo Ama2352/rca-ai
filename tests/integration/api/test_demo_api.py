@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from pathlib import Path
 
@@ -202,6 +203,54 @@ def test_validator_integrity_failure_shows_actual_safe_error_without_result():
         "message": "Validator referenced a non-current fact",
     }
     assert "result" not in result
+
+
+def test_unexpected_analysis_failure_logs_safe_stage_and_exception(caplog, monkeypatch):
+    caplog.set_level(logging.ERROR, logger="rca_ai.api.demo")
+
+    def fail_history_load(_path=None):
+        raise ValueError("Historical corpus does not match its freeze manifest")
+
+    monkeypatch.setattr("rca_ai.retrieval.history.load_history_store", fail_history_load)
+    client = _client()
+    started = client.post("/api/demo/analyses", json={"incident_id": "missing-secret-01"})
+    result = _completed(client, started.json()["analysis_id"])
+
+    assert result["status"] == "failed"
+    assert result["stage"] == "retrieval"
+    assert result["error"]["code"] == "ANALYSIS_FAILED"
+    records = [record for record in caplog.records if record.name == "rca_ai.api.demo"]
+    event = next(json.loads(record.getMessage()) for record in records if '"event": "analysis_failed"' in record.getMessage())
+    assert event == {
+        "analysis_id": started.json()["analysis_id"],
+        "error_message": "Historical corpus does not match its freeze manifest",
+        "event": "analysis_failed",
+        "exception_type": "ValueError",
+        "stage": "retrieval",
+    }
+    assert not any(secret in json.dumps(event) for secret in ("source_ref", "source_path", "api_key", "token"))
+
+
+def test_failure_log_omits_untrusted_exception_text(caplog):
+    class UnsafeFailurePipeline:
+        def run(self, incident, *, observer=None):
+            raise RuntimeError("api_key=secret-value raw telemetry payload")
+
+    caplog.set_level(logging.ERROR, logger="rca_ai.api.demo")
+    client = TestClient(create_app(
+        pipeline_factory=UnsafeFailurePipeline,
+        credential_available=lambda: True,
+    ))
+    started = client.post("/api/demo/analyses", json={"incident_id": "missing-secret-01"})
+    result = _completed(client, started.json()["analysis_id"])
+    records = [record for record in caplog.records if record.name == "rca_ai.api.demo"]
+    event = next(json.loads(record.getMessage()) for record in records if '"event": "analysis_failed"' in record.getMessage())
+
+    assert result["status"] == "failed"
+    assert event["exception_type"] == "RuntimeError"
+    assert event["error_message"] == "Execution failed; details omitted to protect request and telemetry data"
+    assert "secret-value" not in json.dumps(event)
+    assert "raw telemetry payload" not in json.dumps(event)
 
 
 def test_catalog_loader_and_api_share_the_same_scenario_records():

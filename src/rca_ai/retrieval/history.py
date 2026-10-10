@@ -19,6 +19,17 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_HISTORY_PATH = _PROJECT_ROOT / "data" / "history" / "historical_incidents.jsonl"
 
 
+def _canonical_history_bytes(raw: bytes) -> bytes:
+    """Normalize JSONL line endings before checking the frozen corpus digest.
+
+    The manifest digest corresponds to CRLF-serialized JSONL. Git stores the same
+    records with LF, so hashing raw checkout bytes made the freeze check depend
+    on the checkout's line-ending conversion.
+    """
+    normalized = raw.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return normalized.replace(b"\n", b"\r\n")
+
+
 @dataclass(frozen=True)
 class HistoryRetrievalResult:
     """History candidates plus exact query/ranking diagnostics for audit."""
@@ -37,7 +48,8 @@ def load_history_store(path: Path = DEFAULT_HISTORY_PATH) -> tuple[Mapping[str, 
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         expected_hash = manifest.get("corpus_sha256")
-        if expected_hash and hashlib.sha256(raw).hexdigest() != expected_hash:
+        canonical_raw = _canonical_history_bytes(raw)
+        if expected_hash and hashlib.sha256(canonical_raw).hexdigest() != expected_hash:
             raise ValueError("Historical corpus does not match its freeze manifest")
     rows = tuple(json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip())
     ids = [str(row["incident_id"]) for row in rows]

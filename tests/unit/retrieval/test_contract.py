@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from rca_ai.domain.models import HistoricalContext, KnowledgeItem
-from rca_ai.retrieval.history import load_history_store, retrieve_history
+from rca_ai.retrieval.history import _canonical_history_bytes, load_history_store, retrieve_history
 from rca_ai.retrieval.knowledge import load_knowledge_store, retrieve_knowledge
 
 
@@ -25,7 +25,7 @@ def _json(path: Path):
 def test_history_store_hash_order_and_source_identity_are_frozen():
     corpus_path = HISTORY / "historical_incidents.jsonl"
     manifest = _json(HISTORY / "corpus_freeze_manifest.json")
-    actual_hash = hashlib.sha256(corpus_path.read_bytes()).hexdigest()
+    actual_hash = hashlib.sha256(_canonical_history_bytes(corpus_path.read_bytes())).hexdigest()
     assert actual_hash == "1b2052bb17eeae39a1e1dbc2dd5c7ed8d599dc15efeb59445e6de1d25c1ca167"
     assert manifest["corpus_sha256"] == actual_hash
 
@@ -35,6 +35,31 @@ def test_history_store_hash_order_and_source_identity_are_frozen():
     assert [row["incident_id"] for row in loaded] == raw_order
     assert loaded == raw_records
     assert len(loaded) == 22
+
+
+def test_history_freeze_hash_is_line_ending_independent_and_still_checks_content(tmp_path):
+    source = HISTORY / "historical_incidents.jsonl"
+    raw = source.read_bytes()
+    manifest = (HISTORY / "corpus_freeze_manifest.json").read_bytes()
+
+    for name, line_ending_variant in (
+        ("lf", raw),
+        ("crlf", raw.replace(b"\n", b"\r\n")),
+    ):
+        history_dir = tmp_path / name
+        history_dir.mkdir()
+        corpus_path = history_dir / "historical_incidents.jsonl"
+        corpus_path.write_bytes(line_ending_variant)
+        (history_dir / "corpus_freeze_manifest.json").write_bytes(manifest)
+        assert load_history_store(corpus_path) == load_history_store(source)
+
+    tampered_dir = tmp_path / "tampered"
+    tampered_dir.mkdir()
+    tampered_path = tampered_dir / "historical_incidents.jsonl"
+    tampered_path.write_bytes(raw + b" ")
+    (tampered_dir / "corpus_freeze_manifest.json").write_bytes(manifest)
+    with pytest.raises(ValueError, match="does not match its freeze manifest"):
+        load_history_store(tampered_path)
 
 
 def test_history_retrieval_reconstructs_channel_queries_and_frozen_rankings():

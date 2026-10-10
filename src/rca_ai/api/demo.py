@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from copy import deepcopy
@@ -30,6 +31,14 @@ from rca_ai.providers.groq import GroqProvider
 
 SCENARIOS = runnable_scenario_ids()
 _SIGNAL_ORDER = ("metric", "log", "trace", "kubernetes")
+_LOGGER = logging.getLogger(__name__)
+
+
+def _safe_failure_message(error: Exception) -> str:
+    """Return only an allowlisted diagnostic; exception text may contain input data."""
+    if isinstance(error, ValueError) and str(error) == "Historical corpus does not match its freeze manifest":
+        return "Historical corpus does not match its freeze manifest"
+    return "Execution failed; details omitted to protect request and telemetry data"
 
 
 def _default_provider_routing() -> dict[str, dict[str, str]]:
@@ -260,6 +269,14 @@ def create_app(
                 else:
                     failure = {"code": "ANALYSIS_FAILED"}
                 with lock:
+                    stage = str(jobs[analysis_id].get("stage") or "unknown")
+                    _LOGGER.error(json.dumps({
+                        "event": "analysis_failed",
+                        "analysis_id": analysis_id,
+                        "stage": stage,
+                        "exception_type": type(error).__name__,
+                        "error_message": _safe_failure_message(error),
+                    }, sort_keys=True))
                     jobs[analysis_id].update(status="failed", error=failure)
             finally:
                 with lock:
