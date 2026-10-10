@@ -85,9 +85,9 @@ resource "aws_instance" "demo" {
   instance_initiated_shutdown_behavior = "stop"
   user_data_replace_on_change          = false
   user_data_base64 = base64gzip(templatefile("${path.module}/cloud-init.yaml.tftpl", {
-    config_env_b64          = local.config_env_b64
-    compose_file_b64        = filebase64("${path.module}/../../compose.prod.yaml")
-    deploy_script_b64       = filebase64("${path.module}/../../deploy/scripts/deploy.sh")
+    config_env_b64           = local.config_env_b64
+    compose_file_b64         = filebase64("${path.module}/../../compose.prod.yaml")
+    deploy_script_b64        = filebase64("${path.module}/../../deploy/scripts/deploy.sh")
     fetch_secrets_script_b64 = filebase64("${path.module}/../../deploy/scripts/fetch-secrets.sh")
   }))
 

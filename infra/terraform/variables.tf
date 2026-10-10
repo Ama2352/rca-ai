@@ -63,6 +63,14 @@ variable "github_repository" {
   }
 }
 
+variable "github_owner_id" {
+  type = string
+}
+
+variable "github_repository_id" {
+  type = string
+}
+
 variable "github_oidc_provider_ownership" {
   type        = string
   description = "Create the GitHub OIDC provider only when absent, otherwise reuse the existing ARN."
