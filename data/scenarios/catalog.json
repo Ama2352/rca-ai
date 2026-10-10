@@ -6,6 +6,7 @@
     "prepared_input": "data/demo/missing-secret-01.json",
     "snapshot_observation_ids": [
       "a85a7eff00aa98136235be9e",
+      "d5563ffafe9100e99220be7f",
       "d10a1a35a7c0b7deb0cd5ffb"
     ]
   },
@@ -19,7 +20,7 @@
       "c97c2fdf4966378255ff3149",
       "46338b5aba119b96f991baf2",
       "36083e98046a8178dfd9ea78",
-      "e6131312e9ae9202469dceac",
+      "ad56ea564a0349050e79585b",
       "c6b85560f2da70de2b939109"
     ]
   },
@@ -31,7 +32,7 @@
     "snapshot_observation_ids": [
       "310cbe59d2d0675e021d9ef1",
       "9b3c5c99346cb872996f7cac",
-      "b1c4a1e4412d99c257d36966",
+      "0cad6ea9e3fa4c21136334c4",
       "2efa55d3c704bee15b10271d"
     ]
   },
@@ -58,6 +59,7 @@
       "cdb851d670ef3056e456eac1",
       "6442cdfeaeef74058fee9800",
       "014b17ef67481f5602c49177",
+      "fab7386701318ac5ccbf1dc4",
       "c6b85560f2da70de2b939109"
     ]
   },
@@ -92,11 +94,12 @@
     "readiness": "demo-ready",
     "prepared_input": "data/demo/messaging-failure-01.json",
     "snapshot_observation_ids": [
-      "7b4ce16b86967b8a529bfd8c",
       "5db48f63cc31148449f4ae55",
       "c0049806056ee83f82c1c473",
       "0968ce5e8ae92d29ff27bd68",
-      "027da736a147d8b9c550f1bb"
+      "027da736a147d8b9c550f1bb",
+      "0ab116696729eba636058530",
+      "fc473ab2e44e096117841dc2"
     ]
   },
   {

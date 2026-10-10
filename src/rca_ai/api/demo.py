@@ -11,7 +11,7 @@ from threading import Lock, Thread
 from typing import Callable
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 
 from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIO_CATALOG, SCENARIOS_BY_ID, runnable_scenario_ids
@@ -131,6 +131,17 @@ def create_app(
     @app.get("/api/demo/incidents")
     def list_incidents():
         return {"incidents": incident_catalog()}
+
+    @app.get("/api/demo/incidents/{incident_id}/prepared-input")
+    def get_prepared_input(incident_id: str):
+        scenario = SCENARIOS_BY_ID.get(incident_id)
+        if scenario is None or scenario["prepared_input"] is None:
+            raise HTTPException(status_code=404, detail="Unknown prepared incident")
+        try:
+            content = (PROJECT_ROOT / scenario["prepared_input"]).read_text(encoding="utf-8")
+        except OSError as error:
+            raise HTTPException(status_code=503, detail="Prepared incident input is unavailable") from error
+        return Response(content=content, media_type="application/json")
 
     @app.post("/api/demo/analyses", status_code=202)
     def start_analysis(request: AnalysisRequest):

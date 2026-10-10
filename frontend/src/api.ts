@@ -17,6 +17,15 @@ export async function listIncidents(): Promise<DemoIncident[]> {
   return body.incidents
 }
 
+export async function getPreparedInput(incidentId: string): Promise<string> {
+  const response = await fetch(`/api/demo/incidents/${encodeURIComponent(incidentId)}/prepared-input`)
+  if (!response.ok) {
+    await readJson<never>(response)
+    throw new Error(`Demo API returned HTTP ${response.status}`)
+  }
+  return response.text()
+}
+
 export async function startAnalysis(incidentId: string): Promise<AnalysisJob> {
   return readJson<AnalysisJob>(await fetch("/api/demo/analyses", {
     method: "POST", headers: { "Content-Type": "application/json" },

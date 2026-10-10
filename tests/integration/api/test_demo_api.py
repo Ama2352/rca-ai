@@ -108,7 +108,7 @@ def test_catalog_metadata_matches_prepared_observations_without_diagnosis():
         signals = {item["signal"] for item in fixture["evidence"]["observations"]}
         assert set(row["available_evidence_sources"]) == signals
         assert not {"title", "description", "symptoms", "affected_services", "investigation_focus", "analysis_mode"}.intersection(row)
-        assert "eda-capture-secret-does-not-exist" not in json.dumps(row)
+        assert "cause" not in row and "observations" not in row and "investigation" not in row
 
 
 def test_snapshot_ids_and_values_resolve_from_prepared_fixture_and_manifest():
@@ -129,6 +129,36 @@ def test_snapshot_ids_and_values_resolve_from_prepared_fixture_and_manifest():
             assert entry["presentation"]["raw"]["value"] == original["value"]
             assert entry["presentation"]["signal_type"] == original["signal"]
         assert "snapshot_observation_ids" not in row
+
+
+def test_overview_snapshot_does_not_select_or_mutate_pipeline_facts():
+    from rca_ai.facts.builder import build_fact_view
+    from rca_ai.domain.models import to_dict
+
+    rows = {row["id"]: row for row in _client().get("/api/demo/incidents").json()["incidents"]}
+    for scenario in SCENARIOS:
+        incident = demo.load_incident(scenario)
+        before = to_dict(build_fact_view(incident))
+        fixture = json.loads((ROOT / "data/demo" / f"{scenario}.json").read_text(encoding="utf-8"))
+        assert len(before) == len(fixture["evidence"]["observations"])
+        assert len(rows[scenario]["incident_snapshot"]) <= len(before)
+        after = to_dict(build_fact_view(demo.load_incident(scenario)))
+        assert after == before
+
+
+def test_overview_snapshot_selection_covers_principal_recorded_symptoms():
+    rows = {row["id"]: row for row in _client().get("/api/demo/incidents").json()["incidents"]}
+    expected = {
+        "missing-secret-01": {"d5563ffafe9100e99220be7f"},
+        "application-failure-01": {"823d2b475830b7bac53f7246", "ad56ea564a0349050e79585b"},
+        "ad-high-cpu-01": {"310cbe59d2d0675e021d9ef1", "0cad6ea9e3fa4c21136334c4"},
+        "dependency-unavailable-01": {"fab7386701318ac5ccbf1dc4"},
+        "messaging-failure-01": {"5db48f63cc31148449f4ae55", "0ab116696729eba636058530", "fc473ab2e44e096117841dc2"},
+    }
+    for scenario, required in expected.items():
+        chosen = {item["observation_id"] for item in rows[scenario]["incident_snapshot"]}
+        assert required <= chosen
+        assert 3 <= len(chosen) <= 6
 
 
 def test_result_presentation_keeps_exact_fact_value():
@@ -179,6 +209,21 @@ def test_catalog_loader_and_api_share_the_same_scenario_records():
     catalog_rows = load_scenario_catalog()
 
     assert [row["id"] for row in api_rows] == [row["id"] for row in catalog_rows]
+
+
+@pytest.mark.parametrize("scenario", SCENARIOS)
+def test_prepared_input_endpoint_returns_original_registered_json(scenario):
+    response = _client().get(f"/api/demo/incidents/{scenario}/prepared-input")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.text == (ROOT / "data" / "demo" / f"{scenario}.json").read_text(encoding="utf-8")
+    assert response.json()["incident_id"] == scenario
+
+
+@pytest.mark.parametrize("scenario", ["unknown", "..", "%2Fetc%2Fpasswd"])
+def test_prepared_input_endpoint_rejects_unregistered_scenarios(scenario):
+    assert _client().get(f"/api/demo/incidents/{scenario}/prepared-input").status_code == 404
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS)
