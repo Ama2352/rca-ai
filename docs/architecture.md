@@ -26,7 +26,7 @@ The React frontend calls `GET /api/demo/incidents` for scenario registry metadat
 
 `POST /api/demo/analyses` accepts only a prepared scenario ID and returns a job ID. One in-process worker invokes `RCAPipeline`; `GET /api/demo/analyses/{analysis_id}` exposes queued/running/completed/failed state. On completion it returns the assembled `RCAResult`, original Facts, and candidate-specific F/H/K source resolution keyed by hypothesis ID. Backend errors are distinct from an empty-candidate RCA abstention. The UI polls, retains the Scenario Overview, and discards stale responses after incident switches.
 
-Jobs exist only in memory; restarting the API loses them. Concurrent submissions receive HTTP 409. The Vite development proxy handles same-origin `/api` calls locally; a deployment must route `/api` to the Python service. Analysis uses the official Core pipeline.
+Jobs exist only in memory; restarting the API loses them. Concurrent submissions receive HTTP 409. The Vite development proxy handles same-origin `/api` calls locally. The production Caddy container serves the React app over HTTPS and routes the allowlisted `/api` endpoints to the private FastAPI container. Analysis uses the official Core pipeline. See [the AWS deployment guide](deployment/manual-setup.md) for the single-EC2 setup.
 
 ## Evidence and retrieval
 

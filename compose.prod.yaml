@@ -1,0 +1,78 @@
+name: rca-demo
+
+services:
+  frontend:
+    image: ${FRONTEND_IMAGE:?Set the frontend image reference}
+    restart: unless-stopped
+    environment:
+      RCA_DEMO_HOST: ${RCA_DEMO_HOST:?Set the public demo hostname}
+    ports:
+      - "80:80/tcp"
+      - "443:443/tcp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    image: ${BACKEND_IMAGE:?Set the backend image reference}
+    restart: unless-stopped
+    command:
+      - uvicorn
+      - rca_ai.api.demo:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --forwarded-allow-ips=${RCA_PROXY_SUBNET:?Set the dedicated proxy subnet}
+    secrets:
+      - source: groq_api_key
+        target: groq_api_key
+      - source: cerebras_api_key
+        target: cerebras_api_key
+    networks:
+      - app
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/demo/health', timeout=3)"
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  app:
+    name: rca-demo-app
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${RCA_PROXY_SUBNET:?Set the dedicated proxy subnet}
+
+secrets:
+  groq_api_key:
+    file: ${RCA_SECRET_DIR:-/etc/rca-demo/secrets}/groq_api_key
+  cerebras_api_key:
+    file: ${RCA_SECRET_DIR:-/etc/rca-demo/secrets}/cerebras_api_key
+
+volumes:
+  caddy_data:
+    name: rca-demo-caddy-data
+  caddy_config:
+    name: rca-demo-caddy-config

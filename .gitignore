@@ -14,6 +14,13 @@ runs/
 /experiments/
 /scripts/experiments/
 /docs/superpowers/
+/infra/terraform/.terraform/
+/infra/terraform/terraform.tfvars
+/infra/terraform/terraform.tfvars.json
+/infra/terraform/*.tfstate
+/infra/terraform/*.tfstate.*
+/infra/terraform/tfplan
+/infra/terraform/*.tfplan
 /legacy-tests/
 .vagrant
 Vagrantfile

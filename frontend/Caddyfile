@@ -1,0 +1,82 @@
+{$RCA_DEMO_HOST} {
+	encode zstd gzip
+	root * /srv
+
+# Only the public demo API routes reach FastAPI.
+	route {
+		@incidents {
+			method GET
+			path /api/demo/incidents
+		}
+		handle @incidents {
+			reverse_proxy backend:8000 {
+				header_up X-Forwarded-For {http.request.remote.host}
+				header_up X-Real-IP {http.request.remote.host}
+				header_up X-Forwarded-Proto {http.request.scheme}
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+
+		@prepared {
+			method GET
+			path /api/demo/incidents/*/prepared-input
+		}
+		handle @prepared {
+			reverse_proxy backend:8000 {
+				header_up X-Forwarded-For {http.request.remote.host}
+				header_up X-Real-IP {http.request.remote.host}
+				header_up X-Forwarded-Proto {http.request.scheme}
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+
+		@analyses_post {
+			method POST
+			path /api/demo/analyses
+		}
+		handle @analyses_post {
+			reverse_proxy backend:8000 {
+				header_up X-Forwarded-For {http.request.remote.host}
+				header_up X-Real-IP {http.request.remote.host}
+				header_up X-Forwarded-Proto {http.request.scheme}
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+
+		@analyses_get {
+			method GET
+			path /api/demo/analyses/*
+		}
+		handle @analyses_get {
+			reverse_proxy backend:8000 {
+				header_up X-Forwarded-For {http.request.remote.host}
+				header_up X-Real-IP {http.request.remote.host}
+				header_up X-Forwarded-Proto {http.request.scheme}
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+
+		@health {
+			method GET
+			path /api/demo/health
+		}
+		handle @health {
+			reverse_proxy backend:8000 {
+				header_up X-Forwarded-For {http.request.remote.host}
+				header_up X-Real-IP {http.request.remote.host}
+				header_up X-Forwarded-Proto {http.request.scheme}
+				header_up X-Forwarded-Host {http.request.host}
+			}
+		}
+
+		@unknown_api path /api /api/*
+		handle @unknown_api {
+			respond "Not Found" 404
+		}
+
+		handle {
+			try_files {path} /index.html
+			file_server
+		}
+	}
+}

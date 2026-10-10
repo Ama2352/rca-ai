@@ -335,7 +335,7 @@ Frozen behavior that MUST NOT change: source hashes, Fact IDs/values, complete F
 
 Dependencies: all migrated components and immutable fixtures.
 
-Migration notes: **STATUS: EXTENDED.** `tests/integration/pipeline/test_processor_canonical_e2e.py` runs the three saved captures through Processor v1.1, the canonical parser, Core projections, retrieval, complete Fact reasoning, and assembly with fake semantic providers. This is deterministic wiring/provenance coverage, not live model validation.
+Migration notes: **STATUS: HISTORICAL EXTERNAL BRIDGE.** The former `tests/integration/pipeline/test_processor_canonical_e2e.py` depended on the sibling `otel_demo_dataset` repository and its `rca_processor_v1_1` module, which is outside this RCA Demo checkout. That bridge test was removed from this project; it was not part of the prepared-fixture Demo runtime or its supported API tests.
 
 ## Original planned target structure (historical)
 
@@ -378,6 +378,6 @@ This was the Phase 0 proposal; most listed core modules were later implemented a
 - The Fact projection is one canonical observation to one Fact. Entity ownership is resolved in the Processor contract; no Kubernetes field-name logic remains in Core.
 - Retrieval renderers and BM25/RRF engines are unchanged. Core owns the generic control-narration exclusion; an excluded log remains a Fact.
 - Historical normalized Fact Views and retrieval inputs remain controls only. Their scenario-specific curation is not reconstructed as policy.
-- Deterministic fake-provider integration covers all three saved captures in `tests/integration/pipeline/test_processor_canonical_e2e.py`; prepared-demo fixtures and tests are separate and live results are documented in `docs/verification.md`.
+- The former deterministic integration test for three saved Processor captures has been removed because it required the sibling repository. Prepared Demo fixtures and their in-repository tests remain separate; live results are documented in `docs/verification.md`.
 
-The early sections above record the lineage of frozen algorithms and schemas. Where their old input fixture counts or query-source descriptions differ from this update, the canonical boundary migration is current and the old artifacts are historical comparison data.
+The early sections above record the lineage of frozen algorithms and schemas. Where their old input fixture counts or query-source descriptions differ from this update, the canonical boundary migration is current and the old artifacts are historical comparison data. Processor capture conversion remains an external integration boundary; this repository's Demo tests use its bundled prepared canonical fixtures directly.

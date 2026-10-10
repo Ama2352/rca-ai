@@ -436,3 +436,250 @@ def test_job_exposes_real_stage_progress_and_authoritative_timing():
     assert {"preparation", "evidence", "retrieval", "generation_provider", "validation_provider", "assembly"} <= set(names)
     assert all(item["relationship"] == "exclusive" for item in audit["rows"])
     assert sum(item["seconds"] for item in audit["rows"]) <= audit["total_seconds"] + 0.02
+
+
+def test_health_never_initializes_provider():
+    def forbidden_pipeline():
+        raise AssertionError("health initialized a provider")
+
+    client = TestClient(create_app(
+        pipeline_factory=forbidden_pipeline, credential_available=lambda: True,
+    ))
+    response = client.get("/api/demo/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ready"}
+    unavailable = TestClient(create_app(
+        pipeline_factory=forbidden_pipeline, credential_available=lambda: False,
+    )).get("/api/demo/health")
+    assert unavailable.status_code == 503
+    assert unavailable.json() == {"detail": "RCA provider credentials are unavailable"}
+
+
+@pytest.mark.parametrize("path", [
+    "/internal/deploy/drain",
+    "/internal/deploy/status",
+    "/internal/deploy/resume",
+])
+def test_deployment_control_routes_removed(path):
+    client = TestClient(create_app(credential_available=lambda: True))
+    assert client.get(path).status_code == 404
+    assert client.post(path).status_code == 404
+
+
+def test_busy_409_unchanged():
+    from threading import Event
+
+    release = Event()
+
+    class WaitingPipeline:
+        def run(self, incident, *, observer=None):
+            assert release.wait(5)
+            raise RuntimeError("offline-control-secret raw internal error")
+
+    client = TestClient(create_app(
+        pipeline_factory=WaitingPipeline, credential_available=lambda: True,
+    ))
+    started = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+    try:
+        assert started.status_code == 202
+        busy = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[1]})
+        assert busy.status_code == 409
+        assert busy.json() == {"detail": "An analysis is already running"}
+        assert client.get("/api/demo/health").json() == {"status": "ready"}
+    finally:
+        release.set()
+    result = _completed(client, started.json()["analysis_id"])
+    assert result["error"] == {"code": "ANALYSIS_FAILED"}
+    assert "raw internal error" not in json.dumps(result)
+
+
+@pytest.fixture
+def quota_clock(monkeypatch):
+    from types import SimpleNamespace
+
+    clock = SimpleNamespace(now=100.0)
+    monkeypatch.setattr(demo, "time", SimpleNamespace(
+        perf_counter=time.perf_counter, monotonic=lambda: clock.now,
+    ))
+    return clock
+
+
+def _quota_app(generator=None):
+    return create_app(
+        pipeline_factory=lambda: RCAPipeline(
+            generator_provider=generator or FakeGenerator(), validator_provider=FakeValidator(),
+        ), credential_available=lambda: True,
+    )
+
+
+def _accepted_quota_job(client):
+    response = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+    assert response.status_code == 202
+    assert _completed(client, response.json()["analysis_id"])["status"] == "completed"
+    return response
+
+
+class TestAdmissionQuota:
+    def test_worker_start_failure_rolls_back_quota_and_admission(self, quota_clock, monkeypatch):
+        original_thread = demo.Thread
+
+        class FailOnceThread(original_thread):
+            failed = False
+
+            def start(self):
+                if not self.failed:
+                    type(self).failed = True
+                    raise RuntimeError("private worker startup failure")
+                return super().start()
+
+        monkeypatch.setattr(demo, "Thread", FailOnceThread)
+        client = TestClient(_quota_app(), client=("192.0.2.1", 12345), raise_server_exceptions=False)
+        failed = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+        assert failed.status_code == 500
+        assert "private worker startup failure" not in failed.text
+        for _ in range(9):
+            _accepted_quota_job(client)
+        assert failed.json() == {"detail": "Analysis worker could not be started"}
+        assert client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]}).status_code == 429
+
+    def test_stale_quota_keys_are_deleted(self):
+        from collections import OrderedDict, deque
+
+        assert hasattr(demo, "_prune_admission_quota")
+        accepted_by_ip = OrderedDict([
+            ("192.0.2.1", deque([100.0, 101.0])),
+            ("192.0.2.2", deque([100.0, 102.0])),
+            ("192.0.2.3", deque([103.0])),
+        ])
+        demo._prune_admission_quota(accepted_by_ip, 7301.0)
+        # Global cleanup visits expired buckets; live peer queues are pruned
+        # only when that peer submits, avoiding a full-map admission scan.
+        assert accepted_by_ip == OrderedDict([
+            ("192.0.2.2", deque([100.0, 102.0])),
+            ("192.0.2.3", deque([103.0])),
+        ])
+        demo._prune_admission_quota(accepted_by_ip, 7303.0)
+        assert not accepted_by_ip
+
+    def test_quota_peer_order_changes_only_on_acceptance(self, quota_clock, monkeypatch):
+        from collections import OrderedDict
+
+        accepted_by_ip = OrderedDict()
+        monkeypatch.setattr(demo, "OrderedDict", lambda: accepted_by_ip, raising=False)
+        app = _quota_app()
+        first = TestClient(app, client=("192.0.2.1", 12345))
+        second = TestClient(app, client=("192.0.2.2", 12345))
+        _accepted_quota_job(first)
+        quota_clock.now = 101.0
+        _accepted_quota_job(second)
+        assert list(accepted_by_ip) == ["192.0.2.1", "192.0.2.2"]
+        quota_clock.now = 102.0
+        for _ in range(8):
+            _accepted_quota_job(first)
+        assert list(accepted_by_ip) == ["192.0.2.2", "192.0.2.1"]
+        quota_clock.now = 103.0
+        _accepted_quota_job(second)
+        assert list(accepted_by_ip) == ["192.0.2.1", "192.0.2.2"]
+        assert first.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]}).status_code == 429
+        assert list(accepted_by_ip) == ["192.0.2.1", "192.0.2.2"]
+        quota_clock.now = 7301.0
+        _accepted_quota_job(first)
+        assert list(accepted_by_ip) == ["192.0.2.2", "192.0.2.1"]
+        assert list(accepted_by_ip["192.0.2.1"]) == [102.0] * 8 + [7301.0]
+        quota_clock.now = 7303.0
+        _accepted_quota_job(first)
+        assert list(accepted_by_ip) == ["192.0.2.1"]
+        assert list(accepted_by_ip["192.0.2.1"]) == [7301.0, 7303.0]
+
+    def test_ninth_accepted_tenth_429(self, quota_clock):
+        app = _quota_app()
+        first = TestClient(app, client=("192.0.2.1", 12345))
+        second = TestClient(app, client=("192.0.2.2", 12345))
+        for _ in range(9):
+            _accepted_quota_job(first)
+        limited = first.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+        assert limited.status_code == 429
+        assert limited.headers["Retry-After"] == "7200"
+        _accepted_quota_job(second)
+
+    def test_window_boundary_and_retry_after(self, quota_clock):
+        client = TestClient(_quota_app(), client=("192.0.2.1", 12345))
+        _accepted_quota_job(client)
+        quota_clock.now = 101.0
+        for _ in range(8):
+            _accepted_quota_job(client)
+        quota_clock.now = 7299.9
+        limited = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+        assert limited.status_code == 429
+        assert limited.headers["Retry-After"] == "1"
+        quota_clock.now = 7300.0
+        _accepted_quota_job(client)
+        # The rejected request did not consume the slot that expired at 7300.
+        limited = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+        assert limited.status_code == 429
+        assert limited.headers["Retry-After"] == "1"
+        quota_clock.now = 7301.0
+        for _ in range(8):
+            _accepted_quota_job(client)
+        limited = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+        assert limited.status_code == 429
+        assert limited.headers["Retry-After"] == "7199"
+
+    def test_busy_409_does_not_consume_quota(self, quota_clock):
+        from threading import Event
+
+        entered, release = Event(), Event()
+
+        class WaitingGenerator(FakeGenerator):
+            def complete(self, request):
+                if quota_clock.now == 101.0:
+                    entered.set()
+                    assert release.wait(5)
+                return super().complete(request)
+
+        app = _quota_app(WaitingGenerator())
+        first = TestClient(app, client=("192.0.2.1", 12345))
+        second = TestClient(app, client=("192.0.2.2", 12345))
+        for _ in range(8):
+            _accepted_quota_job(first)
+        quota_clock.now = 101.0
+        ninth = first.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+        try:
+            assert ninth.status_code == 202
+            assert entered.wait(3)
+            for client in (first, second):
+                for _ in range(10):
+                    busy = client.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]})
+                    assert busy.status_code == 409
+                    assert busy.json() == {"detail": "An analysis is already running"}
+                    assert "Retry-After" not in busy.headers
+        finally:
+            release.set()
+        assert _completed(first, ninth.json()["analysis_id"])["status"] == "completed"
+        assert first.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]}).status_code == 429
+        for _ in range(9):
+            _accepted_quota_job(second)
+        assert second.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]}).status_code == 429
+
+    def test_spoofed_forwarded_for_cannot_reset_quota(self, quota_clock):
+        app = _quota_app()
+        first = TestClient(app, client=("192.0.2.1", 12345))
+        for _ in range(9):
+            _accepted_quota_job(first)
+        for headers in (
+            {"X-Forwarded-For": "192.0.2.2"},
+            {"X-Forwarded-For": "198.51.100.1, 192.0.2.2", "X-Real-IP": "198.51.100.1"},
+            {"Forwarded": "for=198.51.100.2"},
+        ):
+            limited = first.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]}, headers=headers)
+            assert limited.status_code == 429
+        second = TestClient(app, client=("192.0.2.2", 12345), headers={"X-Forwarded-For": "192.0.2.1"})
+        _accepted_quota_job(second)
+
+    def test_restart_resets_memory_quota(self, quota_clock):
+        original = TestClient(_quota_app(), client=("192.0.2.1", 12345))
+        for _ in range(9):
+            _accepted_quota_job(original)
+        assert original.post("/api/demo/analyses", json={"incident_id": SCENARIOS[0]}).status_code == 429
+        restarted = TestClient(_quota_app(), client=("192.0.2.1", 12345))
+        _accepted_quota_job(restarted)

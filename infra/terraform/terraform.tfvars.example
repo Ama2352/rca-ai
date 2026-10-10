@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars and replace each placeholder before planning.
+# Select architecture, EC2 size, and EBS size only after reviewing the profile.
+aws_region                       = "REPLACE_WITH_AWS_REGION"
+aws_account_id                   = "REPLACE_WITH_12_DIGIT_ACCOUNT_ID"
+architecture                     = "REPLACE_AFTER_PROFILING"
+instance_type                    = "REPLACE_AFTER_PROFILING"
+root_volume_size_gib             = 0
+public_subnet_id                 = "REPLACE_WITH_PUBLIC_DEFAULT_SUBNET_ID"
+proxy_subnet_cidr                = "REPLACE_WITH_UNUSED_DOCKER_SUBNET_CIDR"
+github_repository                = "OWNER/REPOSITORY"
+github_oidc_provider_ownership    = "external"
+existing_github_oidc_provider_arn = "REPLACE_WITH_EXISTING_PROVIDER_ARN"
+github_oidc_thumbprint            = ""
+dockerhub_frontend_repository    = "NAMESPACE/rca-demo-frontend"
+dockerhub_backend_repository     = "NAMESPACE/rca-demo-backend"
+demo_hostname                    = "REPLACE_WITH_SUBDOMAIN.duckdns.org"

@@ -1,0 +1,37 @@
+#cloud-config
+package_update: true
+packages:
+  - awscli
+  - ca-certificates
+  - curl
+  - docker.io
+  - docker-compose-v2
+  - snapd
+
+write_files:
+  - path: /etc/rca-demo/config.env
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${config_env_b64}
+  - path: /etc/rca-demo/compose.prod.yaml
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${compose_file_b64}
+  - path: /usr/local/bin/rca-demo-deploy
+    owner: root:root
+    permissions: "0750"
+    encoding: b64
+    content: ${deploy_script_b64}
+  - path: /usr/local/bin/rca-demo-fetch-secrets
+    owner: root:root
+    permissions: "0750"
+    encoding: b64
+    content: ${fetch_secrets_script_b64}
+
+runcmd:
+  - [install, -d, -o, root, -g, root, -m, "0700", /etc/rca-demo/secrets]
+  - [systemctl, enable, --now, docker.service]
+  - [systemctl, is-active, --quiet, snap.amazon-ssm-agent.amazon-ssm-agent.service]
+  - [/usr/local/bin/rca-demo-fetch-secrets]

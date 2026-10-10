@@ -1,0 +1,20 @@
+# Official docker-library/repo-info manifest index reviewed 2026-10-10.
+FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS builder
+WORKDIR /app
+ENV UV_PROJECT_ENVIRONMENT=/app/.venv UV_LINK_MODE=copy
+# uv is a build tool only; application dependencies are resolved by uv.lock.
+RUN pip install --no-cache-dir uv==0.9.9
+COPY pyproject.toml uv.lock README.md ./
+COPY src ./src
+RUN uv sync --locked --extra api --no-dev --no-editable
+
+FROM python:3.12-slim-bookworm@sha256:34386ef0cb081344d7ec1c103ba398e6e9f64e9ab3a1509accc92a4e24a07258 AS runtime
+WORKDIR /app
+ENV PATH=/app/.venv/bin:$PATH PYTHONPATH=/app/src PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+COPY --from=builder /app/.venv /app/.venv
+COPY src ./src
+COPY data ./data
+COPY deploy/scripts/backend-entrypoint.sh /usr/local/bin/backend-entrypoint.sh
+RUN chmod 0555 /usr/local/bin/backend-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/backend-entrypoint.sh"]
+CMD ["uvicorn", "rca_ai.api.demo:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import time
+from collections import OrderedDict, deque
 from copy import deepcopy
 from datetime import datetime, timezone
+from pathlib import Path
 from threading import Lock, Thread
 from typing import Callable
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from rca_ai.demo_catalog import PROJECT_ROOT, SCENARIO_CATALOG, SCENARIOS_BY_ID, runnable_scenario_ids
@@ -118,6 +121,15 @@ class AnalysisRequest(BaseModel):
     incident_id: str
 
 
+def _prune_admission_quota(accepted_by_ip: OrderedDict[str, deque[float]], now: float) -> None:
+    """Remove fully expired peers ordered by their most recent accepted job."""
+    while accepted_by_ip:
+        accepted = accepted_by_ip[next(iter(accepted_by_ip))]
+        if accepted and accepted[-1] > now - 7200:
+            break
+        accepted_by_ip.popitem(last=False)
+
+
 def create_app(
     *,
     pipeline_factory: Callable[[], RCAPipeline] | None = None,
@@ -134,8 +146,15 @@ def create_app(
     default_routing = _default_provider_routing() if pipeline_factory is None else None
     jobs: dict[str, dict[str, object]] = {}
     started_clocks: dict[str, float] = {}
+    accepted_by_ip: OrderedDict[str, deque[float]] = OrderedDict()
     lock = Lock()
     running_id: str | None = None
+
+    @app.get("/api/demo/health")
+    def health():
+        if not has_credential():
+            raise HTTPException(status_code=503, detail="RCA provider credentials are unavailable")
+        return {"status": "ready"}
 
     @app.get("/api/demo/incidents")
     def list_incidents():
@@ -153,7 +172,7 @@ def create_app(
         return Response(content=content, media_type="application/json")
 
     @app.post("/api/demo/analyses", status_code=202)
-    def start_analysis(request: AnalysisRequest):
+    def start_analysis(request: AnalysisRequest, http_request: Request):
         nonlocal running_id
         if request.incident_id not in SCENARIOS:
             if request.incident_id in SCENARIOS_BY_ID:
@@ -171,6 +190,19 @@ def create_app(
         with lock:
             if running_id is not None:
                 raise HTTPException(status_code=409, detail="An analysis is already running")
+            # Uvicorn resolves trusted proxy headers into the ASGI peer. Never
+            # interpret public forwarding headers directly in the application.
+            client_ip = http_request.client.host if http_request.client is not None else "unknown"
+            now = time.monotonic()
+            _prune_admission_quota(accepted_by_ip, now)
+            accepted = accepted_by_ip.setdefault(client_ip, deque())
+            while accepted and accepted[0] <= now - 7200:
+                accepted.popleft()
+            if len(accepted) >= 9:
+                raise HTTPException(
+                    status_code=429, detail="Analysis request limit reached",
+                    headers={"Retry-After": str(math.ceil(accepted[0] + 7200 - now))},
+                )
             analysis_id = uuid4().hex
             jobs[analysis_id] = {
                 "analysis_id": analysis_id,
@@ -283,7 +315,18 @@ def create_app(
                     jobs[analysis_id]["execution_audit"]["total_seconds"] = time.perf_counter() - started_clocks[analysis_id]
                     running_id = None
 
-        Thread(target=work, name=f"rca-demo-{analysis_id[:8]}", daemon=True).start()
+        with lock:
+            try:
+                Thread(target=work, name=f"rca-demo-{analysis_id[:8]}", daemon=True).start()
+            except Exception as error:
+                jobs.pop(analysis_id, None)
+                started_clocks.pop(analysis_id, None)
+                running_id = None
+                if not accepted:
+                    del accepted_by_ip[client_ip]
+                raise HTTPException(status_code=500, detail="Analysis worker could not be started") from error
+            accepted.append(now)
+            accepted_by_ip.move_to_end(client_ip)
         return {"analysis_id": analysis_id, "incident_id": request.incident_id, "status": "queued"}
 
     @app.get("/api/demo/analyses/{analysis_id}")
