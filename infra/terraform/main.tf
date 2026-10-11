@@ -85,6 +85,8 @@ resource "aws_instance" "demo" {
   instance_initiated_shutdown_behavior = "stop"
   user_data_replace_on_change          = false
   user_data_base64 = base64gzip(templatefile("${path.module}/cloud-init.yaml.tftpl", {
+    aws_cli_arch             = var.architecture == "amd64" ? "x86_64" : "aarch64"
+    aws_region               = var.aws_region
     config_env_b64           = local.config_env_b64
     compose_file_b64         = filebase64("${path.module}/../../compose.prod.yaml")
     deploy_script_b64        = filebase64("${path.module}/../../deploy/scripts/deploy.sh")

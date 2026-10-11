@@ -1,12 +1,12 @@
 #cloud-config
 package_update: true
 packages:
-  - awscli
   - ca-certificates
   - curl
   - docker.io
   - docker-compose-v2
   - snapd
+  - unzip
 
 write_files:
   - path: /etc/rca-demo/config.env
@@ -34,4 +34,39 @@ runcmd:
   - [install, -d, -o, root, -g, root, -m, "0700", /etc/rca-demo/secrets]
   - [systemctl, enable, --now, docker.service]
   - [systemctl, is-active, --quiet, snap.amazon-ssm-agent.amazon-ssm-agent.service]
-  - [/usr/local/bin/rca-demo-fetch-secrets]
+  - |
+    set -eu
+    aws_cli_arch="${aws_cli_arch}"
+    if ! /usr/local/bin/aws --version 2>/dev/null | grep -q '^aws-cli/2\.'; then
+      install_dir="$(mktemp -d /tmp/rca-demo-aws-cli.XXXXXX)"
+      trap 'rm -rf "$install_dir"' EXIT
+      if ! curl --fail --silent --show-error --location \
+        "https://awscli.amazonaws.com/awscli-exe-linux-${aws_cli_arch}.zip" \
+        --output "$install_dir/awscliv2.zip"; then
+        echo "bootstrap: failed to download the official AWS CLI v2 installer" >&2
+        exit 1
+      fi
+      if ! unzip -q "$install_dir/awscliv2.zip" -d "$install_dir"; then
+        echo "bootstrap: failed to unpack the AWS CLI v2 installer" >&2
+        exit 1
+      fi
+      if [ -x /usr/local/aws-cli/v2/current/bin/aws ]; then
+        if ! "$install_dir/aws/install" --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update; then
+          echo "bootstrap: AWS CLI v2 update failed" >&2
+          exit 1
+        fi
+      else
+        if ! "$install_dir/aws/install" --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli; then
+          echo "bootstrap: AWS CLI v2 installation failed" >&2
+          exit 1
+        fi
+      fi
+    fi
+    if ! /usr/local/bin/aws --version 2>&1 | grep -q '^aws-cli/2\.'; then
+      echo "bootstrap: AWS CLI v2 is not available on PATH after installation" >&2
+      exit 1
+    fi
+    if ! AWS_REGION="${aws_region}" /usr/local/bin/rca-demo-fetch-secrets; then
+      echo "bootstrap: failed to retrieve required provider secrets from SSM" >&2
+      exit 1
+    fi

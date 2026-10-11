@@ -13,8 +13,8 @@ trap 'rm -rf -- "$stage"' EXIT
 
 for name in GROQ_API_KEY CEREBRAS_API_KEY; do
   parameter="$PARAMETER_PREFIX/$name"
-  value="$(aws ssm get-parameter --name "$parameter" --with-decryption \
-    --region "$REGION" --query Parameter.Value --output text 2>/dev/null)" || {
+  value="$(/usr/local/bin/aws ssm get-parameter --name "$parameter" --with-decryption \
+    --region "$REGION" --query Parameter.Value --output text)" || {
       echo "secrets: could not read required parameter $parameter" >&2
       exit 1
     }
